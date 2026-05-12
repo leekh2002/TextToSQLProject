@@ -1,0 +1,7 @@
+OPENAI_API_KEY=
+OPENAI_TEXT_TO_SQL_MODEL=gpt-4o-mini
+OPENAI_EMBEDDING_MODEL=text-embedding-3-small
+
+DATABASE_URL=
+REDIS_URL=
+QUERY_LOG_PATH=backend-log.txt

@@ -1,0 +1,28 @@
+# 1. 모델 파일 경로 (본인의 경로에 맞게 수정)
+FROM ./qwen2.5-coder-7b.Q4_K_M.gguf
+
+# 2. 외부 틀 (Template) 설정 - train.py의 alpaca_prompt와 정확히 일치해야 함
+TEMPLATE """Below is an instruction that describes a task, paired with an input that provides further context. Write a response that appropriately completes the request.
+
+### Instruction:
+{{ .System }}
+
+### Input:
+{{ .Prompt }}
+
+### Response:
+"""
+
+# 3. 내부 내용 (System/Instruction) 설정 - 데이터셋의 지시문과 스키마 정보
+SYSTEM """다음 스키마를 참고하여 질문을 SQL로 변환하세요.
+
+Table: courses
+Columns: 
+- course_year(학년): INT, subject_code(교과목코드): TEXT, subject_name(과목명): TEXT,
+- professor(교수): TEXT, capacity(정원): INT, enrolled(수강인원): INT,
+- category(이수구분): TEXT, credit_hours(학점): INT, dept_name(학과명): TEXT,
+- class_mode(강의방식): TEXT"""
+
+# 4. 기타 파라미터
+PARAMETER stop "<|end_of_text|>"
+PARAMETER temperature 0.2
