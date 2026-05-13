@@ -18,6 +18,7 @@ ALLOWED_TABLES = {
     "required_subject",
     "student",
     "subject",
+    "v_course_info",
 }
 BLOCKED_KEYWORDS = ["insert", "update", "delete", "drop", "alter", "truncate"]
 ALLOWED_STUDENT_COLUMNS = {

@@ -69,9 +69,9 @@ def process(query):
         if not sql or sql == "UNKNOWN":
             return {"error": "질문이 모호합니다."}
 
+        sql = enforce_limit(sql)
         t_val = time.perf_counter()
         validate_sql(sql)
-        sql = enforce_limit(sql)
         timings["validate_ms"] = int((time.perf_counter() - t_val) * 1000)
 
         try:
@@ -127,9 +127,9 @@ def process(query):
             fixed = fix_sql(normalized_query, sql, str(e))
             timings["llm_ms"] += int((time.perf_counter() - t_fix) * 1000)
 
+            fixed = enforce_limit(fixed)
             t_val = time.perf_counter()
             validate_sql(fixed)
-            fixed = enforce_limit(fixed)
             timings["validate_ms"] += int((time.perf_counter() - t_val) * 1000)
 
             try:
