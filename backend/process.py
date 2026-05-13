@@ -5,7 +5,20 @@ from .keyword_extract import preprocess_query
 from .llm import fix_sql, generate_sql
 from .redis_cache import get_cache, set_cache
 from .utils import log_query
-from .validator import enforce_limit, validate_sql
+from .validate import validate_generated_sql
+
+
+def enforce_limit(sql):
+    if "limit" not in sql.lower():
+        sql += " LIMIT 50"
+    return sql
+
+
+def validate_sql(sql, requested_student_id=None):
+    result = validate_generated_sql(sql, requested_student_id=requested_student_id)
+    if not result["ok"]:
+        raise Exception(result["reason"] or "SQL validation failed")
+    return True
 
 
 def _with_query_context(response, query, normalized_query, preprocessing):
