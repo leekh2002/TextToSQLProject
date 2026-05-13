@@ -77,3 +77,9 @@ JOIN department d ON c.dept_code = d.dept_code
 LEFT JOIN course_schedule sch ON c.subject_code = sch.subject_code AND c.section = sch.section;
 
 ```
+## 사용한 모델
+
+- Qwen2.5-Coder-7B (Instruct) 사용
+- Ollama 3.1 8B 또한 사용 가능
+
+- [모델 링크 (프로젝트 내 models 폴더에 위치)](https://drive.google.com/file/d/1t5IoSzCTg89vYgrI0YydIqNC4pOj_aVB/view?usp=sharing)
