@@ -26,13 +26,13 @@ DEFAULT_MIN_SCORE = float(os.getenv("KEYWORD_CORRECTION_MIN_SCORE", "78"))
 ## 교정된 값이 DB에 존재하는지 확인하기 위함.
 ## 예) "COURSE_NAME" 엔티티는 "subject" 테이블의 "subject_name" 컬럼과 매핑되어, 교정된 과목명이 실제로 존재하는지 확인할 때 참조됨.
 ENTITY_REFERENCE_MAP = {
-    "CATEGORY": ("subject", "category"),
-    "COURSE_NAME": ("subject", "subject_name"),
-    "DEPARTMENT": ("department", "dept_name"),
-    "CLASS_MODE": ("course_offerings", "class_mode"),
-    "EVAL_TYPE": ("course_offerings", "eval_type"),
-    "GRADE_METHOD": ("course_offerings", "grading_method"),
-    "PROFESSOR": ("course_offerings", "professor"),
+    "CATEGORY": ("v_course_info", "category"),
+    "COURSE_NAME": ("v_course_info", "subject_name"),
+    "DEPARTMENT": ("v_course_info", "dept_name"),
+    "CLASS_MODE": ("v_course_info", "class_mode"),
+    "EVAL_TYPE": ("v_course_info", "eval_type"),
+    "GRADE_METHOD": ("v_course_info", "grading_method"),
+    "PROFESSOR": ("v_course_info", "professor"),
 }
 
 ## 최소 유사도 기준. 라벨별로 다르게 적용하여 과도한 교정을 방지.
@@ -57,6 +57,9 @@ COMMON_ALIASES = {
     "CATEGORY": {
         "전필": ["전공(필수)"],
         "전선": ["전공(선택)"],
+        "전기": ["전공(기초)"],
+        "전핵": ["전공(핵심)"],
+        "전심": ["전공(심화)"],
         "교필": ["교양(필수)"],
         "교선": ["교양(선택)"],
         "일선": ["일반(선택)"],
@@ -146,6 +149,12 @@ def load_reference_values(force: bool = False) -> dict[str, list[str]]:
                         values = fetch_distinct_values(conn, table, column)
                     except Exception:
                         values = []
+                    
+                    if label == "CATEGORY":
+                        for gen_cat in ["전공", "교양"]:
+                            if gen_cat not in values:
+                                values.append(gen_cat)
+                    
                     references[label] = _dedupe(values)
         except Exception:
             references = {label: [] for label in ENTITY_REFERENCE_MAP}
@@ -308,6 +317,18 @@ def strip_korean_particle(value: str) -> str:
     return stripped
 
 
+def is_sequential_match(query: str, target: str) -> bool:
+    """
+    Checks if query characters appear in target in the same order.
+    Example: '컴공' matches '컴퓨터공학과'
+    """
+    if not query:
+        return True
+    
+    it = iter(target)
+    return all(c in it for c in query)
+
+
 def make_match_queries(entity_text: str, label: str) -> list[str]:
     raw = entity_text.strip()
     compact = normalize_for_match(raw)
@@ -341,22 +362,41 @@ def find_best_db_match(entity_text: str, candidates: list[str], label: str) -> M
     best = MatchResult(None, 0.0, entity_text)
 
     for query in make_match_queries(entity_text, label):
-        exact = candidate_by_key.get(normalize_for_match(query))
+        norm_query = normalize_for_match(query)
+        
+        # 1. Exact Match
+        exact = candidate_by_key.get(norm_query)
         if exact:
             return MatchResult(exact, 100.0, query)
 
+        # 2. Sequential Match check (especially for short abbreviations)
+        # We check candidates to see if they contain the query characters in sequence.
+        if len(norm_query) >= 2:
+            seq_matches = []
+            for norm_cand, original_cand in candidate_by_key.items():
+                if is_sequential_match(norm_query, norm_cand):
+                    fuzz_score = fuzz.WRatio(norm_query, norm_cand)
+                    seq_matches.append((original_cand, fuzz_score, len(norm_cand)))
+            
+            if seq_matches:
+                # Sort by fuzz score desc, then by length asc
+                seq_matches.sort(key=lambda x: (-x[1], x[2]))
+                best_cand, best_fuzz, _ = seq_matches[0]
+                seq_score = max(best_fuzz, 80.0)
+                if seq_score > best.score:
+                    best = MatchResult(best_cand, seq_score, query)
+
+        # 3. Standard Fuzzy Matching
         match = fuzz_process.extractOne(
             query,
             candidates,
             scorer=fuzz.WRatio,
             processor=normalize_for_match,
         )
-        if match is None:
-            continue
-
-        matched_text, score, _ = match
-        if float(score) > best.score:
-            best = MatchResult(matched_text, float(score), query)
+        if match:
+            matched_text, score, _ = match
+            if float(score) > best.score:
+                best = MatchResult(matched_text, float(score), query)
 
     return best
 
