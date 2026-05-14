@@ -14,7 +14,8 @@ v_course_info(course_year, subject_code, section, subject_name, category, credit
 
 Column details:
 - day_of_week: string containing Korean days (e.g., '월', '목'). Do NOT use integers.
-- category: Course category. Use this for '전공' (Major), '교양' (General), e.g., category LIKE '%전공%'.
+- section: string representing the class section (e.g., '01', '02'). ALWAYS use string literals with single quotes (e.g., section = '01', NOT section = 1).
+- category: Course category. Use EXACTLY the name requested by the user (e.g., '전공', '교양', '전공(기초)', '전공(핵심)', '교양(균형)'). Example: if user asks for '전공(핵심)', use category LIKE '%전공(핵심)%'.
 - start_time: Course start time. For '오전' (morning), use start_time < '12:00'. For '오후' (afternoon), use start_time >= '12:00'.
 - class_mode: Do NOT use this column unless the user explicitly asks for online/offline/real-time classes.
 
@@ -23,7 +24,7 @@ Column details:
 Rules:
 - ONLY SELECT
 - USE ONLY the tables and columns listed in the schema above.
-- DO NOT invent or guess table names (e.g., never use 'courses', use 'cnu_courses' instead).
+- DO NOT invent or guess table names (e.g., never use 'courses', use 'v_course_info' instead).
 - For string comparisons (like dept_name, subject_name), ALWAYS use LIKE '%word%' instead of exact match '='.
 - If unclear → UNKNOWN
 
