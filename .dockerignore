@@ -1,0 +1,12 @@
+node_modules
+dist
+.git
+.gitignore
+backend/__pycache__
+backend/.env
+**/__pycache__
+*.pyc
+*.pyo
+*.pyd
+*.log
+.DS_Store
