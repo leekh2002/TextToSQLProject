@@ -83,3 +83,33 @@ LEFT JOIN course_schedule sch ON c.subject_code = sch.subject_code AND c.section
 - Ollama 3.1 8B 또한 사용 가능
 
 - [모델 링크 (프로젝트 내 models 폴더에 위치)](https://drive.google.com/file/d/1t5IoSzCTg89vYgrI0YydIqNC4pOj_aVB/view?usp=sharing)
+## Docker
+
+Development containers are included for:
+
+- `frontend`: Vite dev server
+- `backend`: FastAPI app
+- `postgres`: local PostgreSQL
+- `redis`: local Redis
+
+Run:
+
+```bash
+docker compose up --build
+```
+
+Endpoints:
+
+- Frontend: `http://localhost:5173`
+- Backend: `http://localhost:8000`
+- Health: `http://localhost:8000/api/v1/health`
+
+Notes:
+
+- The frontend container proxies `/api/v1` to the backend service by using `VITE_BACKEND_TARGET=http://backend:8000`.
+- The backend container is configured to connect to host Ollama with `OLLAMA_BASE_URL=http://host.docker.internal:11434`.
+- PostgreSQL and Redis are started by Compose with container-local addresses.
+- Your schema and seed data are not created automatically. The backend still expects tables such as `course_offerings`, `subject`, and `department`.
+- The first backend image build can take time because it installs `torch` and `transformers`.
+
+If you want Ollama inside Docker as well, add a separate Ollama service later with GPU/runtime and model volume settings.
