@@ -23,9 +23,9 @@ services:
       - "8000:8000"
     environment:
       OLLAMA_BASE_URL: http://host.docker.internal:11434
-      OLLAMA_MODEL: text2sqllocal_qwen
+      OLLAMA_MODEL: text2sql-local
       OLLAMA_KEEP_ALIVE: 10m
-      DATABASE_URL: postgresql://{사용자명}:{비번}@host.docker.internal:5432/{db명}
+      DATABASE_URL: postgresql://postgres:4231@host.docker.internal:5432/postgres
       REDIS_URL: redis://redis:6379/0
       QUERY_LOG_PATH: /app/backend-log.txt
     extra_hosts:

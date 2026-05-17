@@ -2,8 +2,12 @@ node_modules
 dist
 .git
 .gitignore
+.venv
+venv
+models
 backend/__pycache__
 backend/.env
+backend/backup_api
 **/__pycache__
 *.pyc
 *.pyo
