@@ -55,7 +55,15 @@ def tokenize_and_align(records: list[dict], tokenizer, label_to_id: dict[str, in
     )
 
 
-def _evaluate_on_holdout(model, tokenizer, holdout_records: list[dict], label_to_id: dict[str, int], id_to_label: dict[int, str], max_length: int) -> None:
+def _evaluate_and_report(
+    model,
+    tokenizer,
+    records: list[dict],
+    label_to_id: dict[str, int],
+    id_to_label: dict[int, str],
+    max_length: int,
+    name: str,
+) -> None:
     import torch
 
     model.eval()
@@ -63,7 +71,7 @@ def _evaluate_on_holdout(model, tokenizer, holdout_records: list[dict], label_to
     pred_seqs: list[list[str]] = []
 
     with torch.no_grad():
-        for record in holdout_records:
+        for record in records:
             encoded = tokenizer(
                 record["text"],
                 truncation=True,
@@ -72,6 +80,7 @@ def _evaluate_on_holdout(model, tokenizer, holdout_records: list[dict], label_to
                 return_tensors="pt",
             )
             offset_mapping = encoded.pop("offset_mapping")[0].tolist()
+            encoded = {key: value.to(model.device) for key, value in encoded.items()}
             true_ids = char_spans_to_bio(record["entities"], offset_mapping, label_to_id)
 
             outputs = model(**encoded)
@@ -83,9 +92,9 @@ def _evaluate_on_holdout(model, tokenizer, holdout_records: list[dict], label_to
 
     from seqeval.metrics import classification_report
 
-    print("=== Holdout (real queries) seqeval report ===")
+    print(f"=== {name} seqeval report ===")
     print(classification_report(true_seqs, pred_seqs))
-    print("=== Holdout (real queries) confusion counts ===")
+    print(f"=== {name} confusion counts ===")
     print(format_confusion_report(compute_confusion_counts(true_seqs, pred_seqs)))
 
 
@@ -94,6 +103,7 @@ def main() -> None:
     parser.add_argument("--base-checkpoint", default="monologg/koelectra-small-v3-discriminator")
     parser.add_argument("--train-file", default="../data/ner_train.jsonl")
     parser.add_argument("--valid-file", default="../data/ner_valid.jsonl")
+    parser.add_argument("--test-file", default="../data/ner_test.jsonl")
     parser.add_argument("--holdout-file", default="../metadata/ner_holdout_real.jsonl")
     parser.add_argument("--labels-file", default="../models/course-custom-ner/labels.json")
     parser.add_argument("--output-dir", default="../trained_model_output")
@@ -123,7 +133,17 @@ def main() -> None:
 
     train_records = load_jsonl(args.train_file)
     valid_records = load_jsonl(args.valid_file)
+    test_records = load_jsonl(args.test_file)
     holdout_records = load_jsonl(args.holdout_file)
+
+    for name, records in [
+        ("train", train_records),
+        ("valid", valid_records),
+        ("test", test_records),
+        ("holdout", holdout_records),
+    ]:
+        if not records:
+            raise SystemExit(f"No records loaded for '{name}' — check the corresponding file path and content.")
 
     train_dataset = tokenize_and_align(train_records, tokenizer, label_to_id, args.max_length)
     valid_dataset = tokenize_and_align(valid_records, tokenizer, label_to_id, args.max_length)
@@ -156,8 +176,6 @@ def main() -> None:
     print("=== Final validation metrics ===")
     print(trainer.evaluate())
 
-    _evaluate_on_holdout(model, tokenizer, holdout_records, label_to_id, id_to_label, args.max_length)
-
     final_dir = Path(args.output_dir) / "final"
     model.save_pretrained(final_dir)
     tokenizer.save_pretrained(final_dir)
@@ -166,6 +184,10 @@ def main() -> None:
     with open(final_dir / "labels.json", "w", encoding="utf-8") as file:
         file.write(labels_content)
     print(f"saved final model to {final_dir}")
+
+    _evaluate_and_report(model, tokenizer, valid_records, label_to_id, id_to_label, args.max_length, "Validation")
+    _evaluate_and_report(model, tokenizer, test_records, label_to_id, id_to_label, args.max_length, "Test")
+    _evaluate_and_report(model, tokenizer, holdout_records, label_to_id, id_to_label, args.max_length, "Holdout (real queries)")
 
 
 if __name__ == "__main__":
