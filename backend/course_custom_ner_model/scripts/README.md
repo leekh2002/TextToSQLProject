@@ -65,12 +65,15 @@ python train.py \
   --output-dir ../trained_model_output
 ```
 
-Watch the printed "Holdout (real queries) seqeval report" and "confusion
-counts" at the end — this is the number that matters most, since it's
-measured on real historical queries the model never trained on. If specific
-label pairs show up repeatedly in the confusion counts, go back to
-`generate_ner_dataset.py`'s `TEMPLATE_CATALOG` and increase the `weight` of
-the relevant `confusable_*` templates, then repeat from step 2.
+Watch the printed "Validation", "Test", and "Holdout (real queries)" seqeval
+reports and "confusion counts" at the end. The holdout numbers matter most,
+since they're measured on real historical queries the model never trained
+on, but the validation/test confusion counts (drawn from `ner_valid.jsonl`
+and `ner_test.jsonl`) give a much larger sample to spot systematic
+label-pair confusions in. If specific label pairs show up repeatedly in any
+of the confusion counts, go back to `generate_ner_dataset.py`'s
+`TEMPLATE_CATALOG` and increase the `weight` of the relevant `confusable_*`
+templates, then repeat from step 2.
 
 ## 4. Swap in the new model
 
@@ -103,5 +106,5 @@ python -m backend.eval.run_eval
 ```
 
 Compare the new overall/category accuracy against the baseline run recorded
-in `backend/eval/README.md` (27.9% / 12 of 43 at the time this pipeline was
-built).
+in `backend/eval/reports/20260907T073756Z.json` (27.9% / 12 of 43 at the time
+this pipeline was built).
