@@ -1,0 +1,27 @@
+{"text": "1시 ~ 3시 사이 공과대학 컴퓨터융합학부 전공 보여줘", "entities": [{"start": 0, "end": 2, "label": "TIME"}, {"start": 5, "end": 7, "label": "TIME"}, {"start": 11, "end": 23, "label": "DEPARTMENT"}, {"start": 24, "end": 26, "label": "CATEGORY"}]}
+{"text": "1학년 공과대학 응용화학공학과 전공(심화) 금요일 강의 보여줘", "entities": [{"start": 0, "end": 3, "label": "COURSE_YEAR"}, {"start": 4, "end": 16, "label": "DEPARTMENT"}, {"start": 17, "end": 23, "label": "CATEGORY"}, {"start": 24, "end": 27, "label": "DAY"}]}
+{"text": "2학년대상 공과대학 응용화학공학과 전공과목 찾아줘", "entities": [{"start": 0, "end": 3, "label": "COURSE_YEAR"}, {"start": 6, "end": 18, "label": "DEPARTMENT"}, {"start": 19, "end": 21, "label": "CATEGORY"}]}
+{"text": "3시 제외 전공 보여줘", "entities": [{"start": 0, "end": 2, "label": "TIME"}, {"start": 6, "end": 8, "label": "CATEGORY"}]}
+{"text": "공과대학 컴퓨터융합학부 2학년 대상 과목 중에서 내가 들은 거 빼고 알려줘", "entities": [{"start": 0, "end": 12, "label": "DEPARTMENT"}, {"start": 13, "end": 16, "label": "COURSE_YEAR"}]}
+{"text": "공과대학 컴퓨터융합학부 3학년 전공(핵심) 금요일 14시 강의 보여줘.", "entities": [{"start": 0, "end": 12, "label": "DEPARTMENT"}, {"start": 13, "end": 16, "label": "COURSE_YEAR"}, {"start": 17, "end": 23, "label": "CATEGORY"}, {"start": 24, "end": 27, "label": "DAY"}, {"start": 28, "end": 31, "label": "TIME"}]}
+{"text": "공과대학 컴퓨터융합학부 3학년 전공(핵심)에서 빈자리가 있는 금요일 과목 보여줘", "entities": [{"start": 0, "end": 12, "label": "DEPARTMENT"}, {"start": 13, "end": 16, "label": "COURSE_YEAR"}, {"start": 17, "end": 23, "label": "CATEGORY"}, {"start": 26, "end": 33, "label": "VACANCY"}, {"start": 34, "end": 37, "label": "DAY"}]}
+{"text": "공과대학 컴퓨터융합학부 과목 중 정원이 다 찬 과목은 몇 개야", "entities": [{"start": 0, "end": 12, "label": "DEPARTMENT"}]}
+{"text": "공과대학 컴퓨터융합학부 알응 과목 보여줘", "entities": [{"start": 0, "end": 12, "label": "DEPARTMENT"}, {"start": 13, "end": 15, "label": "COURSE_NAME"}]}
+{"text": "공과대학 컴퓨터융합학부 전공(핵심)에서 3학년 목요일 과목 보여줘", "entities": [{"start": 0, "end": 12, "label": "DEPARTMENT"}, {"start": 13, "end": 19, "label": "CATEGORY"}, {"start": 22, "end": 25, "label": "COURSE_YEAR"}, {"start": 26, "end": 29, "label": "DAY"}]}
+{"text": "공과대학 컴퓨터융합학부에서 개설한 금요일 3시 전공(핵심) 보여줘.", "entities": [{"start": 0, "end": 12, "label": "DEPARTMENT"}, {"start": 19, "end": 22, "label": "DAY"}, {"start": 23, "end": 25, "label": "TIME"}, {"start": 26, "end": 32, "label": "CATEGORY"}]}
+{"text": "공과대학 컴퓨터융합학부에서 수강인원이 가장 많은 과목이 뭐야", "entities": [{"start": 0, "end": 12, "label": "DEPARTMENT"}]}
+{"text": "금요일 3시 30분에 진행하는 공과대학 컴퓨터융합학부 전공(심화)이랑 인공지능과 미래사회 보여줘", "entities": [{"start": 0, "end": 3, "label": "DAY"}, {"start": 4, "end": 10, "label": "TIME"}, {"start": 17, "end": 29, "label": "DEPARTMENT"}, {"start": 30, "end": 36, "label": "CATEGORY"}, {"start": 39, "end": 49, "label": "COURSE_NAME"}]}
+{"text": "나 몇 학년이야", "entities": []}
+{"text": "내 학과가 어디야", "entities": []}
+{"text": "데이터베이스 과목 정보를 삭제해줘", "entities": [{"start": 0, "end": 6, "label": "COURSE_NAME"}]}
+{"text": "목요일 오후 사회과학대학 사회학과 전공과목이랑 대학글쓰기 보여줘", "entities": [{"start": 0, "end": 3, "label": "DAY"}, {"start": 4, "end": 6, "label": "TIME"}, {"start": 7, "end": 18, "label": "DEPARTMENT"}, {"start": 19, "end": 21, "label": "CATEGORY"}, {"start": 26, "end": 31, "label": "COURSE_NAME"}]}
+{"text": "빈자리 있는 공과대학 컴퓨터융합학부 전공(핵심) 보여줘", "entities": [{"start": 0, "end": 6, "label": "VACANCY"}, {"start": 7, "end": 19, "label": "DEPARTMENT"}, {"start": 20, "end": 26, "label": "CATEGORY"}]}
+{"text": "사회과학대학 사회학과에서 개설한 전공(심화)이랑, 공과대학 컴퓨터융합학부에서 개설한 원격 교양(균형) 찾아줘", "entities": [{"start": 0, "end": 11, "label": "DEPARTMENT"}, {"start": 18, "end": 24, "label": "CATEGORY"}, {"start": 28, "end": 40, "label": "DEPARTMENT"}, {"start": 47, "end": 49, "label": "CLASS_MODE"}, {"start": 50, "end": 56, "label": "CATEGORY"}]}
+{"text": "알고리즘응용 과목은 총 몇 개 분반이 있어", "entities": [{"start": 0, "end": 6, "label": "COURSE_NAME"}]}
+{"text": "알응이랑 컴과사 조회해", "entities": [{"start": 0, "end": 2, "label": "COURSE_NAME"}, {"start": 5, "end": 8, "label": "COURSE_NAME"}]}
+{"text": "월요일 16시 강의 보여줘", "entities": [{"start": 0, "end": 3, "label": "DAY"}, {"start": 4, "end": 7, "label": "TIME"}]}
+{"text": "응화공에서 개설한 과목 보여줘", "entities": [{"start": 0, "end": 3, "label": "DEPARTMENT"}]}
+{"text": "잔여석이 남아있는 현대인의 생활문화 보여줘", "entities": [{"start": 0, "end": 9, "label": "VACANCY"}, {"start": 10, "end": 19, "label": "COURSE_NAME"}]}
+{"text": "컴융 전핵 보여줘", "entities": [{"start": 0, "end": 2, "label": "DEPARTMENT"}, {"start": 3, "end": 5, "label": "CATEGORY"}]}
+{"text": "화요일에 진행하는 공과대학 컴퓨터융합학부 전공(기초) 보여줘", "entities": [{"start": 0, "end": 3, "label": "DAY"}, {"start": 10, "end": 22, "label": "DEPARTMENT"}, {"start": 23, "end": 29, "label": "CATEGORY"}]}
+{"text": "유정연 교수님이 가르치는 과목 알려줘", "entities": [{"start": 0, "end": 3, "label": "PROFESSOR"}]}
