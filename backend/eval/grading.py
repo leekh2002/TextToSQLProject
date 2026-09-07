@@ -8,6 +8,8 @@ from ..validate import (
     has_scoped_student_filter,
 )
 
+from ..db import run_query
+
 
 def common_columns(rows_a: list[dict], rows_b: list[dict]) -> list[str]:
     if not rows_a or not rows_b:
@@ -116,3 +118,34 @@ def check_structural(
             return ok, reason
 
     return True, None
+
+
+def _to_grade_dict(outcome: tuple[bool, str | None]) -> dict:
+    ok, reason = outcome
+    return {"ok": ok, "reason": reason}
+
+
+def grade_case(case: dict, result: dict) -> dict:
+    if case.get("expects_error"):
+        if isinstance(result, dict) and result.get("error"):
+            return {"ok": True, "reason": None}
+        return {"ok": False, "reason": "오류가 예상되었지만 SQL이 정상 생성되었습니다."}
+
+    if isinstance(result, dict) and result.get("error"):
+        return {"ok": False, "reason": f"예상치 못한 오류: {result['error']}"}
+
+    sql = result.get("sql", "")
+
+    if case["grading"] == "structural":
+        return _to_grade_dict(
+            check_structural(sql, case.get("structural_checks", {}), case.get("student_id"))
+        )
+
+    if case["grading"] == "execution":
+        reference_rows = run_query(case["reference_sql"])
+        generated_rows = result.get("data", [])
+        return _to_grade_dict(
+            compare_execution(reference_rows, generated_rows, case.get("order_sensitive", False))
+        )
+
+    raise ValueError(f"알 수 없는 grading 값: {case['grading']}")

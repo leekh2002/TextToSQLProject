@@ -1,3 +1,4 @@
+from backend.eval import grading
 from backend.eval.grading import (
     check_required_columns,
     check_required_tables,
@@ -5,6 +6,7 @@ from backend.eval.grading import (
     check_student_scoped,
     common_columns,
     compare_execution,
+    grade_case,
     project_rows,
 )
 
@@ -149,3 +151,67 @@ def test_compare_execution_order_sensitive_detects_reordering():
     generated_rows = [{"n": 2}, {"n": 1}]
     ok, _ = compare_execution(reference_rows, generated_rows, order_sensitive=True)
     assert ok is False
+
+
+def test_grade_case_expects_error_passes_when_process_returns_error():
+    case = {"id": "x", "grading": "structural", "expects_error": True, "structural_checks": {}}
+    result = {"error": "질문이 모호합니다."}
+    grade = grade_case(case, result)
+    assert grade == {"ok": True, "reason": None}
+
+
+def test_grade_case_expects_error_fails_when_sql_was_generated():
+    case = {"id": "x", "grading": "structural", "expects_error": True, "structural_checks": {}}
+    result = {"sql": "SELECT 1 LIMIT 50", "data": []}
+    grade = grade_case(case, result)
+    assert grade["ok"] is False
+
+
+def test_grade_case_fails_when_unexpected_error_occurs():
+    case = {"id": "x", "grading": "execution", "expects_error": False, "reference_sql": "SELECT 1"}
+    result = {"error": "허용되지 않은 테이블 참조: foo"}
+    grade = grade_case(case, result)
+    assert grade["ok"] is False
+    assert "예상치 못한 오류" in grade["reason"]
+
+
+def test_grade_case_structural_delegates_to_check_structural():
+    case = {
+        "id": "x",
+        "grading": "structural",
+        "expects_error": False,
+        "student_id": "202102671",
+        "structural_checks": {"required_tables": ["student"], "student_scoped": True},
+    }
+    result = {"sql": "SELECT s.grade FROM student AS s WHERE s.student_id = '202102671' LIMIT 50"}
+    grade = grade_case(case, result)
+    assert grade == {"ok": True, "reason": None}
+
+
+def test_grade_case_execution_uses_run_query_for_reference_sql(monkeypatch):
+    def fake_run_query(sql, params=None):
+        assert sql == "SELECT subject_code FROM v_course_info WHERE dept_name LIKE '%컴퓨터융합학부%'"
+        return [{"subject_code": "1214-3033"}]
+
+    monkeypatch.setattr(grading, "run_query", fake_run_query)
+
+    case = {
+        "id": "x",
+        "grading": "execution",
+        "expects_error": False,
+        "reference_sql": "SELECT subject_code FROM v_course_info WHERE dept_name LIKE '%컴퓨터융합학부%'",
+        "order_sensitive": False,
+    }
+    result = {"sql": "SELECT subject_code FROM v_course_info WHERE dept_name = '컴퓨터융합학부'", "data": [{"subject_code": "1214-3033"}]}
+    grade = grade_case(case, result)
+    assert grade == {"ok": True, "reason": None}
+
+
+def test_grade_case_unknown_grading_mode_raises():
+    case = {"id": "x", "grading": "not-a-real-mode", "expects_error": False}
+    result = {"sql": "SELECT 1", "data": []}
+    try:
+        grade_case(case, result)
+        assert False, "ValueError를 기대했지만 예외가 발생하지 않았습니다."
+    except ValueError:
+        pass
