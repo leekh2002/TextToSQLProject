@@ -146,6 +146,15 @@ def test_compare_execution_no_common_columns_fails():
     assert "겹치지 않습니다" in reason
 
 
+def test_compare_execution_reports_when_one_side_is_empty():
+    reference_rows = [{"subject_code": "A"}, {"subject_code": "B"}]
+    generated_rows = []
+    ok, reason = compare_execution(reference_rows, generated_rows)
+    assert ok is False
+    assert "겹치지 않습니다" not in reason
+    assert "2" in reason and "0" in reason
+
+
 def test_compare_execution_order_sensitive_detects_reordering():
     reference_rows = [{"n": 1}, {"n": 2}]
     generated_rows = [{"n": 2}, {"n": 1}]
@@ -204,6 +213,19 @@ def test_grade_case_execution_uses_run_query_for_reference_sql(monkeypatch):
     }
     result = {"sql": "SELECT subject_code FROM v_course_info WHERE dept_name = '컴퓨터융합학부'", "data": [{"subject_code": "1214-3033"}]}
     grade = grade_case(case, result)
+    assert grade == {"ok": True, "reason": None}
+
+
+def test_grade_case_handles_null_structural_checks_without_crashing():
+    case = {
+        "id": "x",
+        "grading": "structural",
+        "expects_error": False,
+        "structural_checks": None,
+    }
+    result = {"sql": "SELECT 1 LIMIT 50", "data": []}
+    grade = grade_case(case, result)
+    assert isinstance(grade, dict)
     assert grade == {"ok": True, "reason": None}
 
 

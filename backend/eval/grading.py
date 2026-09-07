@@ -31,6 +31,11 @@ def compare_execution(
     if not reference_rows and not generated_rows:
         return True, None
 
+    if not reference_rows or not generated_rows:
+        return False, (
+            f"reference={len(reference_rows)}행 vs generated={len(generated_rows)}행 (한쪽이 0행)"
+        )
+
     columns = common_columns(reference_rows, generated_rows)
     if not columns:
         reference_cols = sorted(reference_rows[0].keys()) if reference_rows else []
@@ -104,6 +109,7 @@ def check_structural(
     structural_checks: dict,
     student_id: str | None,
 ) -> tuple[bool, str | None]:
+    structural_checks = structural_checks or {}
     ok, reason = check_required_tables(sql, structural_checks.get("required_tables", []))
     if not ok:
         return ok, reason
@@ -138,7 +144,7 @@ def grade_case(case: dict, result: dict) -> dict:
 
     if case["grading"] == "structural":
         return _to_grade_dict(
-            check_structural(sql, case.get("structural_checks", {}), case.get("student_id"))
+            check_structural(sql, case.get("structural_checks") or {}, case.get("student_id"))
         )
 
     if case["grading"] == "execution":
