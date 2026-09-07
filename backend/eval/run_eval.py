@@ -7,8 +7,13 @@ from collections import defaultdict
 from datetime import datetime, timezone
 from pathlib import Path
 
+from dotenv import load_dotenv
+
 from ..process import process
 from .grading import grade_case
+
+load_dotenv()  # load workspace .env if present
+load_dotenv(Path(__file__).resolve().parents[1] / ".env", override=False)  # load backend/.env
 
 GOLDEN_QUERIES_PATH = Path(__file__).with_name("golden_queries.json")
 DEFAULT_REPORTS_DIR = Path(__file__).with_name("reports")
@@ -30,27 +35,51 @@ def load_cases(path: Path = GOLDEN_QUERIES_PATH) -> list[dict]:
         return json.load(file)
 
 
+def _case_record(case: dict, ok: bool, reason: str | None, sql=None, error=None) -> dict:
+    return {
+        "id": case["id"],
+        "category": case["category"],
+        "query": case["query"],
+        "ok": ok,
+        "reason": reason,
+        "sql": sql,
+        "reference_sql": case.get("reference_sql"),
+        "error": error,
+    }
+
+
 def run_case(case: dict) -> dict:
-    result = process(
-        case["query"],
-        exclude_completed_courses=case.get("exclude_completed_courses", False),
-        student_id=case.get("student_id"),
-    )
+    try:
+        result = process(
+            case["query"],
+            exclude_completed_courses=case.get("exclude_completed_courses", False),
+            student_id=case.get("student_id"),
+        )
+    except Exception as exc:
+        return _case_record(case, ok=False, reason=f"process() 실행 중 예외 발생: {exc}")
+
+    warning = result.get("warning") if isinstance(result, dict) else None
+    if isinstance(warning, str) and warning.startswith("DATABASE_URL is not set"):
+        return _case_record(
+            case,
+            ok=False,
+            reason=f"DATABASE_URL이 설정되지 않아 SQL-only 모드로 동작했습니다: {warning}",
+            sql=result.get("sql"),
+            error=None,
+        )
+
     try:
         grade = grade_case(case, result)
     except Exception as exc:
         grade = {"ok": False, "reason": f"채점 중 예외 발생: {exc}"}
 
-    return {
-        "id": case["id"],
-        "category": case["category"],
-        "query": case["query"],
-        "ok": grade["ok"],
-        "reason": grade["reason"],
-        "sql": result.get("sql"),
-        "reference_sql": case.get("reference_sql"),
-        "error": result.get("error"),
-    }
+    return _case_record(
+        case,
+        ok=grade["ok"],
+        reason=grade["reason"],
+        sql=result.get("sql"),
+        error=result.get("error"),
+    )
 
 
 def summarize(records: list[dict]) -> dict:

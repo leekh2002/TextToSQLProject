@@ -61,6 +61,38 @@ def test_run_case_records_exception_from_grading_without_crashing(monkeypatch):
     assert "boom" in record["reason"]
 
 
+def test_run_case_records_exception_from_process_without_crashing(monkeypatch):
+    def failing_process(query, exclude_completed_courses=False, student_id=None):
+        raise RuntimeError("boom")
+
+    monkeypatch.setattr(run_eval, "process", failing_process)
+
+    case = {"id": "x", "category": "course_filter", "query": "q", "reference_sql": None}
+    record = run_eval.run_case(case)
+    assert record["ok"] is False
+    assert "boom" in record["reason"]
+
+
+def test_run_case_treats_database_url_warning_as_hard_failure(monkeypatch):
+    def fake_process(query, exclude_completed_courses=False, student_id=None):
+        return {
+            "warning": "DATABASE_URL is not set. SQL only mode is active.",
+            "data": [],
+            "sql": "SELECT 1",
+        }
+
+    def should_not_be_called(case, result):
+        raise AssertionError("should not be called")
+
+    monkeypatch.setattr(run_eval, "process", fake_process)
+    monkeypatch.setattr(run_eval, "grade_case", should_not_be_called)
+
+    case = {"id": "x", "category": "course_filter", "query": "q", "reference_sql": None}
+    record = run_eval.run_case(case)
+    assert record["ok"] is False
+    assert "DATABASE_URL" in record["reason"]
+
+
 def test_summarize_computes_overall_and_per_category_accuracy():
     records = [
         {"category": "a", "ok": True},
