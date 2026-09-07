@@ -27,7 +27,7 @@ python -m backend.eval.run_eval
 
 ## 알려진 결과 해석 주의사항
 
-이 평가셋을 처음 돌리면 다음 두 카테고리는 구조적으로 낮은 정확도가 나올 가능성이 높다. **채점기 버그가 아니다.**
+이 평가셋을 처음 돌리면 다음과 같은 알려진 요인들로 인해 특정 카테고리/케이스의 정확도가 낮게 측정될 수 있다. **채점기 버그가 아니다.**
 
 1. **`personalized_lookup`, `graduation_requirement`의 일부 케이스**: `backend/process.py`는
    `exclude_completed_courses=True`일 때만 `student_id`를 SQL 검증의 `requested_student_id`로 전달한다.
@@ -42,7 +42,7 @@ python -m backend.eval.run_eval
    달라 `compare_execution`의 공통 컬럼 비교에서 걸러진다 — 이는 집계 케이스에서 별칭 관례가 갈리면 항상
    나타나는 채점 특성이다.
 
-이 두 가지는 이번 작업 범위에서 고치지 않는다(스펙 문서의 Out of scope 참고). 다음 반복에서 프롬프트/검증
+위 두 가지(1, 2)는 이번 작업 범위에서 고치지 않는다(스펙 문서의 Out of scope 참고). 다음 반복에서 프롬프트/검증
 로직을 수정할 때 우선순위를 정하는 데 이 평가셋의 카테고리별 정확도를 근거로 사용한다.
 
 3. **`course_filter`의 요일/시간 필터 케이스 일부(실제 실행 후 발견)**: `backend/process.py`의
@@ -53,7 +53,7 @@ python -m backend.eval.run_eval
    "추가된 행"으로 실패한 것은 대부분 모델이 틀려서가 아니라, 이 골든셋의 `reference_sql`이 이 확장
    동작을 반영하지 않고 해당 요일/시간의 행만 필터링했기 때문이다. 즉 이 6개 케이스의 `reference_sql`은
    `expand_schedule_filtered_course_rows`와 동일한 형태(매칭 과목 전체 스케줄을 반환)로 다시 작성해야
-   정확한 측정이 된다 — **아직 고치지 않은 후속 작업**으로 남겨둔다. (`course_filter_06/09/14`의 실패는
+   정확한 측정이 된다. 이 항목은 파이프라인 버그가 아니라 골든셋 `reference_sql`을 다시 작성해야 하는 별도의 후속 작업이다. (`course_filter_06/09/14`의 실패는
    이와 무관한 별개의 원인 — `dept_name`/`subject_name`에 LIKE 대신 `=`를 쓰거나, NER 교정이 다른
    과목명으로 바꿔치기한 경우 — 이므로 실제 정확도 이슈로 봐도 된다.)
 
