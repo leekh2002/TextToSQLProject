@@ -17,17 +17,25 @@ class Template:
     weight: int = 10
 
 
-DAY_VALUES = ["월", "화", "수", "목", "금", "토", "일"]
+DAY_VALUES = [
+    "월", "화", "수", "목", "금", "토", "일",
+    "월요일", "화요일", "수요일", "목요일", "금요일", "토요일", "일요일",
+]
 VACANCY_PHRASES = ["빈자리가 있는", "빈자리 있는", "잔여석이 남아있는", "자리가 남은"]
 
 
 def generate_time_values(rng: random.Random, count: int) -> list[str]:
     values = []
     for _ in range(count):
+        style = rng.choice(["hour_12", "hour_24", "hour_minute", "24h_colon", "meridiem"])
+        if style == "meridiem":
+            values.append(rng.choice(["오전", "오후"]))
+            continue
         hour = rng.randint(1, 12)
-        style = rng.choice(["hour_only", "hour_minute", "24h"])
-        if style == "hour_only":
+        if style == "hour_12":
             values.append(f"{hour}시")
+        elif style == "hour_24":
+            values.append(f"{rng.randint(13, 24)}시")
         elif style == "hour_minute":
             minute = rng.choice([0, 10, 20, 30, 40, 50])
             values.append(f"{hour}시 {minute}분" if minute else f"{hour}시")
@@ -217,6 +225,11 @@ def build_value_pools(
     pools.setdefault("ENROLLED", generate_headcount_values(rng, 20))
     pools.setdefault("ROOM", generate_room_values(rng, 20))
 
+    if "CATEGORY" in pools and pools["CATEGORY"]:
+        for generic in ("전공", "교양"):
+            if generic not in pools["CATEGORY"]:
+                pools["CATEGORY"] = pools["CATEGORY"] + [generic]
+
     return pools
 
 
@@ -248,6 +261,10 @@ def generate_records(
     return records
 
 
+def _labels_covered_by_records(records: list[dict]) -> set[str]:
+    return {entity["label"] for record in records for entity in record["entities"]}
+
+
 def split_by_template(
     records: list[dict],
     valid_ratio: float,
@@ -264,6 +281,29 @@ def split_by_template(
     test_ids = set(template_ids[:test_count])
     valid_ids = set(template_ids[test_count : test_count + valid_count])
     train_ids = set(template_ids[test_count + valid_count :])
+
+    records_by_template: dict[str, list[dict]] = {}
+    for record in records:
+        records_by_template.setdefault(record["template_id"], []).append(record)
+
+    all_labels = _labels_covered_by_records(records)
+    train_labels = _labels_covered_by_records(
+        [r for tid in train_ids for r in records_by_template[tid]]
+    )
+    missing_labels = all_labels - train_labels
+
+    for label in sorted(missing_labels):
+        for tid in template_ids:
+            if tid in train_ids:
+                continue
+            if label in _labels_covered_by_records(records_by_template[tid]):
+                if tid in valid_ids:
+                    valid_ids.remove(tid)
+                else:
+                    test_ids.remove(tid)
+                train_ids.add(tid)
+                train_labels |= _labels_covered_by_records(records_by_template[tid])
+                break
 
     train = [r for r in records if r["template_id"] in train_ids]
     valid = [r for r in records if r["template_id"] in valid_ids]

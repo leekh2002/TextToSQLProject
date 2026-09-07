@@ -1,6 +1,7 @@
 import random
 
 from generate_ner_dataset import (
+    DAY_VALUES,
     TEMPLATE_CATALOG,
     Template,
     build_value_pools,
@@ -8,6 +9,7 @@ from generate_ner_dataset import (
     generate_credit_values,
     generate_records,
     generate_section_values,
+    generate_time_values,
     split_by_template,
 )
 
@@ -118,3 +120,43 @@ def test_split_by_template_covers_all_records():
     records = [{"template_id": f"t{i % 5}", "text": "x", "entities": []} for i in range(50)]
     train, valid, test = split_by_template(records, valid_ratio=0.2, test_ratio=0.2, rng=random.Random(0))
     assert len(train) + len(valid) + len(test) == 50
+
+
+def test_split_by_template_guarantees_every_label_has_train_support():
+    templates_by_id = {
+        "common_a": ["DEPARTMENT"],
+        "common_b": ["DEPARTMENT"],
+        "common_c": ["CATEGORY"],
+        "common_d": ["CATEGORY"],
+        "rare_only": ["COURSE_YEAR"],
+    }
+    records = []
+    for tid, labels in templates_by_id.items():
+        for _ in range(3):
+            records.append(
+                {
+                    "template_id": tid,
+                    "text": "x",
+                    "entities": [{"start": 0, "end": 1, "label": label} for label in labels],
+                }
+            )
+    train, valid, test = split_by_template(records, valid_ratio=0.2, test_ratio=0.2, rng=random.Random(4))
+    train_labels = {e["label"] for r in train for e in r["entities"]}
+    assert "COURSE_YEAR" in train_labels
+
+
+def test_day_values_include_yoil_suffixed_forms():
+    assert any(v.endswith("요일") for v in DAY_VALUES)
+
+
+def test_generate_time_values_can_produce_24h_and_meridiem_forms():
+    values = generate_time_values(random.Random(1), 200)
+    assert any(v in ("오전", "오후") for v in values)
+
+    def _is_afternoon_hour_form(v: str) -> bool:
+        if v in ("오전", "오후") or "시" not in v:
+            return False
+        hour_part = v.split("시")[0].strip()
+        return hour_part.isdigit() and int(hour_part) >= 13
+
+    assert any(_is_afternoon_hour_form(v) for v in values)
