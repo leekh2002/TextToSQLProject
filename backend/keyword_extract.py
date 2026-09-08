@@ -190,6 +190,36 @@ KOREAN_PARTICLES = (
     "만",
 )
 
+# Particles that are safe to trim off the END OF A PREDICTED SPAN. This is a
+# deliberately smaller list than KOREAN_PARTICLES above, which is only used to
+# build fuzzy-match variants and can afford false positives. Two filters
+# produced it:
+#   1. It must never end a real entity. 과(160 labeled entities), 는(28),
+#      가(23), 은(10) and 의(1) all do — trimming those would corrupt 학과
+#      names, VACANCY phrases and EVAL_TYPE values.
+#   2. It must not be mistakable for a word's final syllable. That rules out
+#      the remaining single-character particles (이/을/를/와/랑/로/도/만):
+#      trimming 이 turned the span '3시 사이' into '3시 사'. Telling those
+#      apart from word endings needs morphological analysis we don't have
+#      here, and on the holdout they fixed nothing that 에/에서 didn't.
+# Ordered longest-first so 에서 wins over 에.
+SPAN_TRIM_PARTICLES = (
+    "이랑",
+    "으로",
+    "부터",
+    "까지",
+    "에서",
+    "에",
+)
+
+# Trailing junk the tokenizer tends to pull into a span. ')' is deliberately
+# absent: 152 labeled entities end with it (e.g. 전공(핵심)).
+SPAN_TRIM_CHARS = " \t~,./;:!?-"
+
+# The only legitimately single-character entities in the labeled data are
+# weekday abbreviations, all of them DAY.
+WEEKDAY_CHARS = frozenset("월화수목금토일")
+
 _predictor_lock = threading.Lock()
 _predictor: "CourseNERPredictor | None" = None
 _references_lock = threading.Lock()
@@ -414,6 +444,56 @@ def strip_korean_particle(value: str) -> str:
         if stripped.endswith(particle) and len(stripped) > len(particle) + 1:
             return stripped[: -len(particle)]
     return stripped
+
+
+def trim_entity_span(text: str, start: int, end: int) -> tuple[int, int]:
+    while end > start and text[end - 1] in SPAN_TRIM_CHARS:
+        end -= 1
+    while start < end and text[start] in SPAN_TRIM_CHARS:
+        start += 1
+
+    span = text[start:end]
+    for particle in SPAN_TRIM_PARTICLES:
+        if span.endswith(particle) and len(span) - len(particle) >= 2:
+            end -= len(particle)
+            break
+
+    while end > start and text[end - 1] in SPAN_TRIM_CHARS:
+        end -= 1
+
+    return start, end
+
+
+def is_noise_span(span: str, label: str) -> bool:
+    if not span:
+        return True
+    if span in SPAN_TRIM_PARTICLES:
+        return True
+    if len(span) == 1:
+        return not (label == "DAY" and span in WEEKDAY_CHARS)
+    return False
+
+
+def postprocess_entities(entities: list[dict[str, Any]], text: str) -> list[dict[str, Any]]:
+    """Drop tokenizer artifacts and trailing particles from predicted spans.
+
+    The model over-predicts: on the real-query holdout its recall (0.83) runs
+    well ahead of its precision (0.68), and most of the gap is single-character
+    fragments and particles tagged as entities. Left in place they become bogus
+    SQL filters, since correct_ner_entities() never drops an entity.
+    """
+    cleaned: list[dict[str, Any]] = []
+
+    for entity in entities:
+        start, end = trim_entity_span(text, int(entity["start"]), int(entity["end"]))
+        span = text[start:end]
+
+        if is_noise_span(span, entity["label"]):
+            continue
+
+        cleaned.append({**entity, "text": span, "start": start, "end": end})
+
+    return cleaned
 
 
 def is_sequential_match(query: str, target: str) -> bool:
@@ -644,7 +724,7 @@ def preprocess_query(
     try:
         predictor = get_predictor(model_dir=model_dir, max_length=max_length)
         references = load_reference_values()
-        entities = predictor.extract(query)
+        entities = postprocess_entities(predictor.extract(query), query)
         corrected_entities = correct_ner_entities(entities, references)
         corrected_query = build_corrected_query(query, corrected_entities)
         masked_query = build_masked_query(query, entities)
