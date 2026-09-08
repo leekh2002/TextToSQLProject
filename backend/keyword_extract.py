@@ -496,6 +496,32 @@ def postprocess_entities(entities: list[dict[str, Any]], text: str) -> list[dict
     return cleaned
 
 
+def _squeeze_whitespace(value: str) -> str:
+    return re.sub(r"\s+", "", value)
+
+
+def locate_normalized_span(text: str, target: str) -> tuple[int, int] | None:
+    """Shortest character range in `text` that normalizes to `target`.
+
+    Used to replace only the part of an over-wide entity span that the DB value
+    actually accounts for. Returns None when no range matches.
+    """
+    needle = normalize_for_match(target)
+    if not needle:
+        return None
+
+    best: tuple[int, int] | None = None
+    for start in range(len(text)):
+        for end in range(start + 1, len(text) + 1):
+            if normalize_for_match(text[start:end]) != needle:
+                continue
+            if best is None or (end - start) < (best[1] - best[0]):
+                best = (start, end)
+            break
+
+    return best
+
+
 def is_sequential_match(query: str, target: str) -> bool:
     """
     Checks if query characters appear in target in the same order.
@@ -610,7 +636,13 @@ def should_apply_match(entity: dict[str, Any], match: MatchResult) -> bool:
         return False
 
     if source == target:
-        return True
+        # Normalising already made these equal, so they differ only in
+        # whitespace, punctuation or case. A punctuation or case difference is
+        # worth fixing ('전공핵심' -> '전공(핵심)', 'grade' -> 'GRADE'), but
+        # rewriting purely for spacing ('컴퓨터프로그래밍3' ->
+        # '컴퓨터프로그래밍 3') tells the DB nothing new while changing what
+        # the LLM sees, which cost a prerequisite case in the eval set.
+        return _squeeze_whitespace(entity["text"]) != _squeeze_whitespace(match.text)
 
     # Very short spans are easy to over-correct unless they are aliases or strong matches.
     if len(source) <= 2 and match.score < 95:
@@ -634,9 +666,23 @@ def correct_ner_entities(
         apply_match = should_apply_match(entity, match)
         corrected_text = match.text if apply_match and match.text else entity["text"]
 
+        # Replace only the slice of the span the matched value accounts for.
+        # A boundary error like '데이터베이스 관련' used to have '관련' deleted
+        # along with the rest of the span. Offsets are optional: this is also
+        # called with bare {text, label} dicts.
+        span_offsets: dict[str, int] = {}
+        if apply_match and entity.get("start") is not None:
+            covered = locate_normalized_span(entity["text"], corrected_text)
+            if covered:
+                span_offsets = {
+                    "corrected_start": int(entity["start"]) + covered[0],
+                    "corrected_end": int(entity["start"]) + covered[1],
+                }
+
         corrected_entities.append(
             {
                 **entity,
+                **span_offsets,
                 "corrected_text": corrected_text,
                 "matched_table": ENTITY_REFERENCE_MAP.get(label, (None, None))[0],
                 "matched_column": ENTITY_REFERENCE_MAP.get(label, (None, None))[1],
@@ -658,8 +704,10 @@ def build_corrected_query(query: str, corrected_entities: list[dict[str, Any]]) 
         if any(not (end <= used_start or start >= used_end) for used_start, used_end in used_ranges):
             continue
 
+        replace_start = int(entity.get("corrected_start", start))
+        replace_end = int(entity.get("corrected_end", end))
         corrected_text = entity.get("corrected_text", entity["text"])
-        corrected_query = corrected_query[:start] + corrected_text + corrected_query[end:]
+        corrected_query = corrected_query[:replace_start] + corrected_text + corrected_query[replace_end:]
         used_ranges.append((start, end))
 
     return corrected_query
