@@ -185,6 +185,138 @@ TEMPLATE_CATALOG: list[Template] = [
     ),
     Template("room_only", "{ROOM} 강의실에서 하는 수업 알려줘", {"ROOM": "ROOM"}, weight=5),
     Template("section_only", "{DEPARTMENT} {SECTION} 과목 알려줘", {"DEPARTMENT": "DEPARTMENT", "SECTION": "SECTION"}, weight=5),
+    # --- Particles attached straight onto an entity -------------------------
+    # Real queries say "학부에서", "화요일에", "교수님의". The catalog only ever
+    # attached 이랑/부터/까지, so the model learned to swallow 에/에서 into the
+    # span (or to tag the leftover 서/에 as its own entity).
+    Template(
+        "particle_dept_eseo_category",
+        "{DEPARTMENT}에서 개설한 {CATEGORY} 보여줘",
+        {"DEPARTMENT": "DEPARTMENT", "CATEGORY": "CATEGORY"},
+        weight=25,
+    ),
+    Template(
+        "particle_dept_eseo_day_time",
+        "{DEPARTMENT}에서 개설한 {DAY} {TIME} 수업 알려줘",
+        {"DEPARTMENT": "DEPARTMENT", "DAY": "DAY", "TIME": "TIME"},
+        weight=20,
+    ),
+    Template(
+        "particle_day_e_dept_category",
+        "{DAY}에 진행하는 {DEPARTMENT} {CATEGORY} 보여줘",
+        {"DAY": "DAY", "DEPARTMENT": "DEPARTMENT", "CATEGORY": "CATEGORY"},
+        weight=20,
+    ),
+    Template(
+        "particle_dept_eseo_credit",
+        "{DEPARTMENT}에서 {CREDIT} 과목 알려줘",
+        {"DEPARTMENT": "DEPARTMENT", "CREDIT": "CREDIT"},
+        weight=12,
+    ),
+    Template(
+        "particle_professor_eui_category",
+        "{PROFESSOR} 교수님의 {CATEGORY} 알려줘",
+        {"PROFESSOR": "PROFESSOR", "CATEGORY": "CATEGORY"},
+        weight=12,
+    ),
+    Template(
+        "particle_dept_eseo_professor",
+        "{DEPARTMENT}에서 {PROFESSOR} 교수님 수업 찾아줘",
+        {"DEPARTMENT": "DEPARTMENT", "PROFESSOR": "PROFESSOR"},
+        weight=12,
+    ),
+    Template(
+        "particle_room_eseo_category",
+        "{ROOM}에서 하는 {CATEGORY} 알려줘",
+        {"ROOM": "ROOM", "CATEGORY": "CATEGORY"},
+        weight=8,
+    ),
+    Template(
+        "particle_class_mode_eun",
+        "{CLASS_MODE} 수업은 뭐가 있어",
+        {"CLASS_MODE": "CLASS_MODE"},
+        weight=12,
+    ),
+    Template(
+        "particle_dept_eseo_eval_type",
+        "{DEPARTMENT}에서 {EVAL_TYPE} 방식 과목 보여줘",
+        {"DEPARTMENT": "DEPARTMENT", "EVAL_TYPE": "EVAL_TYPE"},
+        weight=10,
+    ),
+    Template(
+        "particle_grade_method_neun",
+        "{GRADE_METHOD}는 어떤 과목이 있어",
+        {"GRADE_METHOD": "GRADE_METHOD"},
+        weight=10,
+    ),
+    Template(
+        "particle_course_eun_question",
+        "{COURSE_NAME}은 언제 하는 수업이야",
+        {"COURSE_NAME": "COURSE_NAME"},
+        weight=12,
+    ),
+    # --- Entities butted up against a real word, with no space -------------
+    # "2학년대상 ... 전공과목" made the model merge the whole run into one span.
+    Template(
+        "glued_year_daesang",
+        "{COURSE_YEAR}대상 {DEPARTMENT} {CATEGORY}과목 찾아줘",
+        {"COURSE_YEAR": "COURSE_YEAR", "DEPARTMENT": "DEPARTMENT", "CATEGORY": "CATEGORY"},
+        weight=20,
+    ),
+    Template(
+        "glued_category_gwamok",
+        "{DEPARTMENT} {CATEGORY}과목 보여줘",
+        {"DEPARTMENT": "DEPARTMENT", "CATEGORY": "CATEGORY"},
+        weight=18,
+    ),
+    Template(
+        "glued_time_gangui",
+        "{DAY} {TIME}강의 보여줘",
+        {"DAY": "DAY", "TIME": "TIME"},
+        weight=15,
+    ),
+    Template(
+        "glued_dept_gaeseol",
+        "{DEPARTMENT}개설 {CATEGORY} 알려줘",
+        {"DEPARTMENT": "DEPARTMENT", "CATEGORY": "CATEGORY"},
+        weight=12,
+    ),
+    Template(
+        "glued_capacity_isang",
+        "정원이 {CAPACITY} 이상인 {DEPARTMENT} 과목 보여줘",
+        {"CAPACITY": "CAPACITY", "DEPARTMENT": "DEPARTMENT"},
+        weight=8,
+    ),
+    Template(
+        "glued_enrolled_category",
+        "{ENROLLED} 신청한 {CATEGORY} 보여줘",
+        {"ENROLLED": "ENROLLED", "CATEGORY": "CATEGORY"},
+        weight=8,
+    ),
+    Template(
+        "confusable_capacity_enrolled_2",
+        "{DEPARTMENT} 과목 중 정원 {CAPACITY}에 {ENROLLED} 찬 거 알려줘",
+        {"DEPARTMENT": "DEPARTMENT", "CAPACITY": "CAPACITY", "ENROLLED": "ENROLLED"},
+        weight=8,
+    ),
+    Template(
+        "confusable_credit_section",
+        "{CREDIT} {SECTION} 과목 알려줘",
+        {"CREDIT": "CREDIT", "SECTION": "SECTION"},
+        weight=8,
+    ),
+    # --- Sentences with no entity at all -----------------------------------
+    # Every synthetic sentence used to contain at least one entity, so the
+    # model had never seen a query it should leave alone and tagged pronouns
+    # and adverbs ('나', '내', '몇') instead.
+    Template("no_entity_my_year", "나 몇 학년이야", {}, weight=8),
+    Template("no_entity_my_dept", "내 학과가 어디야", {}, weight=8),
+    Template("no_entity_total_count", "총 몇 개 과목이 있어", {}, weight=8),
+    Template("no_entity_help", "뭘 할 수 있어?", {}, weight=6),
+    Template("no_entity_greeting", "안녕 반가워", {}, weight=6),
+    Template("no_entity_enroll_when", "수강신청은 언제야", {}, weight=6),
+    Template("no_entity_thanks", "고마워 도움이 됐어", {}, weight=5),
+    Template("no_entity_reset", "방금 조건 다 지워줘", {}, weight=5),
 ]
 
 
@@ -251,10 +383,11 @@ def generate_records(
     template_catalog: list[Template],
     value_pools: dict[str, list[str]],
     rng: random.Random,
+    scale: int = 1,
 ) -> list[dict]:
     records: list[dict] = []
     for template in template_catalog:
-        for _ in range(template.weight):
+        for _ in range(template.weight * scale):
             values = _fill_values_for_template(template, value_pools, rng)
             rendered = render_template(template.text, values)
             records.append({"template_id": template.id, "text": rendered["text"], "entities": rendered["entities"]})
@@ -265,49 +398,100 @@ def _labels_covered_by_records(records: list[dict]) -> set[str]:
     return {entity["label"] for record in records for entity in record["entities"]}
 
 
+def _leaves_train_support(
+    template_id: str,
+    labels_by_template: dict[str, set[str]],
+    templates_by_label: dict[str, list[str]],
+    assignment: dict[str, str],
+) -> bool:
+    """True if moving this template out of train still leaves every one of its
+    labels with another train-bound template."""
+    for label in labels_by_template[template_id]:
+        others = [
+            other
+            for other in templates_by_label[label]
+            if other != template_id and other not in assignment
+        ]
+        if not others:
+            return False
+    return True
+
+
 def split_by_template(
     records: list[dict],
     valid_ratio: float,
     test_ratio: float,
     rng: random.Random,
 ) -> tuple[list[dict], list[dict], list[dict]]:
+    """Split per template, never per record.
+
+    Sharing a template between train and eval would let the model memorise the
+    template and inflate the scores, so a template lands wholly in one split.
+    The cost is label coverage: with few templates an entire label can miss a
+    split, which is what left ner_valid.jsonl covering 7 of 16 labels. So
+    templates are picked for valid and test by label first — rarest label
+    first, since those have the fewest templates to spare — and only then
+    topped up to the requested ratios.
+    """
     template_ids = sorted({record["template_id"] for record in records})
-    rng.shuffle(template_ids)
-
-    total = len(template_ids)
-    test_count = max(1, int(total * test_ratio)) if total > 1 else 0
-    valid_count = max(1, int(total * valid_ratio)) if total > 1 else 0
-
-    test_ids = set(template_ids[:test_count])
-    valid_ids = set(template_ids[test_count : test_count + valid_count])
-    train_ids = set(template_ids[test_count + valid_count :])
 
     records_by_template: dict[str, list[dict]] = {}
     for record in records:
         records_by_template.setdefault(record["template_id"], []).append(record)
 
-    all_labels = _labels_covered_by_records(records)
-    train_labels = _labels_covered_by_records(
-        [r for tid in train_ids for r in records_by_template[tid]]
-    )
-    missing_labels = all_labels - train_labels
+    labels_by_template = {
+        tid: _labels_covered_by_records(rs) for tid, rs in records_by_template.items()
+    }
+    templates_by_label: dict[str, list[str]] = {}
+    for tid, labels in labels_by_template.items():
+        for label in labels:
+            templates_by_label.setdefault(label, []).append(tid)
 
-    for label in sorted(missing_labels):
-        for tid in template_ids:
-            if tid in train_ids:
+    total = len(template_ids)
+    targets = {
+        "test": max(1, int(total * test_ratio)) if total > 1 else 0,
+        "valid": max(1, int(total * valid_ratio)) if total > 1 else 0,
+    }
+
+    assignment: dict[str, str] = {}
+    sizes = {"test": 0, "valid": 0}
+    covered: dict[str, set[str]] = {"test": set(), "valid": set()}
+
+    # Coverage wins over the ratio: a split that misses a label cannot measure
+    # it at all, whereas being a few templates over 15% only shifts the sizes.
+    for label in sorted(templates_by_label, key=lambda l: (len(templates_by_label[l]), l)):
+        for split in ("test", "valid"):
+            if label in covered[split]:
                 continue
-            if label in _labels_covered_by_records(records_by_template[tid]):
-                if tid in valid_ids:
-                    valid_ids.remove(tid)
-                else:
-                    test_ids.remove(tid)
-                train_ids.add(tid)
-                train_labels |= _labels_covered_by_records(records_by_template[tid])
-                break
+            spare = [
+                tid
+                for tid in templates_by_label[label]
+                if tid not in assignment
+                and _leaves_train_support(tid, labels_by_template, templates_by_label, assignment)
+            ]
+            if not spare:
+                continue
+            chosen = spare[rng.randrange(len(spare))]
+            assignment[chosen] = split
+            sizes[split] += 1
+            covered[split] |= labels_by_template[chosen]
 
-    train = [r for r in records if r["template_id"] in train_ids]
-    valid = [r for r in records if r["template_id"] in valid_ids]
-    test = [r for r in records if r["template_id"] in test_ids]
+    leftover = [tid for tid in template_ids if tid not in assignment]
+    rng.shuffle(leftover)
+    for split in ("test", "valid"):
+        for tid in leftover:
+            if sizes[split] >= targets[split]:
+                break
+            if tid in assignment:
+                continue
+            if not _leaves_train_support(tid, labels_by_template, templates_by_label, assignment):
+                continue
+            assignment[tid] = split
+            sizes[split] += 1
+
+    train = [r for r in records if assignment.get(r["template_id"], "train") == "train"]
+    valid = [r for r in records if assignment.get(r["template_id"]) == "valid"]
+    test = [r for r in records if assignment.get(r["template_id"]) == "test"]
     return train, valid, test
 
 
@@ -325,6 +509,12 @@ def main() -> None:
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--valid-ratio", type=float, default=0.15)
     parser.add_argument("--test-ratio", type=float, default=0.15)
+    parser.add_argument(
+        "--scale",
+        type=int,
+        default=1,
+        help="multiply every template's record count; the catalog weights are per-scale-unit",
+    )
     args = parser.parse_args()
 
     from infer_abbreviations import _build_postgres_dsn, _fetch_distinct_values
@@ -349,7 +539,7 @@ def main() -> None:
         abbreviations_by_label = {}
 
     value_pools = build_value_pools(db_values_by_label, abbreviations_by_label, rng)
-    records = generate_records(TEMPLATE_CATALOG, value_pools, rng)
+    records = generate_records(TEMPLATE_CATALOG, value_pools, rng, scale=args.scale)
     train, valid, test = split_by_template(records, args.valid_ratio, args.test_ratio, rng)
 
     output_dir = Path(args.output_dir)

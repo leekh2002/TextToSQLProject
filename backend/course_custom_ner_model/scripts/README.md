@@ -45,11 +45,25 @@ the `abbrev_course_only`/`abbrev_dept_category` synthetic templates.
 python generate_ner_dataset.py \
   --abbreviations-file ../metadata/abbreviation_candidates.reviewed.json \
   --output-dir ../data \
-  --seed 42
+  --seed 42 \
+  --scale 5
 ```
 
 Writes `../data/ner_train.jsonl`, `ner_valid.jsonl`, `ner_test.jsonl`. Re-run
 any time to regenerate — nothing under `../data/` is committed to git.
+
+`--scale` multiplies every template's record count; the weights in
+`TEMPLATE_CATALOG` are per-scale-unit. `--scale 1` produces ~800 records,
+which is not enough to train on (see step 3). `--scale 5` gives roughly
+2,800 / 700 / 545.
+
+The split is per template, never per record: a template lands wholly in one
+split so the model cannot memorise it and inflate the eval scores. Templates
+are picked for valid and test by label coverage first — rarest label first —
+so all three splits exercise all 16 labels. One gap remains: the entity-free
+templates carry no label, so the coverage pass never selects them and they
+all end up in train. False positives on entity-free queries are therefore
+only measurable on the real-query holdout, not on valid/test.
 
 ## 3. Train
 
@@ -62,8 +76,23 @@ python train.py \
   --valid-file ../data/ner_valid.jsonl \
   --holdout-file ../metadata/ner_holdout_real.jsonl \
   --labels-file ../models/course-custom-ner/labels.json \
-  --output-dir ../trained_model_output
+  --output-dir ../trained_model_output \
+  --num-train-epochs 15 \
+  --per-device-train-batch-size 8
 ```
+
+**Watch the step count, not the epoch count.** The label schema has 33
+classes and the classifier head starts from random weights, so a few hundred
+optimizer steps are not enough: the first run of this pipeline used 391
+sentences at batch 32 for 8 epochs — about 104 steps — and the model
+collapsed to predicting DEPARTMENT for every entity, scoring 0.00 F1 on
+every other label. Aim for a few thousand steps
+(`len(train) / batch_size * epochs`).
+
+If you run this on Colab, pass `WANDB_DISABLED=true WANDB_MODE=disabled`.
+`TrainingArguments` leaves `report_to` at its default of `"all"`, so a
+Colab image that ships wandb will block forever waiting for an API key that
+`!python` cannot supply.
 
 Watch the printed "Validation", "Test", and "Holdout (real queries)" seqeval
 reports and "confusion counts" at the end. The holdout numbers matter most,
@@ -74,6 +103,27 @@ label-pair confusions in. If specific label pairs show up repeatedly in any
 of the confusion counts, go back to `generate_ner_dataset.py`'s
 `TEMPLATE_CATALOG` and increase the `weight` of the relevant `confusable_*`
 templates, then repeat from step 2.
+
+## 3b. Compare the candidate against the deployed model
+
+`train.py` only reports metrics as part of a training run, so use
+`eval_checkpoint.py` to score any checkpoint directory on any labeled jsonl
+without retraining. Run it on both models before deciding to swap:
+
+```bash
+python eval_checkpoint.py --model-dir ../models/course-custom-ner
+python eval_checkpoint.py --model-dir ../trained_model_output/final
+```
+
+It defaults to the real-query holdout; pass `--data-file` (repeatable) for
+other sets. The label schema comes from `<model-dir>/labels.json`.
+
+A raw model score is not the whole picture: `keyword_extract.py` runs
+`postprocess_entities()` over the predictions before they reach the SQL
+layer, which strips trailing particles and single-character fragments. On
+the holdout that moved span-exact F1 from 0.748 to 0.857, so a candidate
+whose errors are mostly particle noise will look worse here than it behaves
+in production.
 
 ## 4. Swap in the new model
 

@@ -160,3 +160,102 @@ def test_generate_time_values_can_produce_24h_and_meridiem_forms():
         return hour_part.isdigit() and int(hour_part) >= 13
 
     assert any(_is_afternoon_hour_form(v) for v in values)
+
+
+ATTACHABLE_PARTICLES = ("에서", "에", "은", "는", "의", "이랑", "부터", "까지")
+
+# Particles the real queries attach to entities ("학부에서", "화요일에") that
+# the catalog never produced — it only ever attached 이랑/부터/까지.
+LOCATIVE_PARTICLES = ("에서", "에", "은", "는", "의")
+
+
+def _realistic_pools():
+    db_values = {
+        "DEPARTMENT": ["공과대학 컴퓨터융합학부", "경상대학 경제학과", "사회과학대학 사회학과"],
+        "CATEGORY": ["전공(핵심)", "전공(기초)", "일반선택", "교양(균형)"],
+        "COURSE_NAME": ["데이터베이스", "자료구조", "인공지능과 미래사회"],
+        "PROFESSOR": ["유정연", "이규철"],
+        "CLASS_MODE": ["실시간", "콘텐츠", "원격"],
+        "EVAL_TYPE": ["GRADE", "PASS"],
+        "GRADE_METHOD": ["상대평가", "절대평가"],
+    }
+    abbreviations = {
+        "DEPARTMENT": {"공과대학 컴퓨터융합학부": ["컴융"]},
+        "CATEGORY": {"전공(핵심)": ["전핵"]},
+        "COURSE_NAME": {"데이터베이스": ["디비"]},
+    }
+    rng = random.Random(42)
+    return build_value_pools(db_values, abbreviations, rng)
+
+
+def _corpus():
+    return generate_records(TEMPLATE_CATALOG, _realistic_pools(), random.Random(7))
+
+
+def test_every_label_appears_in_at_least_three_templates():
+    # A label carried by fewer than three templates cannot be present in all
+    # of train, valid and test at once, because splitting happens per template.
+    counts: dict[str, int] = {}
+    for template in TEMPLATE_CATALOG:
+        for pool_key in set(template.slots.values()):
+            label = pool_key[: -len("_ABBR")] if pool_key.endswith("_ABBR") else pool_key
+            counts[label] = counts.get(label, 0) + 1
+
+    lacking = {label: n for label, n in counts.items() if n < 3}
+    assert not lacking, lacking
+
+
+def test_generated_records_attach_locative_particles_directly_after_an_entity():
+    hits = 0
+    for record in _corpus():
+        for entity in record["entities"]:
+            if record["text"][entity["end"] :].startswith(LOCATIVE_PARTICLES):
+                hits += 1
+    assert hits >= 10, hits
+
+
+def test_generated_records_glue_a_multi_syllable_word_onto_an_entity():
+    # "2학년대상 ... 전공과목" — the model merged the whole run into one span
+    # because it had never seen an entity butted up against a real word.
+    hits = 0
+    for record in _corpus():
+        for entity in record["entities"]:
+            run = record["text"][entity["end"] :].split(" ")[0]
+            if len(run) >= 2 and not run.startswith(ATTACHABLE_PARTICLES):
+                hits += 1
+    assert hits >= 10, hits
+
+
+def test_generated_records_include_sentences_with_no_entity_at_all():
+    empty = [r for r in _corpus() if not r["entities"]]
+    assert len(empty) >= 5, len(empty)
+
+
+def test_generated_entity_spans_never_swallow_surrounding_template_text():
+    pools = _realistic_pools()
+    for record in generate_records(TEMPLATE_CATALOG, pools, random.Random(3)):
+        for entity in record["entities"]:
+            span = record["text"][entity["start"] : entity["end"]]
+            label = entity["label"]
+            allowed = set(pools.get(label, [])) | set(pools.get(f"{label}_ABBR", []))
+            assert span in allowed, (record["template_id"], record["text"], span, label)
+
+
+def test_generate_records_scale_multiplies_the_record_count():
+    catalog = [Template(id="t", text="{DAY} 수업", slots={"DAY": "DAY"}, weight=4)]
+    pools = {"DAY": ["월"]}
+    assert len(generate_records(catalog, pools, random.Random(0), scale=1)) == 4
+    assert len(generate_records(catalog, pools, random.Random(0), scale=3)) == 12
+
+
+def test_split_by_template_puts_every_label_in_all_three_splits():
+    records = _corpus()
+    train, valid, test = split_by_template(records, valid_ratio=0.15, test_ratio=0.15, rng=random.Random(11))
+
+    def labels(rs):
+        return {e["label"] for r in rs for e in r["entities"]}
+
+    all_labels = labels(records)
+    assert labels(train) == all_labels, all_labels - labels(train)
+    assert labels(valid) == all_labels, all_labels - labels(valid)
+    assert labels(test) == all_labels, all_labels - labels(test)
