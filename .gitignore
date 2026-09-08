@@ -39,6 +39,13 @@ backend/eval/reports/
 *.pth
 *.onnx
 backend/course_custom_ner_model/*
+# ...but the retraining pipeline's source and hand-curated data belong in git.
+# Without these negations, new files under scripts/ are silently ignored while
+# the already-tracked ones stay visible — see the pipeline README.
+!backend/course_custom_ner_model/scripts/
+!backend/course_custom_ner_model/metadata/
+backend/course_custom_ner_model/scripts/__pycache__/
+backend/course_custom_ner_model/scripts/.pytest_cache/
 
 # Editor directories and files
 .vscode/*
