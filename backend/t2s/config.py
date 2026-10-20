@@ -19,6 +19,18 @@ class Settings:
     row_cap: int
     statement_timeout_ms: int
     review_log: bool
+    stop: tuple[str, ...]
+    max_tokens: int
+
+
+DEFAULT_STOP = ("###", "Below is an instruction", "\n\n\n")
+
+
+def _stop_sequences() -> tuple[str, ...]:
+    raw = os.getenv("T2S_STOP")
+    if raw is None:
+        return DEFAULT_STOP
+    return tuple(part for part in raw.split("||") if part)
 
 
 def _flag(name: str, default: str) -> bool:
@@ -40,4 +52,6 @@ def load_settings() -> Settings:
         row_cap=int(os.getenv("T2S_ROW_CAP", "50")),
         statement_timeout_ms=int(os.getenv("T2S_STATEMENT_TIMEOUT_MS", "3000")),
         review_log=_flag("T2S_REVIEW_LOG", "1"),
+        stop=_stop_sequences(),
+        max_tokens=int(os.getenv("T2S_MAX_TOKENS", "256")),
     )

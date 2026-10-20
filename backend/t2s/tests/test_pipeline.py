@@ -10,7 +10,8 @@ from backend.t2s.pipeline import Deps, run_v2
 
 def settings(**kw):
     base = dict(model="m", candidates=3, temperature=0.7, examples_k=1, use_examples=True,
-                value_sources=("ngram",), row_cap=50, statement_timeout_ms=3000, review_log=False)
+                value_sources=("ngram",), row_cap=50, statement_timeout_ms=3000, review_log=False,
+                stop=("###",), max_tokens=256)
     base.update(kw)
     return Settings(**base)
 
@@ -30,7 +31,7 @@ def test_majority_answer_and_response_shape():
     answers = iter(["SELECT COUNT(*) FROM v_course_info", "SELECT 2 FROM v_course_info", "SELECT COUNT(*) FROM v_course_info"])
     seen = []
 
-    def chat(messages, *, model, temperature, seed=None):
+    def chat(messages, *, model, temperature, seed=None, **_):
         seen.append(messages)
         return next(answers)
 
@@ -48,7 +49,7 @@ def test_majority_answer_and_response_shape():
 def test_hints_replace_value_search():
     captured = []
 
-    def chat(messages, *, model, temperature, seed=None):
+    def chat(messages, *, model, temperature, seed=None, **_):
         captured.append(messages[-1]["content"])
         return "UNKNOWN"
 
@@ -61,7 +62,7 @@ def test_hints_replace_value_search():
 def test_retry_when_all_candidates_empty():
     replies = iter(["SELECT a FROM v_course_info"] * 3 + ["SELECT b FROM v_course_info"])
 
-    def chat(messages, *, model, temperature, seed=None):
+    def chat(messages, *, model, temperature, seed=None, **_):
         return next(replies)
 
     result = run_v2("q", deps=deps(chat, lambda sql, p, t: []))
@@ -71,7 +72,7 @@ def test_retry_when_all_candidates_empty():
 
 
 def test_errors_everywhere_return_error_response():
-    def chat(messages, *, model, temperature, seed=None):
+    def chat(messages, *, model, temperature, seed=None, **_):
         raise RuntimeError("down")
 
     result = run_v2("q", deps=deps(chat, lambda *a: []))
@@ -82,7 +83,7 @@ def test_errors_everywhere_return_error_response():
 def test_retry_recovers_with_non_empty_result():
     calls = []
 
-    def chat(messages, *, model, temperature, seed=None):
+    def chat(messages, *, model, temperature, seed=None, **_):
         calls.append(messages)
         return "SELECT a FROM v_course_info" if len(calls) <= 3 else "SELECT b FROM v_course_info"
 
@@ -103,7 +104,7 @@ def test_review_log_record_keys(tmp_path, monkeypatch):
     log = tmp_path / "logs" / "review.jsonl"
     monkeypatch.setattr(pipeline_module, "REVIEW_LOG_PATH", log)
 
-    def chat(messages, *, model, temperature, seed=None):
+    def chat(messages, *, model, temperature, seed=None, **_):
         return "SELECT 1 FROM v_course_info"
 
     run_v2("질문", deps=deps(chat, lambda *a: [{"n": 1}], settings=settings(review_log=True)))
@@ -115,7 +116,7 @@ def test_review_log_record_keys(tmp_path, monkeypatch):
 
 
 def test_all_llm_calls_failing_reports_llm_error():
-    def chat(messages, *, model, temperature, seed=None):
+    def chat(messages, *, model, temperature, seed=None, **_):
         raise RuntimeError("connection refused")
 
     result = run_v2("q", deps=deps(chat, lambda *a: []))
@@ -125,7 +126,7 @@ def test_all_llm_calls_failing_reports_llm_error():
 
 
 def test_partial_llm_failure_is_not_an_llm_error():
-    def chat(messages, *, model, temperature, seed=None):
+    def chat(messages, *, model, temperature, seed=None, **_):
         if seed == 1:
             raise RuntimeError("down")
         return "UNKNOWN"
@@ -145,7 +146,7 @@ def test_empty_model_fails_fast():
 def _retry_feedback(first_reply, run):
     calls = []
 
-    def chat(messages, *, model, temperature, seed=None):
+    def chat(messages, *, model, temperature, seed=None, **_):
         calls.append(messages)
         is_retry = messages[-1]["content"].startswith("위 ")
         is_first_candidate = seed is None and not is_retry
@@ -172,3 +173,16 @@ def test_store_not_built_when_examples_disabled(monkeypatch):
     monkeypatch.setattr(examples, "default_store", lambda: (_ for _ in ()).throw(AssertionError("built")))
 
     assert pipeline_module._build_store(settings(use_examples=False)) is None
+
+
+def test_stop_and_max_tokens_reach_every_call_including_retry():
+    seen = []
+
+    def chat(messages, *, model, temperature, seed=None, stop=None, max_tokens=None):
+        seen.append((stop, max_tokens))
+        return "SELECT a FROM v_course_info"
+
+    run_v2("q", deps=deps(chat, lambda *a: [], settings=settings(stop=("###",), max_tokens=77)))
+
+    assert len(seen) == 4
+    assert all(call == (("###",), 77) for call in seen)

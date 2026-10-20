@@ -124,7 +124,8 @@ def run_v2(query, *, exclude_completed_courses=False, student_id=None, value_hin
         sets.append(messages_for(order))
 
     t0 = time.perf_counter()
-    generated = generate_with_errors(sets, model=settings.model, temperature=settings.temperature, chat=deps.chat)
+    generated = generate_with_errors(sets, model=settings.model, temperature=settings.temperature, chat=deps.chat,
+                                     stop=settings.stop, max_tokens=settings.max_tokens)
     raws = [text for text, _ in generated]
     llm_errors = [err for _, err in generated]
     llm_ms = (time.perf_counter() - t0) * 1000
@@ -153,7 +154,8 @@ def run_v2(query, *, exclude_completed_courses=False, student_id=None, value_hin
         ]
         t0 = time.perf_counter()
         try:
-            retry_raw = deps.chat(retry_messages, model=settings.model, temperature=0.0)
+            retry_raw = deps.chat(retry_messages, model=settings.model, temperature=0.0,
+                                  stop=settings.stop, max_tokens=settings.max_tokens)
         except Exception as exc:
             retry_raw = None
             llm_errors.append(str(exc) or type(exc).__name__)

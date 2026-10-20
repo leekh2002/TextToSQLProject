@@ -1,7 +1,9 @@
 from backend.t2s.config import Settings
 from backend.t2s.execute import bind_student, run_candidate
 
-SETTINGS = Settings("m", 5, 0.7, 4, True, ("ner", "ngram"), 50, 3000, False)
+SETTINGS = Settings(model="m", candidates=5, temperature=0.7, examples_k=4, use_examples=True,
+                    value_sources=("ner", "ngram"), row_cap=50, statement_timeout_ms=3000, review_log=False,
+                    stop=("###",), max_tokens=256)
 
 
 def ok_validate(sql, requested_student_id=None):
