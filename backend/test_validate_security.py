@@ -193,3 +193,48 @@ def test_non_student_query_still_passes():
         "AND c.section IS NOT DISTINCT FROM matched_courses.section ORDER BY c.subject_code LIMIT 200"
     )
     assert validate_generated_sql(sql) == OK
+
+
+OUTER_JOIN_BYPASSES = [
+    "SELECT s.grade FROM department d RIGHT JOIN student s ON s.student_id = '202102671' LIMIT 50",
+    "SELECT s.grade FROM department d FULL JOIN student s ON s.student_id = '202102671' LIMIT 50",
+    "SELECT e.letter_grade FROM subject j RIGHT JOIN enrollment e ON e.student_id = '202102671' LIMIT 50",
+    "SELECT e.letter_grade FROM subject j FULL OUTER JOIN enrollment e ON e.student_id = %(student_id)s LIMIT 50",
+    "SELECT s.grade FROM department d RIGHT OUTER JOIN student s ON s.student_id = %(student_id)s LIMIT 50",
+    "SELECT s.grade FROM student s LEFT JOIN department d ON s.student_id = '202102671' LIMIT 50",
+    "SELECT e.letter_grade FROM enrollment e LEFT JOIN subject j ON e.student_id = %(student_id)s LIMIT 50",
+    "SELECT s.grade FROM student s FULL JOIN department d ON s.student_id = '202102671' LIMIT 50",
+    "SELECT s.grade FROM department d NATURAL JOIN student s LIMIT 50",
+    "SELECT s.grade FROM department d CROSS JOIN student s LIMIT 50",
+    "SELECT s.grade FROM department d JOIN student s USING (dept_code) LIMIT 50",
+    "SELECT e.letter_grade FROM subject j NATURAL RIGHT JOIN enrollment e LIMIT 50",
+    "SELECT e.letter_grade FROM subject j RIGHT JOIN enrollment e USING (subject_code) LIMIT 50",
+]
+
+
+@pytest.mark.parametrize("requested", [STUDENT_ID, None])
+@pytest.mark.parametrize("sql", OUTER_JOIN_BYPASSES)
+def test_outer_join_preserved_side_is_not_scoped_by_on(sql, requested):
+    result = validate_generated_sql(sql, requested_student_id=requested)
+    assert result["ok"] is False, sql
+
+
+@pytest.mark.parametrize("sql", OUTER_JOIN_BYPASSES[:4])
+def test_grader_rejects_outer_join_preserved_side(sql):
+    assert check_student_scope(sql, STUDENT_ID)[0] is False
+
+
+@pytest.mark.parametrize(
+    "sql",
+    [
+        "SELECT d.dept_name FROM department d INNER JOIN student s ON s.student_id = '202102671' "
+        "AND s.dept_code = d.dept_code LIMIT 50",
+        "SELECT j.subject_name FROM subject j LEFT JOIN enrollment e ON e.subject_code = j.subject_code "
+        "AND e.student_id = '202102671' LIMIT 50",
+        "SELECT s.grade FROM department d RIGHT JOIN student s ON s.dept_code = d.dept_code "
+        "WHERE s.student_id = '202102671' LIMIT 50",
+        "SELECT s.grade FROM department d JOIN student s USING (dept_code) WHERE s.student_id = '202102671' LIMIT 50",
+    ],
+)
+def test_inner_or_nullable_side_join_scope_passes(sql):
+    assert validate_generated_sql(sql, requested_student_id=STUDENT_ID) == OK

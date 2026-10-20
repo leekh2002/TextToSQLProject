@@ -148,16 +148,33 @@ def _is_student_id_of(node: exp.Expression, table: exp.Table, single_source: boo
     return db is None or _ident(db) == _ident(table.args.get("db"))
 
 
+def _join_on_filters_instance(join: exp.Join) -> bool:
+    """Whether the joined table's own ON condition restricts which of its rows appear.
+
+    Only a plain/INNER join, or a LEFT join (the joined table is the nullable side), does.
+    RIGHT and FULL joins preserve every row of the joined table regardless of ON, and CROSS,
+    NATURAL and USING joins have no ON to rely on, so their instances need the scope in WHERE.
+    A table in FROM is never scoped by any ON; it always needs the scope in WHERE.
+    """
+    if join.args.get("using") or (join.method or "").upper() == "NATURAL":
+        return False
+    side = (join.side or "").upper()
+    kind = (join.kind or "").upper()
+    if side == "LEFT":
+        return kind in ("", "OUTER")
+    return side == "" and kind in ("", "INNER")
+
+
 def _is_instance_scoped(table: exp.Table, requested_student_id: str | None) -> bool:
     """`<ref>.student_id = <allowed rhs>` must be a top-level AND term of the owning SELECT's
-    WHERE or of the instance's own JOIN ... ON."""
+    WHERE or of the instance's own JOIN ... ON (when that join filters the instance)."""
     select, join = _owning_select(table)
     if select is None:
         return False
     single_source = len(_sources(select)) == 1
     where = select.args.get("where")
     predicates = [where.this if where is not None else None]
-    if join is not None:
+    if join is not None and _join_on_filters_instance(join):
         predicates.append(join.args.get("on"))
     for predicate in predicates:
         for term in _conjuncts(predicate):
