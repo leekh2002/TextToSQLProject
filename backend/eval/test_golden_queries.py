@@ -76,7 +76,7 @@ def test_category_counts_match_the_expanded_design():
     assert counts == {
         "course_filter": 80,
         "prerequisite": 30,
-        "enrollment_aggregate": 35,
+        "enrollment_aggregate": 41,
         "personalized_lookup": 30,
         "exclude_completed_courses": 30,
         "ambiguous_reject": 30,

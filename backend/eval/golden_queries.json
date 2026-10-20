@@ -4506,5 +4506,99 @@
     "structural_checks": {},
     "notes": "서비스와 무관한 질의.",
     "gold_values": []
+  },
+  {
+    "id": "enrollment_aggregate_36",
+    "category": "enrollment_aggregate",
+    "query": "컴융 목요일 수업 분반 몇 개야",
+    "grading": "execution",
+    "reference_sql": "SELECT COUNT(DISTINCT subject_code || '-' || section) AS course_count FROM v_course_info WHERE dept_name LIKE '%컴퓨터융합학부%' AND day_of_week = '목'",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "컴퓨터융합학부 목요일 분반 수. 실제 DB 기준 1행.",
+    "gold_values": [
+      {
+        "column": "dept_name",
+        "value": "공과대학 컴퓨터융합학부"
+      }
+    ]
+  },
+  {
+    "id": "enrollment_aggregate_37",
+    "category": "enrollment_aggregate",
+    "query": "오전 수업 중 정원이 가장 많은 분반 알려줘",
+    "grading": "execution",
+    "reference_sql": "SELECT DISTINCT subject_code, section, subject_name, capacity FROM v_course_info WHERE start_time < '12:00:00' AND capacity = (SELECT MAX(capacity) FROM v_course_info WHERE start_time < '12:00:00')",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "오전(start_time < 12:00) 수업 중 정원 최대 분반(1133-7004-00 자기조절, capacity=300; 2위 170이라 동점 없음). 실제 DB 기준 1행.",
+    "gold_values": []
+  },
+  {
+    "id": "enrollment_aggregate_38",
+    "category": "enrollment_aggregate",
+    "query": "경영학부 화요일 오후 수업 분반이 몇 개나 돼?",
+    "grading": "execution",
+    "reference_sql": "SELECT COUNT(DISTINCT subject_code || '-' || section) AS course_count FROM v_course_info WHERE dept_name LIKE '%경상대학 경영학부%' AND day_of_week = '화' AND start_time >= '12:00:00'",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "경영학부 화요일 오후(start_time >= 12:00) 분반 수. 실제 DB 기준 1행.",
+    "gold_values": [
+      {
+        "column": "dept_name",
+        "value": "경상대학 경영학부"
+      }
+    ]
+  },
+  {
+    "id": "enrollment_aggregate_39",
+    "category": "enrollment_aggregate",
+    "query": "목요일 2시에 시작하는 수업은 전부 몇 분반이나 있어",
+    "grading": "execution",
+    "reference_sql": "SELECT COUNT(DISTINCT subject_code || '-' || section) AS course_count FROM v_course_info WHERE day_of_week = '목' AND start_time = '14:00:00'",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "목요일 14:00 시작 분반 수(course_count=154). 실제 DB 기준 1행.",
+    "gold_values": []
+  },
+  {
+    "id": "enrollment_aggregate_40",
+    "category": "enrollment_aggregate",
+    "query": "금요일 오후 수업 중 신청 인원이 제일 많은 분반이 뭐야",
+    "grading": "execution",
+    "reference_sql": "SELECT DISTINCT subject_code, section, subject_name, enrolled FROM v_course_info WHERE day_of_week = '금' AND start_time >= '12:00:00' AND enrolled = (SELECT MAX(enrolled) FROM v_course_info WHERE day_of_week = '금' AND start_time >= '12:00:00')",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "금요일 오후 수업 중 신청 인원 최대 분반(5915-9980-00 인문학의향기, enrolled=270; 2위 231이라 동점 없음). 실제 DB 기준 1행.",
+    "gold_values": []
+  },
+  {
+    "id": "enrollment_aggregate_41",
+    "category": "enrollment_aggregate",
+    "query": "수요일에 수업이 제일 많이 열리는 학과가 어디야",
+    "grading": "execution",
+    "reference_sql": "SELECT dept_name, COUNT(DISTINCT subject_code || '-' || section) AS course_count FROM v_course_info WHERE day_of_week = '수' GROUP BY dept_name ORDER BY course_count DESC LIMIT 1",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "수요일 개설 분반 수가 가장 많은 학과(경상대학 경영학부 49개; 2위 국어국문학과 33개라 동점 없음). 실제 DB 기준 1행.",
+    "gold_values": []
   }
 ]
