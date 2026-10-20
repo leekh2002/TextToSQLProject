@@ -10,7 +10,7 @@
     "student_id": null,
     "exclude_completed_courses": false,
     "structural_checks": null,
-    "notes": "target_year(대상학년)은 prompt.py의 Column details에 문서화되어 있지 않다. course_year(개설학년)와 혼동하는지 확인하는 케이스. 실제 DB 기준 2행.",
+    "notes": "target_year(대상학년)은 prompt.py의 Column details에 문서화되어 있지 않다. course_year(개설학년)와 혼동하는지 확인하는 케이스. 실제 DB 기준 3행(스케줄 확장 후, 확장 전 2행).",
     "gold_values": [
       {
         "column": "dept_name",
@@ -70,7 +70,7 @@
     "student_id": null,
     "exclude_completed_courses": false,
     "structural_checks": null,
-    "notes": "오전/오후 range 규칙(prompt.py) 검증. 실제 DB 기준 2행.",
+    "notes": "오전/오후 range 규칙(prompt.py) 검증. 실제 DB 기준 4행(스케줄 확장 후, 확장 전 2행).",
     "gold_values": [
       {
         "column": "dept_name",
@@ -93,7 +93,7 @@
     "student_id": null,
     "exclude_completed_courses": false,
     "structural_checks": null,
-    "notes": "'1시'를 13:00:00으로 매핑하는 prompt.py 규칙 검증. 실제 DB 기준 19행.",
+    "notes": "'1시'를 13:00:00으로 매핑하는 prompt.py 규칙 검증. 실제 DB 기준 33행(스케줄 확장 후, 확장 전 19행).",
     "gold_values": [
       {
         "column": "dept_name",
@@ -165,7 +165,7 @@
   {
     "id": "course_filter_09",
     "category": "course_filter",
-    "query": "알고리즘 과목 알려줘",
+    "query": "알고리즘 들어간 과목 알려줘",
     "grading": "execution",
     "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE subject_name LIKE '%알고리즘%'",
     "order_sensitive": false,
@@ -187,7 +187,7 @@
     "student_id": null,
     "exclude_completed_courses": false,
     "structural_checks": null,
-    "notes": "실제 DB 기준 12행.",
+    "notes": "실제 DB 기준 23행(스케줄 확장 후, 확장 전 12행).",
     "gold_values": [
       {
         "column": "dept_name",
@@ -210,7 +210,7 @@
     "student_id": null,
     "exclude_completed_courses": false,
     "structural_checks": null,
-    "notes": "'5시'를 17:00:00으로 매핑. 실제 DB 기준 4행.",
+    "notes": "'5시'를 17:00:00으로 매핑. 실제 DB 기준 6행(스케줄 확장 후, 확장 전 4행).",
     "gold_values": [
       {
         "column": "dept_name",
@@ -229,7 +229,7 @@
     "student_id": null,
     "exclude_completed_courses": false,
     "structural_checks": null,
-    "notes": "실제 DB 기준 22행.",
+    "notes": "실제 DB 기준 44행(스케줄 확장 후, 확장 전 22행).",
     "gold_values": [
       {
         "column": "dept_name",
@@ -244,7 +244,7 @@
   {
     "id": "course_filter_13",
     "category": "course_filter",
-    "query": "컴퓨터융합학부 전공(심화) 과목 알려줘",
+    "query": "컴융 전심 과목 알려줘",
     "grading": "execution",
     "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%컴퓨터융합학부%' AND category LIKE '%전공(심화)%'",
     "order_sensitive": false,
@@ -636,7 +636,7 @@
   {
     "id": "course_filter_34",
     "category": "course_filter",
-    "query": "통계학 과목 알려줘",
+    "query": "통계학 들어간 과목 알려줘",
     "grading": "execution",
     "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE subject_name LIKE '%통계학%'",
     "order_sensitive": false,
@@ -669,7 +669,7 @@
   {
     "id": "course_filter_36",
     "category": "course_filter",
-    "query": "경영학부 전공(핵심) 과목 알려줘",
+    "query": "경영학부 전공핵심 과목 알려줘",
     "grading": "execution",
     "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%경영학부%' AND category LIKE '%전공(핵심)%'",
     "order_sensitive": false,
@@ -1013,7 +1013,7 @@
   {
     "id": "course_filter_52",
     "category": "course_filter",
-    "query": "교양(기초) 과목 중 실시간 수업 알려줘",
+    "query": "기초교양 과목 중 실시간 수업 알려줘",
     "grading": "execution",
     "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE category LIKE '%교양(기초)%' AND class_mode = '실시간'",
     "order_sensitive": false,
@@ -1036,7 +1036,7 @@
   {
     "id": "course_filter_53",
     "category": "course_filter",
-    "query": "혼합 수업 중에 전공(심화) 과목 있어?",
+    "query": "혼합 수업 중에 전공심화 과목 있어?",
     "grading": "execution",
     "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE category LIKE '%전공(심화)%' AND class_mode = '혼합'",
     "order_sensitive": false,
@@ -1153,7 +1153,7 @@
   {
     "id": "course_filter_59",
     "category": "course_filter",
-    "query": "미적분학 과목 중 오전 수업 알려줘",
+    "query": "미적분학 들어간 과목 중 오전 수업 알려줘",
     "grading": "execution",
     "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE subject_name LIKE '%미적분학%' AND start_time < '12:00:00'",
     "order_sensitive": false,
@@ -1167,7 +1167,7 @@
   {
     "id": "course_filter_60",
     "category": "course_filter",
-    "query": "물리학 과목 중 3학점 수업 알려줘",
+    "query": "물리학 들어간 과목 중 3학점 수업 알려줘",
     "grading": "execution",
     "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE subject_name LIKE '%물리학%' AND credit_hours LIKE '3/%'",
     "order_sensitive": false,
@@ -1181,7 +1181,7 @@
   {
     "id": "course_filter_61",
     "category": "course_filter",
-    "query": "교양(균형) 과목 중에 수요일 수업 알려줘",
+    "query": "균형교양 중에 수요일 수업 알려줘",
     "grading": "execution",
     "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE category LIKE '%교양(균형)%' AND day_of_week = '수'",
     "order_sensitive": false,
@@ -1204,7 +1204,7 @@
   {
     "id": "course_filter_62",
     "category": "course_filter",
-    "query": "컴퓨터융합학부 3학년 전공(핵심) 과목 중 화요일 수업 알려줘",
+    "query": "컴융 3학년 전공핵심 중 화요일 수업 알려줘",
     "grading": "execution",
     "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%컴퓨터융합학부%' AND target_year = 3 AND category LIKE '%전공(핵심)%' AND day_of_week = '화'",
     "order_sensitive": false,
@@ -1400,7 +1400,7 @@
   {
     "id": "course_filter_70",
     "category": "course_filter",
-    "query": "국어국문학과 1학년 전공(기초) 과목 중 3학점짜리 알려줘",
+    "query": "국어국문학과 1학년 전공기초 과목 중 3학점짜리 알려줘",
     "grading": "execution",
     "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%국어국문학과%' AND target_year = 1 AND category LIKE '%전공(기초)%' AND credit_hours LIKE '3/%'",
     "order_sensitive": false,
@@ -1442,7 +1442,7 @@
   {
     "id": "course_filter_72",
     "category": "course_filter",
-    "query": "교양(균형) 과목 월요일 오후 수업 있어?",
+    "query": "균형교양 월요일 오후 수업 있어?",
     "grading": "execution",
     "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE category LIKE '%교양(균형)%' AND day_of_week = '월' AND start_time >= '12:00:00'",
     "order_sensitive": false,
@@ -1465,7 +1465,7 @@
   {
     "id": "course_filter_73",
     "category": "course_filter",
-    "query": "경제학과 전공(핵심) 과목 중 상대평가이고 3학점인 과목 알려줘",
+    "query": "경제학과 전핵 중에 상대평가이고 3학점인 과목 알려줘",
     "grading": "execution",
     "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%경상대학 경제학과%' AND category LIKE '%전공(핵심)%' AND eval_type = '상대평가' AND credit_hours LIKE '3/%'",
     "order_sensitive": false,
@@ -1634,7 +1634,7 @@
   {
     "id": "course_filter_80",
     "category": "course_filter",
-    "query": "스포츠과학과 3학점 전공(핵심) 과목 중 오전 수업 알려줘",
+    "query": "스포츠과학과 3학점 전공 핵심 과목 중 오전 수업 알려줘",
     "grading": "execution",
     "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%스포츠과학과%' AND credit_hours LIKE '3/%' AND category LIKE '%전공(핵심)%' AND start_time < '12:00:00'",
     "order_sensitive": false,
@@ -1671,7 +1671,7 @@
   {
     "id": "exclude_completed_courses_02",
     "category": "exclude_completed_courses",
-    "query": "알고리즘 과목 중에 내가 안 들은 것만 보여줘",
+    "query": "알고리즘 들어간 과목 중에 내가 안 들은 것만 보여줘",
     "grading": "execution",
     "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE subject_name LIKE '%알고리즘%' AND NOT EXISTS (SELECT 1 FROM enrollment AS e WHERE e.student_id = '202102671' AND e.subject_code = v_course_info.subject_code)",
     "order_sensitive": false,
@@ -1728,7 +1728,7 @@
   {
     "id": "exclude_completed_courses_05",
     "category": "exclude_completed_courses",
-    "query": "컴퓨터융합학부 전공(심화) 과목 중 내가 아직 안 들은 것만 알려줘",
+    "query": "컴퓨터융합학부 전공심화 과목 중 내가 아직 안 들은 것만 알려줘",
     "grading": "execution",
     "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%컴퓨터융합학부%' AND category LIKE '%전공(심화)%' AND NOT EXISTS (SELECT 1 FROM enrollment AS e WHERE e.student_id = '202102671' AND e.subject_code = v_course_info.subject_code)",
     "order_sensitive": false,
@@ -1784,7 +1784,7 @@
   {
     "id": "exclude_completed_courses_08",
     "category": "exclude_completed_courses",
-    "query": "컴퓨터융합학부 전공(심화) 과목 중에 수강 안 한 것만 알려줘",
+    "query": "컴융 전심 중에 수강 안 한 것만 알려줘",
     "grading": "execution",
     "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%컴퓨터융합학부%' AND category LIKE '%전공(심화)%' AND NOT EXISTS (SELECT 1 FROM enrollment AS e WHERE e.student_id = '202102671' AND e.subject_code = v_course_info.subject_code)",
     "order_sensitive": false,
@@ -1807,7 +1807,7 @@
   {
     "id": "exclude_completed_courses_09",
     "category": "exclude_completed_courses",
-    "query": "컴퓨터융합학부 4학년 전공(심화) 과목에서 이미 들은 건 빼고 알려줘",
+    "query": "컴퓨터융합학부 4학년 전공심화 과목에서 이미 들은 건 빼고 알려줘",
     "grading": "execution",
     "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%컴퓨터융합학부%' AND target_year = 4 AND category LIKE '%전공(심화)%' AND NOT EXISTS (SELECT 1 FROM enrollment AS e WHERE e.student_id = '202102671' AND e.subject_code = v_course_info.subject_code)",
     "order_sensitive": false,
@@ -1857,7 +1857,7 @@
   {
     "id": "exclude_completed_courses_11",
     "category": "exclude_completed_courses",
-    "query": "인공지능학과 3학년 전공(심화) 중에 내가 안 들은 과목 보여줘",
+    "query": "인공지능학과 3학년 전심 중에 내가 안 들은 과목 보여줘",
     "grading": "execution",
     "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%공과대학 인공지능학과%' AND target_year = 3 AND category LIKE '%전공(심화)%' AND NOT EXISTS (SELECT 1 FROM enrollment AS e WHERE e.student_id = '202102671' AND e.subject_code = v_course_info.subject_code)",
     "order_sensitive": false,
@@ -1949,7 +1949,7 @@
   {
     "id": "exclude_completed_courses_15",
     "category": "exclude_completed_courses",
-    "query": "컴퓨터융합학부 전공(심화) 중에 자리 남아있고 내가 안 들은 과목 보여줘",
+    "query": "컴퓨터융합학부 전공심화 중에 자리 남아있고 내가 안 들은 과목 보여줘",
     "grading": "execution",
     "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%컴퓨터융합학부%' AND category LIKE '%전공(심화)%' AND enrolled < capacity AND capacity > 0 AND NOT EXISTS (SELECT 1 FROM enrollment AS e WHERE e.student_id = '202102671' AND e.subject_code = v_course_info.subject_code)",
     "order_sensitive": false,
@@ -2042,7 +2042,7 @@
   {
     "id": "exclude_completed_courses_21",
     "category": "exclude_completed_courses",
-    "query": "소프트웨어 과목 중에 아직 수강 안 한 것 알려줘",
+    "query": "이름에 소프트웨어 들어간 과목 중에 아직 수강 안 한 것 알려줘",
     "grading": "execution",
     "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE subject_name LIKE '%소프트웨어%' AND NOT EXISTS (SELECT 1 FROM enrollment AS e WHERE e.student_id = '202102671' AND e.subject_code = v_course_info.subject_code)",
     "order_sensitive": false,
@@ -2056,7 +2056,7 @@
   {
     "id": "exclude_completed_courses_22",
     "category": "exclude_completed_courses",
-    "query": "정보통신융합학부 전공(기초) 과목 중에 안 들은 것만 보여줘",
+    "query": "정보통신융합학부 전공기초 과목 중에 안 들은 것만 보여줘",
     "grading": "execution",
     "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%공과대학 정보통신융합학부%' AND category LIKE '%전공(기초)%' AND NOT EXISTS (SELECT 1 FROM enrollment AS e WHERE e.student_id = '202102671' AND e.subject_code = v_course_info.subject_code)",
     "order_sensitive": false,
@@ -2093,7 +2093,7 @@
   {
     "id": "exclude_completed_courses_24",
     "category": "exclude_completed_courses",
-    "query": "전자공학과 전공(기초) 과목 중에 아직 안 들은 것 알려줘",
+    "query": "전자공학과 전공 기초 과목 중에 아직 안 들은 것 알려줘",
     "grading": "execution",
     "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%공과대학 전자공학과%' AND category LIKE '%전공(기초)%' AND NOT EXISTS (SELECT 1 FROM enrollment AS e WHERE e.student_id = '202102671' AND e.subject_code = v_course_info.subject_code)",
     "order_sensitive": false,
@@ -2281,14 +2281,19 @@
     "category": "prerequisite",
     "query": "자료구조 과목의 선수과목 알려줘",
     "grading": "execution",
-    "reference_sql": "SELECT subject_code, section, subject_name, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE subject_name LIKE '%자료구조%'",
+    "reference_sql": "SELECT subject_code, section, subject_name, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE subject_name = '자료구조'",
     "order_sensitive": false,
     "expects_error": false,
     "student_id": null,
     "exclude_completed_courses": false,
     "structural_checks": null,
-    "notes": "'자료구조'와 '자료구조및실습'을 모두 포함하는 실제 DB 기준 16행.",
-    "gold_values": []
+    "notes": "과목 '자료구조' 자체를 묻는 질의라 subject_name = '자료구조'로 한정(LIKE는 자료구조및실습, 자료구조와 알고리즘까지 포함). 실제 DB 기준 10행(5분반, 스케줄 중복). 2026-10-20 수정(수정 전 LIKE 16행).",
+    "gold_values": [
+      {
+        "column": "subject_name",
+        "value": "자료구조"
+      }
+    ]
   },
   {
     "id": "prerequisite_04",
@@ -2743,7 +2748,7 @@
   {
     "id": "prerequisite_26",
     "category": "prerequisite",
-    "query": "수학과 전공(핵심) 과목 중 선수과목 없는 것 알려줘",
+    "query": "수학과 전공핵심 과목 중 선수과목 없는 것 알려줘",
     "grading": "execution",
     "reference_sql": "SELECT subject_code, section, subject_name, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%수학과%' AND category LIKE '%전공(핵심)%' AND prereq_subject_names = '없음'",
     "order_sensitive": false,
@@ -2870,7 +2875,7 @@
   {
     "id": "enrollment_aggregate_01",
     "category": "enrollment_aggregate",
-    "query": "컴퓨터융합학부에서 수강인원이 가장 많은 과목이 뭐야",
+    "query": "컴퓨터융합학부에서 수강인원이 가장 많은 분반이 뭐야",
     "grading": "execution",
     "reference_sql": "SELECT subject_code, section, subject_name, enrolled, capacity FROM v_course_info WHERE dept_name LIKE '%컴퓨터융합학부%' ORDER BY enrolled DESC LIMIT 1",
     "order_sensitive": false,
@@ -2931,7 +2936,7 @@
   {
     "id": "enrollment_aggregate_04",
     "category": "enrollment_aggregate",
-    "query": "알고리즘 과목은 총 몇 개 분반이 있어",
+    "query": "이름에 알고리즘 들어간 과목은 분반이 총 몇 개야",
     "grading": "execution",
     "reference_sql": "SELECT COUNT(DISTINCT subject_code || '-' || section) AS course_count FROM v_course_info WHERE subject_name LIKE '%알고리즘%'",
     "order_sensitive": false,
@@ -3016,7 +3021,7 @@
   {
     "id": "enrollment_aggregate_09",
     "category": "enrollment_aggregate",
-    "query": "수강인원이 가장 많은 과목이 뭐야",
+    "query": "수강인원이 가장 많은 분반이 뭐야",
     "grading": "execution",
     "reference_sql": "SELECT subject_code, section, subject_name, enrolled, capacity FROM v_course_info ORDER BY enrolled DESC LIMIT 1",
     "order_sensitive": false,
@@ -3044,7 +3049,7 @@
   {
     "id": "enrollment_aggregate_11",
     "category": "enrollment_aggregate",
-    "query": "평가방식별로 분반이 몇 개씩이야",
+    "query": "상대평가/절대평가별로 분반이 몇 개씩이야",
     "grading": "execution",
     "reference_sql": "SELECT eval_type, COUNT(DISTINCT subject_code || '-' || section) AS course_count FROM v_course_info GROUP BY eval_type",
     "order_sensitive": false,
@@ -3124,7 +3129,7 @@
   {
     "id": "enrollment_aggregate_16",
     "category": "enrollment_aggregate",
-    "query": "물리학과 정원 꽉찬 과목 몇개?",
+    "query": "물리학과 정원 꽉찬 분반 몇개?",
     "grading": "execution",
     "reference_sql": "SELECT COUNT(DISTINCT subject_code || '-' || section) AS course_count FROM v_course_info WHERE dept_name LIKE '%물리학과%' AND enrolled >= capacity AND capacity > 0",
     "order_sensitive": false,
@@ -3214,7 +3219,7 @@
   {
     "id": "enrollment_aggregate_21",
     "category": "enrollment_aggregate",
-    "query": "물리학과에서 수강인원 제일 많은 과목 알려줘",
+    "query": "물리학과에서 수강인원 제일 많은 분반 알려줘",
     "grading": "execution",
     "reference_sql": "SELECT subject_code, section, subject_name, enrolled, capacity FROM v_course_info WHERE dept_name LIKE '%물리학과%' ORDER BY enrolled DESC LIMIT 1",
     "order_sensitive": false,
@@ -3233,7 +3238,7 @@
   {
     "id": "enrollment_aggregate_22",
     "category": "enrollment_aggregate",
-    "query": "화학과 과목 중 수강인원이 가장 많은 과목은 뭐야",
+    "query": "화학과에서 수강인원 제일 많은 분반은?",
     "grading": "execution",
     "reference_sql": "SELECT subject_code, section, subject_name, enrolled, capacity FROM v_course_info WHERE dept_name LIKE '%자연과학대학 화학과%' ORDER BY enrolled DESC LIMIT 1",
     "order_sensitive": false,
@@ -3252,7 +3257,7 @@
   {
     "id": "enrollment_aggregate_23",
     "category": "enrollment_aggregate",
-    "query": "심리학과 수강인원 최대 과목 뭐야",
+    "query": "심리학과 수강인원 최대 분반 뭐야",
     "grading": "execution",
     "reference_sql": "SELECT subject_code, section, subject_name, enrolled, capacity FROM v_course_info WHERE dept_name LIKE '%심리학과%' ORDER BY enrolled DESC LIMIT 1",
     "order_sensitive": false,
@@ -3271,7 +3276,7 @@
   {
     "id": "enrollment_aggregate_24",
     "category": "enrollment_aggregate",
-    "query": "교양(소양필수) 중에서 수강인원이 가장 많은 과목 알려줘",
+    "query": "교필 중에 수강인원 제일 많은 분반 알려줘",
     "grading": "execution",
     "reference_sql": "SELECT subject_code, section, subject_name, enrolled, capacity FROM v_course_info WHERE category LIKE '%교양(소양필수)%' ORDER BY enrolled DESC LIMIT 1",
     "order_sensitive": false,
@@ -3309,7 +3314,7 @@
   {
     "id": "enrollment_aggregate_26",
     "category": "enrollment_aggregate",
-    "query": "컴퓨터융합학부 여석이 가장 많은 과목 3개 알려줘",
+    "query": "컴퓨터융합학부 여석이 가장 많은 분반 3개 알려줘",
     "grading": "execution",
     "reference_sql": "SELECT DISTINCT subject_code, section, subject_name, enrolled, capacity, capacity - enrolled AS remaining_seats FROM v_course_info WHERE dept_name LIKE '%컴퓨터융합학부%' AND capacity > 0 ORDER BY capacity - enrolled DESC LIMIT 3",
     "order_sensitive": false,
@@ -3365,7 +3370,7 @@
   {
     "id": "enrollment_aggregate_29",
     "category": "enrollment_aggregate",
-    "query": "컴퓨터융합학부 3학년 전공(핵심) 과목 중 여석 있는 분반은 몇 개야",
+    "query": "컴퓨터융합학부 3학년 전공핵심 중 여석 있는 분반은 몇 개야",
     "grading": "execution",
     "reference_sql": "SELECT COUNT(DISTINCT subject_code || '-' || section) AS course_count FROM v_course_info WHERE dept_name LIKE '%컴퓨터융합학부%' AND target_year = 3 AND category LIKE '%전공(핵심)%' AND enrolled < capacity AND capacity > 0",
     "order_sensitive": false,
@@ -3457,7 +3462,7 @@
   {
     "id": "enrollment_aggregate_33",
     "category": "enrollment_aggregate",
-    "query": "컴융 1명 이상 신청한 과목 중에 수강인원이 제일 적은 과목 알려줘",
+    "query": "컴융 1명 이상 신청한 분반 중에 수강인원이 제일 적은 분반 알려줘",
     "grading": "execution",
     "reference_sql": "SELECT subject_code, section, subject_name, enrolled, capacity FROM v_course_info WHERE dept_name LIKE '%컴퓨터융합학부%' AND enrolled > 0 ORDER BY enrolled ASC LIMIT 1",
     "order_sensitive": false,
@@ -3476,7 +3481,7 @@
   {
     "id": "enrollment_aggregate_34",
     "category": "enrollment_aggregate",
-    "query": "기계공학부 전공(심화) 과목 중 여석이 제일 많은 과목 알려줘",
+    "query": "기계공학부 전공심화 과목 중 여석이 제일 많은 분반 알려줘",
     "grading": "execution",
     "reference_sql": "SELECT subject_code, section, subject_name, enrolled, capacity, capacity - enrolled AS remaining_seats FROM v_course_info WHERE dept_name LIKE '%기계공학부%' AND category LIKE '%전공(심화)%' AND capacity > 0 ORDER BY capacity - enrolled DESC LIMIT 1",
     "order_sensitive": false,
@@ -3499,15 +3504,15 @@
   {
     "id": "enrollment_aggregate_35",
     "category": "enrollment_aggregate",
-    "query": "공과대학 학과 중 분반이 35개를 넘는 학과와 분반 수 알려줘",
+    "query": "공대에서 분반을 제일 많이 여는 학과 5곳이랑 분반 수 알려줘",
     "grading": "execution",
-    "reference_sql": "SELECT dept_name, COUNT(DISTINCT subject_code || '-' || section) AS course_count FROM v_course_info WHERE dept_name LIKE '%공과대학%' GROUP BY dept_name HAVING COUNT(DISTINCT subject_code || '-' || section) > 35",
-    "order_sensitive": false,
+    "reference_sql": "SELECT dept_name, COUNT(DISTINCT subject_code || '-' || section) AS course_count FROM v_course_info WHERE dept_name LIKE '%공과대학%' GROUP BY dept_name ORDER BY course_count DESC LIMIT 5",
+    "order_sensitive": true,
     "expects_error": false,
     "student_id": null,
     "exclude_completed_courses": false,
     "structural_checks": null,
-    "notes": "실제 DB 기준 6행.",
+    "notes": "공과대학 분반 수 상위 5개 학과(order_sensitive). 동점 없음 확인: 5위 38, 6위 37. 실제 DB 기준 5행. 2026-10-20 임의 임계값('35개를 넘는', HAVING) 질의에서 변경.",
     "gold_values": []
   },
   {
@@ -3515,13 +3520,13 @@
     "category": "personalized_lookup",
     "query": "내 학과가 어디야",
     "grading": "execution",
-    "reference_sql": "SELECT d.dept_code, d.dept_name FROM student AS s JOIN department AS d ON d.dept_code = s.dept_code WHERE s.student_id = '202102671'",
+    "reference_sql": "SELECT d.dept_name FROM student AS s JOIN department AS d ON d.dept_code = s.dept_code WHERE s.student_id = '202102671'",
     "order_sensitive": false,
     "expects_error": false,
     "student_id": "202102671",
     "exclude_completed_courses": false,
     "structural_checks": null,
-    "notes": "2026-10-19 execution 채점으로 전환. 실제 DB 기준 1행.",
+    "notes": "2026-10-19 execution 채점으로 전환. 2026-10-20 dept_name만 반환하도록 좁힘. 실제 DB 기준 1행.",
     "gold_values": []
   },
   {
@@ -3541,35 +3546,30 @@
   {
     "id": "personalized_lookup_03",
     "category": "personalized_lookup",
-    "query": "내 학번이랑 소속 학과 코드 알려줘",
+    "query": "내 학과 코드랑 학년 알려줘",
     "grading": "execution",
-    "reference_sql": "SELECT student_id, dept_code FROM student WHERE student_id = '202102671'",
+    "reference_sql": "SELECT dept_code, grade FROM student WHERE student_id = '202102671'",
     "order_sensitive": false,
     "expects_error": false,
     "student_id": "202102671",
     "exclude_completed_courses": false,
     "structural_checks": null,
-    "notes": "2026-10-19 execution 채점으로 전환. 실제 DB 기준 1행.",
+    "notes": "2026-10-19 execution 채점으로 전환. 2026-10-20 학번 대신 학과 코드+학년으로 변경. 실제 DB 기준 1행.",
     "gold_values": []
   },
   {
     "id": "personalized_lookup_04",
     "category": "personalized_lookup",
-    "query": "내가 D094 소속 맞아?",
+    "query": "내 학과 코드 뭐야?",
     "grading": "execution",
-    "reference_sql": "SELECT student_id, dept_code FROM student WHERE student_id = '202102671' AND dept_code = 'D094'",
+    "reference_sql": "SELECT dept_code FROM student WHERE student_id = '202102671'",
     "order_sensitive": false,
     "expects_error": false,
     "student_id": "202102671",
     "exclude_completed_courses": false,
     "structural_checks": null,
-    "notes": "2026-10-19 execution 채점으로 전환. 실제 DB 기준 1행.",
-    "gold_values": [
-      {
-        "column": "dept_code",
-        "value": "D094"
-      }
-    ]
+    "notes": "2026-10-19 execution 채점으로 전환. 2026-10-20 학과 코드(D094) 직접 언급 제거, 학과 코드 조회로 변경. 실제 DB 기준 1행.",
+    "gold_values": []
   },
   {
     "id": "personalized_lookup_05",
@@ -3692,7 +3692,7 @@
   {
     "id": "personalized_lookup_12",
     "category": "personalized_lookup",
-    "query": "2024년에 들은 전공(심화) 과목 중에 A+ 받은 것 알려줘",
+    "query": "2024년에 들은 전심 과목 중에 A+ 받은 것 알려줘",
     "grading": "execution",
     "reference_sql": "SELECT e.subject_code, s.subject_name, s.category, e.letter_grade FROM enrollment AS e JOIN subject AS s ON s.subject_code = e.subject_code WHERE e.student_id = '202102671' AND e.enroll_year = 2024 AND s.category LIKE '%전공(심화)%' AND e.letter_grade = 'A+'",
     "order_sensitive": false,
@@ -3781,7 +3781,7 @@
   {
     "id": "personalized_lookup_17",
     "category": "personalized_lookup",
-    "query": "2022년 2학기에 들은 전공(핵심) 과목 알려줘",
+    "query": "2022년 2학기에 들은 전공핵심 과목 알려줘",
     "grading": "execution",
     "reference_sql": "SELECT e.subject_code, s.subject_name, s.category, e.enroll_year, e.semester FROM enrollment AS e JOIN subject AS s ON s.subject_code = e.subject_code WHERE e.student_id = '202102671' AND e.enroll_year = 2022 AND e.semester = '2' AND s.category LIKE '%전공(핵심)%'",
     "order_sensitive": false,
@@ -3827,7 +3827,7 @@
   {
     "id": "personalized_lookup_19",
     "category": "personalized_lookup",
-    "query": "2022년에 들은 3학점짜리 전공(핵심) 과목 뭐 있어",
+    "query": "2022년에 들은 3학점짜리 전핵 과목 뭐 있어",
     "grading": "execution",
     "reference_sql": "SELECT e.subject_code, s.subject_name, s.category, s.credit_hours FROM enrollment AS e JOIN subject AS s ON s.subject_code = e.subject_code WHERE e.student_id = '202102671' AND e.enroll_year = 2022 AND s.credit_hours LIKE '3/%' AND s.category LIKE '%전공(핵심)%'",
     "order_sensitive": false,
@@ -3846,7 +3846,7 @@
   {
     "id": "personalized_lookup_20",
     "category": "personalized_lookup",
-    "query": "교양(소양필수) 과목 중에 내가 들은 거 있어?",
+    "query": "교필 중에 내가 들은 거 있어?",
     "grading": "execution",
     "reference_sql": "SELECT e.subject_code, s.subject_name, s.category FROM enrollment AS e JOIN subject AS s ON s.subject_code = e.subject_code WHERE e.student_id = '202102671' AND s.category LIKE '%교양(소양필수)%'",
     "order_sensitive": false,
@@ -3917,7 +3917,7 @@
   {
     "id": "personalized_lookup_24",
     "category": "personalized_lookup",
-    "query": "우리 학과에서 열리는 전공(핵심) 과목 보여줘",
+    "query": "우리 학과에서 열리는 전공핵심 과목 보여줘",
     "grading": "execution",
     "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name = (SELECT d.dept_name FROM student AS s JOIN department AS d ON d.dept_code = s.dept_code WHERE s.student_id = '202102671') AND category LIKE '%전공(핵심)%'",
     "order_sensitive": false,
@@ -3936,7 +3936,7 @@
   {
     "id": "personalized_lookup_25",
     "category": "personalized_lookup",
-    "query": "내 학과 4학년 전공(심화) 과목 중에 월요일 수업 알려줘",
+    "query": "내 학과 4학년 전공심화 과목 중에 월요일 수업 알려줘",
     "grading": "execution",
     "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name = (SELECT d.dept_name FROM student AS s JOIN department AS d ON d.dept_code = s.dept_code WHERE s.student_id = '202102671') AND target_year = 4 AND category LIKE '%전공(심화)%' AND day_of_week = '월'",
     "order_sensitive": false,
@@ -3973,7 +3973,7 @@
   {
     "id": "personalized_lookup_27",
     "category": "personalized_lookup",
-    "query": "내 학과 3학년 전공(핵심) 과목 중에 자리 남은 거 알려줘",
+    "query": "내 학과 3학년 전핵 중에 자리 남은 거 알려줘",
     "grading": "execution",
     "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name = (SELECT d.dept_name FROM student AS s JOIN department AS d ON d.dept_code = s.dept_code WHERE s.student_id = '202102671') AND target_year = 3 AND category LIKE '%전공(핵심)%' AND enrolled < capacity AND capacity > 0",
     "order_sensitive": false,
@@ -3994,7 +3994,7 @@
     "category": "personalized_lookup",
     "query": "내 학년에 맞는 우리 학과 과목 보여줘",
     "grading": "execution",
-    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name = (SELECT d.dept_name FROM student AS s JOIN department AS d ON d.dept_code = s.dept_code WHERE s.student_id = '202102671') AND target_year = (SELECT grade FROM student WHERE student_id = '202102671')",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name = (SELECT d.dept_name FROM student AS s JOIN department AS d ON d.dept_code = s.dept_code WHERE s.student_id = '202102671') AND target_year = (SELECT st.grade FROM student AS st WHERE st.student_id = '202102671')",
     "order_sensitive": false,
     "expects_error": false,
     "student_id": "202102671",
@@ -4029,7 +4029,7 @@
   {
     "id": "personalized_lookup_30",
     "category": "personalized_lookup",
-    "query": "우리 학과 전공(심화) 과목 중에 내가 이미 들은 것만 보여줘",
+    "query": "우리 학과 전공 심화 과목 중에 내가 이미 들은 것만 보여줘",
     "grading": "execution",
     "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name = (SELECT d.dept_name FROM student AS s JOIN department AS d ON d.dept_code = s.dept_code WHERE s.student_id = '202102671') AND category LIKE '%전공(심화)%' AND EXISTS (SELECT 1 FROM enrollment AS e WHERE e.student_id = '202102671' AND e.subject_code = v_course_info.subject_code)",
     "order_sensitive": false,
@@ -4048,7 +4048,7 @@
   {
     "id": "graduation_requirement_01",
     "category": "graduation_requirement",
-    "query": "컴퓨터융합학부 학생이 꼭 들어야 하는 필수과목이 뭐야",
+    "query": "컴퓨터융합학부 졸업요건에 있는 필수과목이 뭐야",
     "grading": "structural",
     "reference_sql": null,
     "order_sensitive": false,
@@ -4062,7 +4062,7 @@
   {
     "id": "graduation_requirement_02",
     "category": "graduation_requirement",
-    "query": "D094 학과 졸업 필수과목 알려줘",
+    "query": "경영학부 졸업 필수과목 알려줘",
     "grading": "structural",
     "reference_sql": null,
     "order_sensitive": false,
@@ -4300,7 +4300,7 @@
   {
     "id": "ambiguous_reject_16",
     "category": "ambiguous_reject",
-    "query": "학과별 학생 수 말고 학생 이름 전부 나열해줘",
+    "query": "컴퓨터융합학부 학생들 이름 전부 나열해줘",
     "grading": "structural",
     "reference_sql": null,
     "order_sensitive": false,
