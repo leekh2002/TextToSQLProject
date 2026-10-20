@@ -195,6 +195,1397 @@
     "notes": "실제 DB 기준 8행."
   },
   {
+    "id": "course_filter_16",
+    "category": "course_filter",
+    "query": "컴융 수업 전부 보여줘",
+    "grading": "execution",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%컴퓨터융합학부%'",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 82행.",
+    "gold_values": [
+      {
+        "column": "dept_name",
+        "value": "공과대학 컴퓨터융합학부"
+      }
+    ]
+  },
+  {
+    "id": "course_filter_17",
+    "category": "course_filter",
+    "query": "경영학부 과목 뭐 개설돼있어?",
+    "grading": "execution",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%경영학부%'",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 190행.",
+    "gold_values": [
+      {
+        "column": "dept_name",
+        "value": "경상대학 경영학부"
+      }
+    ]
+  },
+  {
+    "id": "course_filter_18",
+    "category": "course_filter",
+    "query": "토요일에 하는 수업 있어?",
+    "grading": "execution",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE day_of_week = '토'",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 35행.",
+    "gold_values": [
+      {
+        "column": "day_of_week",
+        "value": "토"
+      }
+    ]
+  },
+  {
+    "id": "course_filter_19",
+    "category": "course_filter",
+    "query": "심리학과 과목좀 알려줘",
+    "grading": "execution",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%심리학과%'",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 51행.",
+    "gold_values": [
+      {
+        "column": "dept_name",
+        "value": "사회과학대학 심리학과"
+      }
+    ]
+  },
+  {
+    "id": "course_filter_20",
+    "category": "course_filter",
+    "query": "김수일 교수님 수업 알려줘",
+    "grading": "execution",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE professor LIKE '%김수일%'",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 166행.",
+    "gold_values": [
+      {
+        "column": "professor",
+        "value": "김수일"
+      }
+    ]
+  },
+  {
+    "id": "course_filter_21",
+    "category": "course_filter",
+    "query": "구본석 교수 과목 뭐있어",
+    "grading": "execution",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE professor LIKE '%구본석%'",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 68행.",
+    "gold_values": [
+      {
+        "column": "professor",
+        "value": "구본석"
+      }
+    ]
+  },
+  {
+    "id": "course_filter_22",
+    "category": "course_filter",
+    "query": "정미숙 교수님이 가르치는 과목 알려줘",
+    "grading": "execution",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE professor LIKE '%정미숙%'",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 47행.",
+    "gold_values": [
+      {
+        "column": "professor",
+        "value": "정미숙"
+      }
+    ]
+  },
+  {
+    "id": "course_filter_23",
+    "category": "course_filter",
+    "query": "프로그래밍과목 알려줘",
+    "grading": "execution",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE subject_name LIKE '%프로그래밍%'",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 100행.",
+    "gold_values": [
+      {
+        "column": "subject_name",
+        "value": "컴퓨터프로그래밍 1"
+      }
+    ]
+  },
+  {
+    "id": "course_filter_24",
+    "category": "course_filter",
+    "query": "딥러닝 수업 있어?",
+    "grading": "execution",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE subject_name LIKE '%딥러닝%'",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 5행.",
+    "gold_values": [
+      {
+        "column": "subject_name",
+        "value": "딥러닝"
+      }
+    ]
+  },
+  {
+    "id": "course_filter_25",
+    "category": "course_filter",
+    "query": "선형대수 과목 알려줘",
+    "grading": "execution",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE subject_name LIKE '%선형대수%'",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 6행.",
+    "gold_values": [
+      {
+        "column": "subject_name",
+        "value": "선형대수1및실습"
+      }
+    ]
+  },
+  {
+    "id": "course_filter_26",
+    "category": "course_filter",
+    "query": "운영체제 수업좀 알려줘",
+    "grading": "execution",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE subject_name LIKE '%운영체제%'",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 8행.",
+    "gold_values": [
+      {
+        "column": "subject_name",
+        "value": "운영체제및실습"
+      }
+    ]
+  },
+  {
+    "id": "course_filter_27",
+    "category": "course_filter",
+    "query": "실시간 수업만 보여줘",
+    "grading": "execution",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE class_mode = '실시간'",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 35행.",
+    "gold_values": [
+      {
+        "column": "class_mode",
+        "value": "실시간"
+      }
+    ]
+  },
+  {
+    "id": "course_filter_28",
+    "category": "course_filter",
+    "query": "혼합 방식으로 진행하는 수업 알려줘",
+    "grading": "execution",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE class_mode = '혼합'",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 75행.",
+    "gold_values": [
+      {
+        "column": "class_mode",
+        "value": "혼합"
+      }
+    ]
+  },
+  {
+    "id": "course_filter_29",
+    "category": "course_filter",
+    "query": "P/F 과목 뭐 있어?",
+    "grading": "execution",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE grading_method = 'PASS/FAIL'",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 406행.",
+    "gold_values": [
+      {
+        "column": "grading_method",
+        "value": "PASS/FAIL"
+      }
+    ]
+  },
+  {
+    "id": "course_filter_30",
+    "category": "course_filter",
+    "query": "균형교양 과목 알려줘",
+    "grading": "execution",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE category LIKE '%교양(균형)%'",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 413행.",
+    "gold_values": [
+      {
+        "column": "category",
+        "value": "교양(균형)"
+      }
+    ]
+  },
+  {
+    "id": "course_filter_31",
+    "category": "course_filter",
+    "query": "교직 과목좀 알려줘",
+    "grading": "execution",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE category LIKE '%교직%'",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 73행.",
+    "gold_values": [
+      {
+        "column": "category",
+        "value": "교직"
+      }
+    ]
+  },
+  {
+    "id": "course_filter_32",
+    "category": "course_filter",
+    "query": "일반선택 과목 알려줘",
+    "grading": "execution",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE category LIKE '%일반선택%'",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 88행.",
+    "gold_values": [
+      {
+        "column": "category",
+        "value": "일반선택"
+      }
+    ]
+  },
+  {
+    "id": "course_filter_33",
+    "category": "course_filter",
+    "query": "교필 과목 알려줘",
+    "grading": "execution",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE category LIKE '%교양(소양필수)%'",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 115행.",
+    "gold_values": [
+      {
+        "column": "category",
+        "value": "교양(소양필수)"
+      }
+    ]
+  },
+  {
+    "id": "course_filter_34",
+    "category": "course_filter",
+    "query": "통계학 과목 알려줘",
+    "grading": "execution",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE subject_name LIKE '%통계학%'",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 25행.",
+    "gold_values": [
+      {
+        "column": "subject_name",
+        "value": "경영통계학"
+      }
+    ]
+  },
+  {
+    "id": "course_filter_35",
+    "category": "course_filter",
+    "query": "대학영어 수업 알려줘",
+    "grading": "execution",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE subject_name LIKE '%대학영어%'",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 54행.",
+    "gold_values": [
+      {
+        "column": "subject_name",
+        "value": "대학영어 "
+      }
+    ]
+  },
+  {
+    "id": "course_filter_36",
+    "category": "course_filter",
+    "query": "경영학부 전공(핵심) 과목 알려줘",
+    "grading": "execution",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%경영학부%' AND category LIKE '%전공(핵심)%'",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 39행.",
+    "gold_values": [
+      {
+        "column": "dept_name",
+        "value": "경상대학 경영학부"
+      },
+      {
+        "column": "category",
+        "value": "전공(핵심)"
+      }
+    ]
+  },
+  {
+    "id": "course_filter_37",
+    "category": "course_filter",
+    "query": "컴융 전핵 과목 뭐 있어?",
+    "grading": "execution",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%컴퓨터융합학부%' AND category LIKE '%전공(핵심)%'",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 29행.",
+    "gold_values": [
+      {
+        "column": "dept_name",
+        "value": "공과대학 컴퓨터융합학부"
+      },
+      {
+        "column": "category",
+        "value": "전공(핵심)"
+      }
+    ]
+  },
+  {
+    "id": "course_filter_38",
+    "category": "course_filter",
+    "query": "물리학과 전기 과목 알려줘",
+    "grading": "execution",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%물리학과%' AND category LIKE '%전공(기초)%'",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 24행.",
+    "gold_values": [
+      {
+        "column": "dept_name",
+        "value": "자연과학대학 물리학과"
+      },
+      {
+        "column": "category",
+        "value": "전공(기초)"
+      }
+    ]
+  },
+  {
+    "id": "course_filter_39",
+    "category": "course_filter",
+    "query": "수학과 월요일 수업 알려줘",
+    "grading": "execution",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%수학과%' AND day_of_week = '월'",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 60행.",
+    "gold_values": [
+      {
+        "column": "dept_name",
+        "value": "자연과학대학 수학과"
+      },
+      {
+        "column": "day_of_week",
+        "value": "월"
+      }
+    ]
+  },
+  {
+    "id": "course_filter_40",
+    "category": "course_filter",
+    "query": "경제학과 금요일 수업 뭐있어",
+    "grading": "execution",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%경제학과%' AND day_of_week = '금'",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 1행.",
+    "gold_values": [
+      {
+        "column": "dept_name",
+        "value": "경상대학 경제학과"
+      },
+      {
+        "column": "day_of_week",
+        "value": "금"
+      }
+    ]
+  },
+  {
+    "id": "course_filter_41",
+    "category": "course_filter",
+    "query": "3학년 대상 국어국문학과 과목 알려줘",
+    "grading": "execution",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%국어국문학과%' AND target_year = 3",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 17행.",
+    "gold_values": [
+      {
+        "column": "dept_name",
+        "value": "인문대학 국어국문학과"
+      }
+    ]
+  },
+  {
+    "id": "course_filter_42",
+    "category": "course_filter",
+    "query": "영어영문학과 2학년 과목좀",
+    "grading": "execution",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%영어영문학과%' AND target_year = 2",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 19행.",
+    "gold_values": [
+      {
+        "column": "dept_name",
+        "value": "인문대학 영어영문학과"
+      }
+    ]
+  },
+  {
+    "id": "course_filter_43",
+    "category": "course_filter",
+    "query": "화학과 전심 과목 알려줘",
+    "grading": "execution",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%화학과%' AND category LIKE '%전공(심화)%'",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 43행.",
+    "gold_values": [
+      {
+        "column": "dept_name",
+        "value": "자연과학대학 화학과"
+      },
+      {
+        "column": "category",
+        "value": "전공(심화)"
+      }
+    ]
+  },
+  {
+    "id": "course_filter_44",
+    "category": "course_filter",
+    "query": "간호학과 3학점 과목 알려줘",
+    "grading": "execution",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%간호학과%' AND credit_hours LIKE '3/%'",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 80행.",
+    "gold_values": [
+      {
+        "column": "dept_name",
+        "value": "간호대학 간호학과"
+      }
+    ]
+  },
+  {
+    "id": "course_filter_45",
+    "category": "course_filter",
+    "query": "기계공학부 오전 수업 있어?",
+    "grading": "execution",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%기계공학부%' AND start_time < '12:00:00'",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 61행.",
+    "gold_values": [
+      {
+        "column": "dept_name",
+        "value": "공과대학 기계공학부"
+      }
+    ]
+  },
+  {
+    "id": "course_filter_46",
+    "category": "course_filter",
+    "query": "신소재공학과 오후 수업 알려줘",
+    "grading": "execution",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%신소재공학과%' AND start_time >= '12:00:00'",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 47행.",
+    "gold_values": [
+      {
+        "column": "dept_name",
+        "value": "공과대학 신소재공학과"
+      }
+    ]
+  },
+  {
+    "id": "course_filter_47",
+    "category": "course_filter",
+    "query": "김수일 교수님 월요일 수업 알려줘",
+    "grading": "execution",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE professor LIKE '%김수일%' AND day_of_week = '월'",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 115행.",
+    "gold_values": [
+      {
+        "column": "professor",
+        "value": "김수일"
+      },
+      {
+        "column": "day_of_week",
+        "value": "월"
+      }
+    ]
+  },
+  {
+    "id": "course_filter_48",
+    "category": "course_filter",
+    "query": "김형석 교수 과목 중에 전공(핵심)만",
+    "grading": "execution",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE professor LIKE '%김형석%' AND category LIKE '%전공(핵심)%'",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 4행.",
+    "gold_values": [
+      {
+        "column": "professor",
+        "value": "김형석"
+      },
+      {
+        "column": "category",
+        "value": "전공(핵심)"
+      }
+    ]
+  },
+  {
+    "id": "course_filter_49",
+    "category": "course_filter",
+    "query": "김현우 교수님 오전 수업 알려줘",
+    "grading": "execution",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE professor LIKE '%김현우%' AND start_time < '12:00:00'",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 37행.",
+    "gold_values": [
+      {
+        "column": "professor",
+        "value": "김현우"
+      }
+    ]
+  },
+  {
+    "id": "course_filter_50",
+    "category": "course_filter",
+    "query": "수요일 10시 수업 알려줘",
+    "grading": "execution",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE day_of_week = '수' AND start_time = '10:00:00'",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 200행.",
+    "gold_values": [
+      {
+        "column": "day_of_week",
+        "value": "수"
+      },
+      {
+        "column": "start_time",
+        "value": "10:00:00"
+      }
+    ]
+  },
+  {
+    "id": "course_filter_51",
+    "category": "course_filter",
+    "query": "컴퓨터융합학부 금요일 오후 수업 알려줘",
+    "grading": "execution",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%컴퓨터융합학부%' AND day_of_week = '금' AND start_time >= '12:00:00'",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 6행.",
+    "gold_values": [
+      {
+        "column": "dept_name",
+        "value": "공과대학 컴퓨터융합학부"
+      },
+      {
+        "column": "day_of_week",
+        "value": "금"
+      }
+    ]
+  },
+  {
+    "id": "course_filter_52",
+    "category": "course_filter",
+    "query": "교양(기초) 과목 중 실시간 수업 알려줘",
+    "grading": "execution",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE category LIKE '%교양(기초)%' AND class_mode = '실시간'",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 16행.",
+    "gold_values": [
+      {
+        "column": "category",
+        "value": "교양(기초)"
+      },
+      {
+        "column": "class_mode",
+        "value": "실시간"
+      }
+    ]
+  },
+  {
+    "id": "course_filter_53",
+    "category": "course_filter",
+    "query": "혼합 수업 중에 전공(심화) 과목 있어?",
+    "grading": "execution",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE category LIKE '%전공(심화)%' AND class_mode = '혼합'",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 4행.",
+    "gold_values": [
+      {
+        "column": "category",
+        "value": "전공(심화)"
+      },
+      {
+        "column": "class_mode",
+        "value": "혼합"
+      }
+    ]
+  },
+  {
+    "id": "course_filter_54",
+    "category": "course_filter",
+    "query": "절대평가 교양(소양) 과목 알려줘",
+    "grading": "execution",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE eval_type = '절대평가' AND category LIKE '%교양(소양)%'",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 63행.",
+    "gold_values": [
+      {
+        "column": "eval_type",
+        "value": "절대평가"
+      },
+      {
+        "column": "category",
+        "value": "교양(소양)"
+      }
+    ]
+  },
+  {
+    "id": "course_filter_55",
+    "category": "course_filter",
+    "query": "컴퓨터융합학부 여석 있는 과목 알려줘",
+    "grading": "execution",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%컴퓨터융합학부%' AND enrolled < capacity AND capacity > 0",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 58행.",
+    "gold_values": [
+      {
+        "column": "dept_name",
+        "value": "공과대학 컴퓨터융합학부"
+      }
+    ]
+  },
+  {
+    "id": "course_filter_56",
+    "category": "course_filter",
+    "query": "경영학부 정원 다 찬 과목 있어?",
+    "grading": "execution",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%경영학부%' AND enrolled >= capacity AND capacity > 0",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 47행.",
+    "gold_values": [
+      {
+        "column": "dept_name",
+        "value": "경상대학 경영학부"
+      }
+    ]
+  },
+  {
+    "id": "course_filter_57",
+    "category": "course_filter",
+    "query": "프로그래밍 과목 중 2학년 대상 과목 알려줘",
+    "grading": "execution",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE subject_name LIKE '%프로그래밍%' AND target_year = 2",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 32행.",
+    "gold_values": [
+      {
+        "column": "subject_name",
+        "value": "컴퓨터프로그래밍 1"
+      }
+    ]
+  },
+  {
+    "id": "course_filter_58",
+    "category": "course_filter",
+    "query": "데이터 과목 중에 화요일 수업",
+    "grading": "execution",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE subject_name LIKE '%데이터%' AND day_of_week = '화'",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 29행.",
+    "gold_values": [
+      {
+        "column": "subject_name",
+        "value": "데이터베이스"
+      },
+      {
+        "column": "day_of_week",
+        "value": "화"
+      }
+    ]
+  },
+  {
+    "id": "course_filter_59",
+    "category": "course_filter",
+    "query": "미적분학 과목 중 오전 수업 알려줘",
+    "grading": "execution",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE subject_name LIKE '%미적분학%' AND start_time < '12:00:00'",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 34행.",
+    "gold_values": [
+      {
+        "column": "subject_name",
+        "value": "미적분학1"
+      }
+    ]
+  },
+  {
+    "id": "course_filter_60",
+    "category": "course_filter",
+    "query": "물리학 과목 중 3학점 수업 알려줘",
+    "grading": "execution",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE subject_name LIKE '%물리학%' AND credit_hours LIKE '3/%'",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 71행.",
+    "gold_values": [
+      {
+        "column": "subject_name",
+        "value": "물리학 1"
+      }
+    ]
+  },
+  {
+    "id": "course_filter_61",
+    "category": "course_filter",
+    "query": "교양(균형) 과목 중에 수요일 수업 알려줘",
+    "grading": "execution",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE category LIKE '%교양(균형)%' AND day_of_week = '수'",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 157행.",
+    "gold_values": [
+      {
+        "column": "category",
+        "value": "교양(균형)"
+      },
+      {
+        "column": "day_of_week",
+        "value": "수"
+      }
+    ]
+  },
+  {
+    "id": "course_filter_62",
+    "category": "course_filter",
+    "query": "컴퓨터융합학부 3학년 전공(핵심) 과목 중 화요일 수업 알려줘",
+    "grading": "execution",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%컴퓨터융합학부%' AND target_year = 3 AND category LIKE '%전공(핵심)%' AND day_of_week = '화'",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 5행.",
+    "gold_values": [
+      {
+        "column": "dept_name",
+        "value": "공과대학 컴퓨터융합학부"
+      },
+      {
+        "column": "category",
+        "value": "전공(핵심)"
+      },
+      {
+        "column": "day_of_week",
+        "value": "화"
+      }
+    ]
+  },
+  {
+    "id": "course_filter_63",
+    "category": "course_filter",
+    "query": "컴융 2학년 전기 과목 알려줘",
+    "grading": "execution",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%컴퓨터융합학부%' AND target_year = 2 AND category LIKE '%전공(기초)%'",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 12행.",
+    "gold_values": [
+      {
+        "column": "dept_name",
+        "value": "공과대학 컴퓨터융합학부"
+      },
+      {
+        "column": "category",
+        "value": "전공(기초)"
+      }
+    ]
+  },
+  {
+    "id": "course_filter_64",
+    "category": "course_filter",
+    "query": "물리학과 목요일 오전 수업 알려줘",
+    "grading": "execution",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%물리학과%' AND day_of_week = '목' AND start_time < '12:00:00'",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 20행.",
+    "gold_values": [
+      {
+        "column": "dept_name",
+        "value": "자연과학대학 물리학과"
+      },
+      {
+        "column": "day_of_week",
+        "value": "목"
+      }
+    ]
+  },
+  {
+    "id": "course_filter_65",
+    "category": "course_filter",
+    "query": "경영학부 월요일 오후 전핵 수업 있어?",
+    "grading": "execution",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%경영학부%' AND day_of_week = '월' AND start_time >= '12:00:00' AND category LIKE '%전공(핵심)%'",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 12행.",
+    "gold_values": [
+      {
+        "column": "dept_name",
+        "value": "경상대학 경영학부"
+      },
+      {
+        "column": "day_of_week",
+        "value": "월"
+      },
+      {
+        "column": "category",
+        "value": "전공(핵심)"
+      }
+    ]
+  },
+  {
+    "id": "course_filter_66",
+    "category": "course_filter",
+    "query": "전자공학과 4학년 전공(심화) 과목 중 여석 있는 과목 알려줘",
+    "grading": "execution",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%전자공학과%' AND target_year = 4 AND category LIKE '%전공(심화)%' AND enrolled < capacity AND capacity > 0",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 14행.",
+    "gold_values": [
+      {
+        "column": "dept_name",
+        "value": "공과대학 전자공학과"
+      },
+      {
+        "column": "category",
+        "value": "전공(심화)"
+      }
+    ]
+  },
+  {
+    "id": "course_filter_67",
+    "category": "course_filter",
+    "query": "간호학과 2학년 수요일 수업좀",
+    "grading": "execution",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%간호학과%' AND target_year = 2 AND day_of_week = '수'",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 9행.",
+    "gold_values": [
+      {
+        "column": "dept_name",
+        "value": "간호대학 간호학과"
+      },
+      {
+        "column": "day_of_week",
+        "value": "수"
+      }
+    ]
+  },
+  {
+    "id": "course_filter_68",
+    "category": "course_filter",
+    "query": "수학과 화요일 10시 수업 알려줘",
+    "grading": "execution",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%수학과%' AND day_of_week = '화' AND start_time = '10:00:00'",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 8행.",
+    "gold_values": [
+      {
+        "column": "dept_name",
+        "value": "자연과학대학 수학과"
+      },
+      {
+        "column": "day_of_week",
+        "value": "화"
+      },
+      {
+        "column": "start_time",
+        "value": "10:00:00"
+      }
+    ]
+  },
+  {
+    "id": "course_filter_69",
+    "category": "course_filter",
+    "query": "김수일 교수님 목요일 오후 수업 알려줘",
+    "grading": "execution",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE professor LIKE '%김수일%' AND day_of_week = '목' AND start_time >= '12:00:00'",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 144행.",
+    "gold_values": [
+      {
+        "column": "professor",
+        "value": "김수일"
+      },
+      {
+        "column": "day_of_week",
+        "value": "목"
+      }
+    ]
+  },
+  {
+    "id": "course_filter_70",
+    "category": "course_filter",
+    "query": "국어국문학과 1학년 전공(기초) 과목 중 3학점짜리 알려줘",
+    "grading": "execution",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%국어국문학과%' AND target_year = 1 AND category LIKE '%전공(기초)%' AND credit_hours LIKE '3/%'",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 4행.",
+    "gold_values": [
+      {
+        "column": "dept_name",
+        "value": "인문대학 국어국문학과"
+      },
+      {
+        "column": "category",
+        "value": "전공(기초)"
+      }
+    ]
+  },
+  {
+    "id": "course_filter_71",
+    "category": "course_filter",
+    "query": "기계공학부 3학년 오후 수업 중에 정원 다 찬 과목 있어?",
+    "grading": "execution",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%기계공학부%' AND target_year = 3 AND start_time >= '12:00:00' AND enrolled >= capacity AND capacity > 0",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 11행.",
+    "gold_values": [
+      {
+        "column": "dept_name",
+        "value": "공과대학 기계공학부"
+      }
+    ]
+  },
+  {
+    "id": "course_filter_72",
+    "category": "course_filter",
+    "query": "교양(균형) 과목 월요일 오후 수업 있어?",
+    "grading": "execution",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE category LIKE '%교양(균형)%' AND day_of_week = '월' AND start_time >= '12:00:00'",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 133행.",
+    "gold_values": [
+      {
+        "column": "category",
+        "value": "교양(균형)"
+      },
+      {
+        "column": "day_of_week",
+        "value": "월"
+      }
+    ]
+  },
+  {
+    "id": "course_filter_73",
+    "category": "course_filter",
+    "query": "경제학과 전공(핵심) 과목 중 상대평가이고 3학점인 과목 알려줘",
+    "grading": "execution",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%경제학과%' AND category LIKE '%전공(핵심)%' AND eval_type = '상대평가' AND credit_hours LIKE '3/%'",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 27행.",
+    "gold_values": [
+      {
+        "column": "dept_name",
+        "value": "경상대학 경제학과"
+      },
+      {
+        "column": "category",
+        "value": "전공(핵심)"
+      },
+      {
+        "column": "eval_type",
+        "value": "상대평가"
+      }
+    ]
+  },
+  {
+    "id": "course_filter_74",
+    "category": "course_filter",
+    "query": "화학과 금요일 오전 3학년 과목 뭐 있어",
+    "grading": "execution",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%화학과%' AND day_of_week = '금' AND start_time < '12:00:00' AND target_year = 3",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 2행.",
+    "gold_values": [
+      {
+        "column": "dept_name",
+        "value": "자연과학대학 화학과"
+      },
+      {
+        "column": "day_of_week",
+        "value": "금"
+      }
+    ]
+  },
+  {
+    "id": "course_filter_75",
+    "category": "course_filter",
+    "query": "컴퓨터융합학부 월요일 오전 수업 중 여석 있는 과목 알려줘",
+    "grading": "execution",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%컴퓨터융합학부%' AND day_of_week = '월' AND start_time < '12:00:00' AND enrolled < capacity AND capacity > 0",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 2행.",
+    "gold_values": [
+      {
+        "column": "dept_name",
+        "value": "공과대학 컴퓨터융합학부"
+      },
+      {
+        "column": "day_of_week",
+        "value": "월"
+      }
+    ]
+  },
+  {
+    "id": "course_filter_76",
+    "category": "course_filter",
+    "query": "영어영문학과 전공핵심 과목 중에 화요일 오후 수업",
+    "grading": "execution",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%영어영문학과%' AND category LIKE '%전공(핵심)%' AND day_of_week = '화' AND start_time >= '12:00:00'",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 10행.",
+    "gold_values": [
+      {
+        "column": "dept_name",
+        "value": "인문대학 영어영문학과"
+      },
+      {
+        "column": "category",
+        "value": "전공(핵심)"
+      },
+      {
+        "column": "day_of_week",
+        "value": "화"
+      }
+    ]
+  },
+  {
+    "id": "course_filter_77",
+    "category": "course_filter",
+    "query": "신소재공학과 4학년 전공(심화) 과목 중 목요일 수업 알려줘",
+    "grading": "execution",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%신소재공학과%' AND target_year = 4 AND category LIKE '%전공(심화)%' AND day_of_week = '목'",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 6행.",
+    "gold_values": [
+      {
+        "column": "dept_name",
+        "value": "공과대학 신소재공학과"
+      },
+      {
+        "column": "category",
+        "value": "전공(심화)"
+      },
+      {
+        "column": "day_of_week",
+        "value": "목"
+      }
+    ]
+  },
+  {
+    "id": "course_filter_78",
+    "category": "course_filter",
+    "query": "교육학과 수요일 오전 수업 알려줘",
+    "grading": "execution",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%교육학과%' AND day_of_week = '수' AND start_time < '12:00:00'",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 6행.",
+    "gold_values": [
+      {
+        "column": "dept_name",
+        "value": "사범대학 교육학과"
+      },
+      {
+        "column": "day_of_week",
+        "value": "수"
+      }
+    ]
+  },
+  {
+    "id": "course_filter_79",
+    "category": "course_filter",
+    "query": "프로그래밍 과목 중 컴퓨터융합학부 3학년 대상 과목 알려줘",
+    "grading": "execution",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE subject_name LIKE '%프로그래밍%' AND dept_name LIKE '%컴퓨터융합학부%' AND target_year = 3",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 4행.",
+    "gold_values": [
+      {
+        "column": "subject_name",
+        "value": "컴퓨터프로그래밍 1"
+      },
+      {
+        "column": "dept_name",
+        "value": "공과대학 컴퓨터융합학부"
+      }
+    ]
+  },
+  {
+    "id": "course_filter_80",
+    "category": "course_filter",
+    "query": "스포츠과학과 3학점 전공(핵심) 과목 중 오전 수업 알려줘",
+    "grading": "execution",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%스포츠과학과%' AND credit_hours LIKE '3/%' AND category LIKE '%전공(핵심)%' AND start_time < '12:00:00'",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 10행.",
+    "gold_values": [
+      {
+        "column": "dept_name",
+        "value": "자연과학대학 스포츠과학과"
+      },
+      {
+        "column": "category",
+        "value": "전공(핵심)"
+      }
+    ]
+  },
+  {
     "id": "exclude_completed_courses_01",
     "category": "exclude_completed_courses",
     "query": "데이터베이스 관련 과목 중에서 내가 이미 들은 과목은 빼고 보여줘",
