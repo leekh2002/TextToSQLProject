@@ -669,15 +669,15 @@
   {
     "id": "course_filter_40",
     "category": "course_filter",
-    "query": "경제학과 금요일 수업 뭐있어",
+    "query": "경제학과 수요일 수업 뭐있어",
     "grading": "execution",
-    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%경제학과%' AND day_of_week = '금'",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%경상대학 경제학과%' AND day_of_week = '수'",
     "order_sensitive": false,
     "expects_error": false,
     "student_id": null,
     "exclude_completed_courses": false,
     "structural_checks": null,
-    "notes": "실제 DB 기준 1행.",
+    "notes": "실제 DB 기준 30행.",
     "gold_values": [
       {
         "column": "dept_name",
@@ -685,7 +685,7 @@
       },
       {
         "column": "day_of_week",
-        "value": "금"
+        "value": "수"
       }
     ]
   },
@@ -732,13 +732,13 @@
     "category": "course_filter",
     "query": "화학과 전심 과목 알려줘",
     "grading": "execution",
-    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%화학과%' AND category LIKE '%전공(심화)%'",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%자연과학대학 화학과%' AND category LIKE '%전공(심화)%'",
     "order_sensitive": false,
     "expects_error": false,
     "student_id": null,
     "exclude_completed_courses": false,
     "structural_checks": null,
-    "notes": "실제 DB 기준 43행.",
+    "notes": "실제 DB 기준 19행.",
     "gold_values": [
       {
         "column": "dept_name",
@@ -1394,13 +1394,13 @@
     "category": "course_filter",
     "query": "경제학과 전공(핵심) 과목 중 상대평가이고 3학점인 과목 알려줘",
     "grading": "execution",
-    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%경제학과%' AND category LIKE '%전공(핵심)%' AND eval_type = '상대평가' AND credit_hours LIKE '3/%'",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%경상대학 경제학과%' AND category LIKE '%전공(핵심)%' AND eval_type = '상대평가' AND credit_hours LIKE '3/%'",
     "order_sensitive": false,
     "expects_error": false,
     "student_id": null,
     "exclude_completed_courses": false,
     "structural_checks": null,
-    "notes": "실제 DB 기준 27행.",
+    "notes": "실제 DB 기준 23행.",
     "gold_values": [
       {
         "column": "dept_name",
@@ -1421,7 +1421,7 @@
     "category": "course_filter",
     "query": "화학과 금요일 오전 3학년 과목 뭐 있어",
     "grading": "execution",
-    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%화학과%' AND day_of_week = '금' AND start_time < '12:00:00' AND target_year = 3",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%자연과학대학 화학과%' AND day_of_week = '금' AND start_time < '12:00:00' AND target_year = 3",
     "order_sensitive": false,
     "expects_error": false,
     "student_id": null,
