@@ -43,6 +43,12 @@ python -m pytest backend/eval/ -v
   일치하면 `rejected: true`를 붙인다. `process()`가 그 사유로 예외를 던져도 같은 결과로 바꾼다. "FROM 또는 JOIN 절이 필요합니다.",
   "기본 LIMIT가 필요합니다."는 잘못된 SQL이지 거부가 아니므로 제외한다. 사유 문구가 바뀌면
   `test_rejection_patterns_track_validate_reasons`가 실패한다.
+- **student 조회 정책**: 학생은 자기 자신의 허용 컬럼(`ALLOWED_STUDENT_COLUMNS`: `student_id`, `dept_code`, `grade`,
+  `admission_year`, `completed_credits`)을 읽을 수 있다. `student` 컬럼을 SELECT하는 SQL은 요청된 학생의 학번으로 스코프돼
+  있을 때만(`has_scoped_student_filter`) 허용되고, 그렇지 않으면 "student 테이블은 필터 조건으로만 사용할 수 있습니다."로
+  거부된다. 허용되지 않은 컬럼(`*` 포함)은 스코프와 무관하게 "student에서 허용되지 않은 컬럼 참조: ..."로 거부된다.
+  `student`만 참조하는 단일 테이블 질의에서는 한정자 없는 컬럼(`SELECT grade FROM student ...`)도 student 컬럼으로 보고
+  같은 규칙을 적용한다.
 - `value_hints`: `None`이면 파이프라인이 값 검색을 스스로 한다. 리스트(빈 리스트 `[]` 포함)이면 "정확히 이 힌트만 쓴다"는 뜻이다.
   `--decoupled`일 때만 케이스의 `gold_values`가 그대로 전달된다.
 - 각 파이프라인은 함수 속성 `accepts_value_hints`(bool)를 선언한다. 없으면 `False`로 본다.
@@ -110,6 +116,8 @@ python -m backend.eval.validate_golden
      호출 시점에 읽음)행이고 그 행이 모두 정답 집합에 들어 있으면 통과다(`order_sensitive` 케이스는 정답의 앞부분과 순서까지 같아야 한다).
   5. **학생 범위**: 케이스에 `student_id`가 있고 생성 SQL이 `student`나 `enrollment`를 참조하면, 참조한 테이블마다
      `backend.validate.has_scoped_student_filter`(학번 리터럴 또는 플레이스홀더 허용)를 통과해야 한다. 아니면 "학생 범위 미지정"으로 실패한다.
+     한정자 없는 `student_id = ...`는 질의 전체가 그 테이블 하나만 참조할 때만 인정한다(`FROM enrollment WHERE student_id = '...'`).
+     여러 테이블을 참조하면 `e.student_id`처럼 한정해야 한다.
      결과가 우연히 같아도 다른 학생 데이터를 읽을 수 있는 SQL은 정답이 아니다.
   6. **인프라 오류**: 정답 SQL 실행 자체가 실패하면 "정답 SQL 실행 실패: ..."로 기록하고 실패 유형은 `infra_error`다.
 - `grading: "structural"` — 실행 결과 비교가 부적절한 케이스(졸업요건처럼 데이터가 없는 경우)용.
@@ -126,7 +134,8 @@ python -m backend.eval.validate_golden
    `requested_student_id`로 전달한다(`validate_sql` 호출부 참고). 일반 개인화 조회
    (`exclude_completed_courses=False`)에서는 생성된 SQL이 올바르게 `student.student_id = '202102671'`로
    스코프돼도 검증 단계(`backend/validate.py`의 `has_scoped_student_filter`)가 플레이스홀더(`:student_id` 등)만
-   허용하므로 거의 항상 실패한다 — 이는 코드로 확인되는 실제 파이프라인 갭이다. 다만 실제 라이브 실행
+   허용하므로 거의 항상 실패한다 — 이는 코드로 확인되는 실제 파이프라인 갭이다(validate.py는 이제 스코프된 본인 student
+   컬럼 SELECT를 허용하지만, 학번 리터럴 스코프는 `requested_student_id`가 전달될 때만 인정되므로 이 갭은 그대로다). 다만 실제 라이브 실행
    리포트(`backend/eval/reports/*.json`)를 확인해 보면, 이 두 카테고리에서 발생한 8건의 실패 중 이 검증
    갭이 원인이 된 사례는 하나도 없었다: `personalized_lookup_01/02/05`는 모델이 아예 `student` 테이블을
    참조하지 않아 "필요한 테이블이 SQL에 없습니다: student"로 실패했고, `personalized_lookup_03/04`는 존재하지
