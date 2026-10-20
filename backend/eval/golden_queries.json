@@ -1652,6 +1652,525 @@
     "notes": "제외 전 39행 -> 제외 후 7행."
   },
   {
+    "id": "exclude_completed_courses_06",
+    "category": "exclude_completed_courses",
+    "query": "컴퓨터융합학부 4학년 대상 과목 중에 아직 안 들은 것만 알려줘",
+    "grading": "execution",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%컴퓨터융합학부%' AND target_year = 4 AND NOT EXISTS (SELECT 1 FROM enrollment AS e WHERE e.student_id = '202102671' AND e.subject_code = v_course_info.subject_code)",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": "202102671",
+    "exclude_completed_courses": true,
+    "structural_checks": null,
+    "notes": "제외 전 19행 -> 제외 후 7행.",
+    "gold_values": [
+      {
+        "column": "dept_name",
+        "value": "공과대학 컴퓨터융합학부"
+      }
+    ]
+  },
+  {
+    "id": "exclude_completed_courses_07",
+    "category": "exclude_completed_courses",
+    "query": "운영체제 과목 중에 내가 안 들은 것 알려줘",
+    "grading": "execution",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE subject_name LIKE '%운영체제%' AND NOT EXISTS (SELECT 1 FROM enrollment AS e WHERE e.student_id = '202102671' AND e.subject_code = v_course_info.subject_code)",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": "202102671",
+    "exclude_completed_courses": true,
+    "structural_checks": null,
+    "notes": "제외 전 8행 -> 제외 후 2행.",
+    "gold_values": [
+      {
+        "column": "subject_name",
+        "value": "운영체제및실습"
+      }
+    ]
+  },
+  {
+    "id": "exclude_completed_courses_08",
+    "category": "exclude_completed_courses",
+    "query": "컴퓨터융합학부 전공(심화) 과목 중에 수강 안 한 것만 알려줘",
+    "grading": "execution",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%컴퓨터융합학부%' AND category LIKE '%전공(심화)%' AND NOT EXISTS (SELECT 1 FROM enrollment AS e WHERE e.student_id = '202102671' AND e.subject_code = v_course_info.subject_code)",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": "202102671",
+    "exclude_completed_courses": true,
+    "structural_checks": null,
+    "notes": "제외 전 39행 -> 제외 후 7행.",
+    "gold_values": [
+      {
+        "column": "dept_name",
+        "value": "공과대학 컴퓨터융합학부"
+      },
+      {
+        "column": "category",
+        "value": "전공(심화)"
+      }
+    ]
+  },
+  {
+    "id": "exclude_completed_courses_09",
+    "category": "exclude_completed_courses",
+    "query": "컴퓨터융합학부 4학년 전공(심화) 과목에서 이미 들은 건 빼고 알려줘",
+    "grading": "execution",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%컴퓨터융합학부%' AND target_year = 4 AND category LIKE '%전공(심화)%' AND NOT EXISTS (SELECT 1 FROM enrollment AS e WHERE e.student_id = '202102671' AND e.subject_code = v_course_info.subject_code)",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": "202102671",
+    "exclude_completed_courses": true,
+    "structural_checks": null,
+    "notes": "제외 전 18행 -> 제외 후 7행.",
+    "gold_values": [
+      {
+        "column": "dept_name",
+        "value": "공과대학 컴퓨터융합학부"
+      },
+      {
+        "column": "category",
+        "value": "전공(심화)"
+      }
+    ]
+  },
+  {
+    "id": "exclude_completed_courses_10",
+    "category": "exclude_completed_courses",
+    "query": "컴퓨터융합학부 수요일 수업 중에 내가 안 들은 과목 알려줘",
+    "grading": "execution",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%컴퓨터융합학부%' AND day_of_week = '수' AND NOT EXISTS (SELECT 1 FROM enrollment AS e WHERE e.student_id = '202102671' AND e.subject_code = v_course_info.subject_code)",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": "202102671",
+    "exclude_completed_courses": true,
+    "structural_checks": null,
+    "notes": "제외 전 34행 -> 제외 후 8행.",
+    "gold_values": [
+      {
+        "column": "dept_name",
+        "value": "공과대학 컴퓨터융합학부"
+      },
+      {
+        "column": "day_of_week",
+        "value": "수"
+      }
+    ]
+  },
+  {
+    "id": "exclude_completed_courses_11",
+    "category": "exclude_completed_courses",
+    "query": "컴퓨터융합학부 월요일 수업 중에 아직 안 들은 것 보여줘",
+    "grading": "execution",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%컴퓨터융합학부%' AND day_of_week = '월' AND NOT EXISTS (SELECT 1 FROM enrollment AS e WHERE e.student_id = '202102671' AND e.subject_code = v_course_info.subject_code)",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": "202102671",
+    "exclude_completed_courses": true,
+    "structural_checks": null,
+    "notes": "제외 전 29행 -> 제외 후 8행.",
+    "gold_values": [
+      {
+        "column": "dept_name",
+        "value": "공과대학 컴퓨터융합학부"
+      },
+      {
+        "column": "day_of_week",
+        "value": "월"
+      }
+    ]
+  },
+  {
+    "id": "exclude_completed_courses_12",
+    "category": "exclude_completed_courses",
+    "query": "컴퓨터융합학부 화요일 과목 중에 이미 들은 건 제외해줘",
+    "grading": "execution",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%컴퓨터융합학부%' AND day_of_week = '화' AND NOT EXISTS (SELECT 1 FROM enrollment AS e WHERE e.student_id = '202102671' AND e.subject_code = v_course_info.subject_code)",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": "202102671",
+    "exclude_completed_courses": true,
+    "structural_checks": null,
+    "notes": "제외 전 31행 -> 제외 후 10행.",
+    "gold_values": [
+      {
+        "column": "dept_name",
+        "value": "공과대학 컴퓨터융합학부"
+      },
+      {
+        "column": "day_of_week",
+        "value": "화"
+      }
+    ]
+  },
+  {
+    "id": "exclude_completed_courses_13",
+    "category": "exclude_completed_courses",
+    "query": "컴퓨터융합학부 금요일 수업 중에 내가 수강한 건 빼고 알려줘",
+    "grading": "execution",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%컴퓨터융합학부%' AND day_of_week = '금' AND NOT EXISTS (SELECT 1 FROM enrollment AS e WHERE e.student_id = '202102671' AND e.subject_code = v_course_info.subject_code)",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": "202102671",
+    "exclude_completed_courses": true,
+    "structural_checks": null,
+    "notes": "제외 전 18행 -> 제외 후 2행.",
+    "gold_values": [
+      {
+        "column": "dept_name",
+        "value": "공과대학 컴퓨터융합학부"
+      },
+      {
+        "column": "day_of_week",
+        "value": "금"
+      }
+    ]
+  },
+  {
+    "id": "exclude_completed_courses_14",
+    "category": "exclude_completed_courses",
+    "query": "컴퓨터융합학부 여석 있는 과목 중에 안 들은 것만 알려줘",
+    "grading": "execution",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%컴퓨터융합학부%' AND enrolled < capacity AND capacity > 0 AND NOT EXISTS (SELECT 1 FROM enrollment AS e WHERE e.student_id = '202102671' AND e.subject_code = v_course_info.subject_code)",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": "202102671",
+    "exclude_completed_courses": true,
+    "structural_checks": null,
+    "notes": "제외 전 58행 -> 제외 후 9행.",
+    "gold_values": [
+      {
+        "column": "dept_name",
+        "value": "공과대학 컴퓨터융합학부"
+      }
+    ]
+  },
+  {
+    "id": "exclude_completed_courses_15",
+    "category": "exclude_completed_courses",
+    "query": "컴퓨터융합학부 전공(심화) 중에 자리 남아있고 내가 안 들은 과목 보여줘",
+    "grading": "execution",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%컴퓨터융합학부%' AND category LIKE '%전공(심화)%' AND enrolled < capacity AND capacity > 0 AND NOT EXISTS (SELECT 1 FROM enrollment AS e WHERE e.student_id = '202102671' AND e.subject_code = v_course_info.subject_code)",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": "202102671",
+    "exclude_completed_courses": true,
+    "structural_checks": null,
+    "notes": "제외 전 30행 -> 제외 후 3행.",
+    "gold_values": [
+      {
+        "column": "dept_name",
+        "value": "공과대학 컴퓨터융합학부"
+      },
+      {
+        "column": "category",
+        "value": "전공(심화)"
+      }
+    ]
+  },
+  {
+    "id": "exclude_completed_courses_16",
+    "category": "exclude_completed_courses",
+    "query": "프로그래밍 과목 중에 아직 안 들은 것만 알려줘",
+    "grading": "execution",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE subject_name LIKE '%프로그래밍%' AND NOT EXISTS (SELECT 1 FROM enrollment AS e WHERE e.student_id = '202102671' AND e.subject_code = v_course_info.subject_code)",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": "202102671",
+    "exclude_completed_courses": true,
+    "structural_checks": null,
+    "notes": "제외 전 100행 -> 제외 후 54행.",
+    "gold_values": [
+      {
+        "column": "subject_name",
+        "value": "컴퓨터프로그래밍 1"
+      }
+    ]
+  },
+  {
+    "id": "exclude_completed_courses_17",
+    "category": "exclude_completed_courses",
+    "query": "데이터 들어간 과목 중에 내가 안 들은 것 보여줘",
+    "grading": "execution",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE subject_name LIKE '%데이터%' AND NOT EXISTS (SELECT 1 FROM enrollment AS e WHERE e.student_id = '202102671' AND e.subject_code = v_course_info.subject_code)",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": "202102671",
+    "exclude_completed_courses": true,
+    "structural_checks": null,
+    "notes": "제외 전 72행 -> 제외 후 56행.",
+    "gold_values": [
+      {
+        "column": "subject_name",
+        "value": "데이터베이스"
+      }
+    ]
+  },
+  {
+    "id": "exclude_completed_courses_18",
+    "category": "exclude_completed_courses",
+    "query": "종합설계 과목 중에 이미 들은 건 빼고 알려줘",
+    "grading": "execution",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE subject_name LIKE '%종합설계%' AND NOT EXISTS (SELECT 1 FROM enrollment AS e WHERE e.student_id = '202102671' AND e.subject_code = v_course_info.subject_code)",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": "202102671",
+    "exclude_completed_courses": true,
+    "structural_checks": null,
+    "notes": "제외 전 41행 -> 제외 후 35행.",
+    "gold_values": [
+      {
+        "column": "subject_name",
+        "value": "종합설계1"
+      }
+    ]
+  },
+  {
+    "id": "exclude_completed_courses_19",
+    "category": "exclude_completed_courses",
+    "query": "컴퓨터 이름 들어간 과목 중에 수강 안 한 것만 보여줘",
+    "grading": "execution",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE subject_name LIKE '%컴퓨터%' AND NOT EXISTS (SELECT 1 FROM enrollment AS e WHERE e.student_id = '202102671' AND e.subject_code = v_course_info.subject_code)",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": "202102671",
+    "exclude_completed_courses": true,
+    "structural_checks": null,
+    "notes": "제외 전 107행 -> 제외 후 64행.",
+    "gold_values": [
+      {
+        "column": "subject_name",
+        "value": "컴퓨터프로그래밍3"
+      }
+    ]
+  },
+  {
+    "id": "exclude_completed_courses_20",
+    "category": "exclude_completed_courses",
+    "query": "회로 관련 과목 중에 내가 안 들은 거 알려줘",
+    "grading": "execution",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE subject_name LIKE '%회로%' AND NOT EXISTS (SELECT 1 FROM enrollment AS e WHERE e.student_id = '202102671' AND e.subject_code = v_course_info.subject_code)",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": "202102671",
+    "exclude_completed_courses": true,
+    "structural_checks": null,
+    "notes": "제외 전 62행 -> 제외 후 53행.",
+    "gold_values": [
+      {
+        "column": "subject_name",
+        "value": "논리회로"
+      }
+    ]
+  },
+  {
+    "id": "exclude_completed_courses_21",
+    "category": "exclude_completed_courses",
+    "query": "소프트웨어 과목 중에 아직 수강 안 한 것 알려줘",
+    "grading": "execution",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE subject_name LIKE '%소프트웨어%' AND NOT EXISTS (SELECT 1 FROM enrollment AS e WHERE e.student_id = '202102671' AND e.subject_code = v_course_info.subject_code)",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": "202102671",
+    "exclude_completed_courses": true,
+    "structural_checks": null,
+    "notes": "제외 전 5행 -> 제외 후 3행.",
+    "gold_values": [
+      {
+        "column": "subject_name",
+        "value": "임베디드소프트웨어"
+      }
+    ]
+  },
+  {
+    "id": "exclude_completed_courses_22",
+    "category": "exclude_completed_courses",
+    "query": "영어 과목 중에 안 들은 것만 보여줘",
+    "grading": "execution",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE subject_name LIKE '%영어%' AND NOT EXISTS (SELECT 1 FROM enrollment AS e WHERE e.student_id = '202102671' AND e.subject_code = v_course_info.subject_code)",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": "202102671",
+    "exclude_completed_courses": true,
+    "structural_checks": null,
+    "notes": "제외 전 139행 -> 제외 후 137행.",
+    "gold_values": [
+      {
+        "column": "subject_name",
+        "value": "IT영어1"
+      }
+    ]
+  },
+  {
+    "id": "exclude_completed_courses_23",
+    "category": "exclude_completed_courses",
+    "query": "프로젝트 과목 중에 내가 안 들은 것 알려줘",
+    "grading": "execution",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE subject_name LIKE '%프로젝트%' AND NOT EXISTS (SELECT 1 FROM enrollment AS e WHERE e.student_id = '202102671' AND e.subject_code = v_course_info.subject_code)",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": "202102671",
+    "exclude_completed_courses": true,
+    "structural_checks": null,
+    "notes": "제외 전 10행 -> 제외 후 6행.",
+    "gold_values": [
+      {
+        "column": "subject_name",
+        "value": "기초프로젝트랩"
+      }
+    ]
+  },
+  {
+    "id": "exclude_completed_courses_24",
+    "category": "exclude_completed_courses",
+    "query": "교양(소양필수) 과목 중에 아직 안 들은 것만 알려줘",
+    "grading": "execution",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE category LIKE '%교양(소양필수)%' AND NOT EXISTS (SELECT 1 FROM enrollment AS e WHERE e.student_id = '202102671' AND e.subject_code = v_course_info.subject_code)",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": "202102671",
+    "exclude_completed_courses": true,
+    "structural_checks": null,
+    "notes": "제외 전 115행 -> 제외 후 112행.",
+    "gold_values": [
+      {
+        "column": "category",
+        "value": "교양(소양필수)"
+      }
+    ]
+  },
+  {
+    "id": "exclude_completed_courses_25",
+    "category": "exclude_completed_courses",
+    "query": "컴퓨터융합학부 전공(기초) 과목 중에 내가 수강 안 한 것 보여줘",
+    "grading": "execution",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%컴퓨터융합학부%' AND category LIKE '%전공(기초)%' AND NOT EXISTS (SELECT 1 FROM enrollment AS e WHERE e.student_id = '202102671' AND e.subject_code = v_course_info.subject_code)",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": "202102671",
+    "exclude_completed_courses": true,
+    "structural_checks": null,
+    "notes": "제외 전 14행 -> 제외 후 8행.",
+    "gold_values": [
+      {
+        "column": "dept_name",
+        "value": "공과대학 컴퓨터융합학부"
+      },
+      {
+        "column": "category",
+        "value": "전공(기초)"
+      }
+    ]
+  },
+  {
+    "id": "exclude_completed_courses_26",
+    "category": "exclude_completed_courses",
+    "query": "컴퓨터융합학부 3학점짜리 과목 중에 안 들은 것만 알려줘",
+    "grading": "execution",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%컴퓨터융합학부%' AND credit_hours LIKE '3/%' AND NOT EXISTS (SELECT 1 FROM enrollment AS e WHERE e.student_id = '202102671' AND e.subject_code = v_course_info.subject_code)",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": "202102671",
+    "exclude_completed_courses": true,
+    "structural_checks": null,
+    "notes": "제외 전 74행 -> 제외 후 14행.",
+    "gold_values": [
+      {
+        "column": "dept_name",
+        "value": "공과대학 컴퓨터융합학부"
+      }
+    ]
+  },
+  {
+    "id": "exclude_completed_courses_27",
+    "category": "exclude_completed_courses",
+    "query": "컴퓨터융합학부 절대평가 과목 중에서 내가 안 들은 과목 알려줘",
+    "grading": "execution",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%컴퓨터융합학부%' AND eval_type = '절대평가' AND NOT EXISTS (SELECT 1 FROM enrollment AS e WHERE e.student_id = '202102671' AND e.subject_code = v_course_info.subject_code)",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": "202102671",
+    "exclude_completed_courses": true,
+    "structural_checks": null,
+    "notes": "제외 전 43행 -> 제외 후 5행.",
+    "gold_values": [
+      {
+        "column": "dept_name",
+        "value": "공과대학 컴퓨터융합학부"
+      },
+      {
+        "column": "eval_type",
+        "value": "절대평가"
+      }
+    ]
+  },
+  {
+    "id": "exclude_completed_courses_28",
+    "category": "exclude_completed_courses",
+    "query": "컴퓨터융합학부 상대평가 과목 중에 아직 안 들은 것 보여줘",
+    "grading": "execution",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%컴퓨터융합학부%' AND eval_type = '상대평가' AND NOT EXISTS (SELECT 1 FROM enrollment AS e WHERE e.student_id = '202102671' AND e.subject_code = v_course_info.subject_code)",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": "202102671",
+    "exclude_completed_courses": true,
+    "structural_checks": null,
+    "notes": "제외 전 39행 -> 제외 후 10행.",
+    "gold_values": [
+      {
+        "column": "dept_name",
+        "value": "공과대학 컴퓨터융합학부"
+      },
+      {
+        "column": "eval_type",
+        "value": "상대평가"
+      }
+    ]
+  },
+  {
+    "id": "exclude_completed_courses_29",
+    "category": "exclude_completed_courses",
+    "query": "컴퓨터융합학부 김경섭 교수님 수업 중에 아직 안 들은 거 알려줘",
+    "grading": "execution",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%컴퓨터융합학부%' AND professor = '김경섭' AND NOT EXISTS (SELECT 1 FROM enrollment AS e WHERE e.student_id = '202102671' AND e.subject_code = v_course_info.subject_code)",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": "202102671",
+    "exclude_completed_courses": true,
+    "structural_checks": null,
+    "notes": "제외 전 4행 -> 제외 후 2행.",
+    "gold_values": [
+      {
+        "column": "dept_name",
+        "value": "공과대학 컴퓨터융합학부"
+      },
+      {
+        "column": "professor",
+        "value": "김경섭"
+      }
+    ]
+  },
+  {
+    "id": "exclude_completed_courses_30",
+    "category": "exclude_completed_courses",
+    "query": "컴퓨터융합학부 2학년 대상 과목 중에 수강 안 한 것 알려줘",
+    "grading": "execution",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%컴퓨터융합학부%' AND target_year = 2 AND NOT EXISTS (SELECT 1 FROM enrollment AS e WHERE e.student_id = '202102671' AND e.subject_code = v_course_info.subject_code)",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": "202102671",
+    "exclude_completed_courses": true,
+    "structural_checks": null,
+    "notes": "제외 전 30행 -> 제외 후 8행.",
+    "gold_values": [
+      {
+        "column": "dept_name",
+        "value": "공과대학 컴퓨터융합학부"
+      }
+    ]
+  },
+  {
     "id": "prerequisite_01",
     "category": "prerequisite",
     "query": "운영체제및실습 과목의 선수과목이 뭐야",
@@ -2872,66 +3391,561 @@
     "id": "personalized_lookup_01",
     "category": "personalized_lookup",
     "query": "내 학과가 어디야",
-    "grading": "structural",
-    "reference_sql": null,
+    "grading": "execution",
+    "reference_sql": "SELECT d.dept_code, d.dept_name FROM student AS s JOIN department AS d ON d.dept_code = s.dept_code WHERE s.student_id = '202102671'",
     "order_sensitive": false,
     "expects_error": false,
     "student_id": "202102671",
     "exclude_completed_courses": false,
-    "structural_checks": {"required_tables": ["student"], "required_columns": [], "student_scoped": true},
-    "notes": "알려진 파이프라인 갭: process.py는 exclude_completed_courses=True일 때만 student_id를 validate_sql의 requested_student_id로 전달한다(process.py의 validate_sql 호출부 참고). 즉 일반 개인화 조회에서는 SQL이 student.student_id = '202102671'로 스코프돼도 검증 시 플레이스홀더(:student_id 등)만 허용되어 실패할 가능성이 높다. 버그가 아니라 이 갭을 정량적으로 드러내기 위한 케이스."
+    "structural_checks": null,
+    "notes": "2026-10-19 execution 채점으로 전환. 실제 DB 기준 1행."
   },
   {
     "id": "personalized_lookup_02",
     "category": "personalized_lookup",
     "query": "나 몇 학년이야",
-    "grading": "structural",
-    "reference_sql": null,
+    "grading": "execution",
+    "reference_sql": "SELECT grade FROM student WHERE student_id = '202102671'",
     "order_sensitive": false,
     "expects_error": false,
     "student_id": "202102671",
     "exclude_completed_courses": false,
-    "structural_checks": {"required_tables": ["student"], "required_columns": ["student.grade"], "student_scoped": true},
-    "notes": "personalized_lookup_01과 동일한 알려진 갭 적용."
+    "structural_checks": null,
+    "notes": "2026-10-19 execution 채점으로 전환. 실제 DB 기준 1행."
   },
   {
     "id": "personalized_lookup_03",
     "category": "personalized_lookup",
     "query": "내 학번이랑 소속 학과 코드 알려줘",
-    "grading": "structural",
-    "reference_sql": null,
+    "grading": "execution",
+    "reference_sql": "SELECT student_id, dept_code FROM student WHERE student_id = '202102671'",
     "order_sensitive": false,
     "expects_error": false,
     "student_id": "202102671",
     "exclude_completed_courses": false,
-    "structural_checks": {"required_tables": ["student"], "required_columns": ["student.student_id", "student.dept_code"], "student_scoped": true},
-    "notes": "personalized_lookup_01과 동일한 알려진 갭 적용."
+    "structural_checks": null,
+    "notes": "2026-10-19 execution 채점으로 전환. 실제 DB 기준 1행."
   },
   {
     "id": "personalized_lookup_04",
     "category": "personalized_lookup",
     "query": "내가 D094 소속 맞아?",
-    "grading": "structural",
-    "reference_sql": null,
+    "grading": "execution",
+    "reference_sql": "SELECT student_id, dept_code FROM student WHERE student_id = '202102671' AND dept_code = 'D094'",
     "order_sensitive": false,
     "expects_error": false,
     "student_id": "202102671",
     "exclude_completed_courses": false,
-    "structural_checks": {"required_tables": ["student"], "required_columns": ["student.dept_code"], "student_scoped": true},
-    "notes": "personalized_lookup_01과 동일한 알려진 갭 적용."
+    "structural_checks": null,
+    "notes": "2026-10-19 execution 채점으로 전환. 실제 DB 기준 1행.",
+    "gold_values": [
+      {
+        "column": "dept_code",
+        "value": "D094"
+      }
+    ]
   },
   {
     "id": "personalized_lookup_05",
     "category": "personalized_lookup",
-    "query": "내 정보 요약해서 보여줘",
-    "grading": "structural",
-    "reference_sql": null,
+    "query": "내 학번, 학과 코드, 학년을 한꺼번에 보여줘",
+    "grading": "execution",
+    "reference_sql": "SELECT student_id, dept_code, grade FROM student WHERE student_id = '202102671'",
     "order_sensitive": false,
     "expects_error": false,
     "student_id": "202102671",
     "exclude_completed_courses": false,
-    "structural_checks": {"required_tables": ["student"], "required_columns": [], "student_scoped": true},
-    "notes": "personalized_lookup_01과 동일한 알려진 갭 적용. 질문이 열려있어 모델이 애초에 UNKNOWN을 반환할 수도 있음(그 경우 expects_error=false이므로 오답 처리됨 — 이 자체도 유의미한 측정치)."
+    "structural_checks": null,
+    "notes": "2026-10-19 execution 채점으로 전환. 실제 DB 기준 1행."
+  },
+  {
+    "id": "personalized_lookup_06",
+    "category": "personalized_lookup",
+    "query": "내 학과 이름이랑 학년 같이 알려줘",
+    "grading": "execution",
+    "reference_sql": "SELECT d.dept_name, s.grade FROM student AS s JOIN department AS d ON d.dept_code = s.dept_code WHERE s.student_id = '202102671'",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": "202102671",
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 1행."
+  },
+  {
+    "id": "personalized_lookup_07",
+    "category": "personalized_lookup",
+    "query": "내가 지금까지 들은 과목 목록 보여줘",
+    "grading": "execution",
+    "reference_sql": "SELECT e.subject_code, s.subject_name FROM enrollment AS e JOIN subject AS s ON s.subject_code = e.subject_code WHERE e.student_id = '202102671'",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": "202102671",
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 29행."
+  },
+  {
+    "id": "personalized_lookup_08",
+    "category": "personalized_lookup",
+    "query": "2021년에 들은 전공(기초) 과목 알려줘",
+    "grading": "execution",
+    "reference_sql": "SELECT e.subject_code, s.subject_name, s.category FROM enrollment AS e JOIN subject AS s ON s.subject_code = e.subject_code WHERE e.student_id = '202102671' AND e.enroll_year = 2021 AND s.category LIKE '%전공(기초)%'",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": "202102671",
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 4행.",
+    "gold_values": [
+      {
+        "column": "category",
+        "value": "전공(기초)"
+      }
+    ]
+  },
+  {
+    "id": "personalized_lookup_09",
+    "category": "personalized_lookup",
+    "query": "2022년 1학기에 들은 과목 알려줘",
+    "grading": "execution",
+    "reference_sql": "SELECT e.subject_code, s.subject_name, e.enroll_year, e.semester FROM enrollment AS e JOIN subject AS s ON s.subject_code = e.subject_code WHERE e.student_id = '202102671' AND e.enroll_year = 2022 AND e.semester = '1'",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": "202102671",
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 4행.",
+    "gold_values": [
+      {
+        "column": "semester",
+        "value": "1"
+      }
+    ]
+  },
+  {
+    "id": "personalized_lookup_10",
+    "category": "personalized_lookup",
+    "query": "2021년에 A+ 받은 과목 뭐야",
+    "grading": "execution",
+    "reference_sql": "SELECT e.subject_code, s.subject_name, e.letter_grade FROM enrollment AS e JOIN subject AS s ON s.subject_code = e.subject_code WHERE e.student_id = '202102671' AND e.enroll_year = 2021 AND e.letter_grade = 'A+'",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": "202102671",
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 3행.",
+    "gold_values": [
+      {
+        "column": "letter_grade",
+        "value": "A+"
+      }
+    ]
+  },
+  {
+    "id": "personalized_lookup_11",
+    "category": "personalized_lookup",
+    "query": "2023년 2학기에 수강한 과목 알려줘",
+    "grading": "execution",
+    "reference_sql": "SELECT e.subject_code, s.subject_name, e.enroll_year, e.semester FROM enrollment AS e JOIN subject AS s ON s.subject_code = e.subject_code WHERE e.student_id = '202102671' AND e.enroll_year = 2023 AND e.semester = '2'",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": "202102671",
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 4행.",
+    "gold_values": [
+      {
+        "column": "semester",
+        "value": "2"
+      }
+    ]
+  },
+  {
+    "id": "personalized_lookup_12",
+    "category": "personalized_lookup",
+    "query": "2024년에 들은 전공(심화) 과목 중에 A+ 받은 것 알려줘",
+    "grading": "execution",
+    "reference_sql": "SELECT e.subject_code, s.subject_name, s.category, e.letter_grade FROM enrollment AS e JOIN subject AS s ON s.subject_code = e.subject_code WHERE e.student_id = '202102671' AND e.enroll_year = 2024 AND s.category LIKE '%전공(심화)%' AND e.letter_grade = 'A+'",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": "202102671",
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 2행.",
+    "gold_values": [
+      {
+        "column": "category",
+        "value": "전공(심화)"
+      },
+      {
+        "column": "letter_grade",
+        "value": "A+"
+      }
+    ]
+  },
+  {
+    "id": "personalized_lookup_13",
+    "category": "personalized_lookup",
+    "query": "내가 들은 과목 총 몇 개야",
+    "grading": "execution",
+    "reference_sql": "SELECT COUNT(DISTINCT subject_code) AS course_count FROM enrollment WHERE student_id = '202102671'",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": "202102671",
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 1행."
+  },
+  {
+    "id": "personalized_lookup_14",
+    "category": "personalized_lookup",
+    "query": "연도별로 내가 몇 과목씩 들었는지 알려줘",
+    "grading": "execution",
+    "reference_sql": "SELECT enroll_year, COUNT(DISTINCT subject_code) AS course_count FROM enrollment WHERE student_id = '202102671' GROUP BY enroll_year",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": "202102671",
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 4행."
+  },
+  {
+    "id": "personalized_lookup_15",
+    "category": "personalized_lookup",
+    "query": "2022년에 B0 받은 과목 이름 알려줘",
+    "grading": "execution",
+    "reference_sql": "SELECT e.subject_code, s.subject_name, e.letter_grade FROM enrollment AS e JOIN subject AS s ON s.subject_code = e.subject_code WHERE e.student_id = '202102671' AND e.enroll_year = 2022 AND e.letter_grade = 'B0'",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": "202102671",
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 2행.",
+    "gold_values": [
+      {
+        "column": "letter_grade",
+        "value": "B0"
+      }
+    ]
+  },
+  {
+    "id": "personalized_lookup_16",
+    "category": "personalized_lookup",
+    "query": "4학년 대상 과목 중에 전공(심화)로 내가 들은 거 알려줘",
+    "grading": "execution",
+    "reference_sql": "SELECT e.subject_code, s.subject_name, s.category, s.target_year FROM enrollment AS e JOIN subject AS s ON s.subject_code = e.subject_code WHERE e.student_id = '202102671' AND s.target_year = 4 AND s.category LIKE '%전공(심화)%'",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": "202102671",
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 5행.",
+    "gold_values": [
+      {
+        "column": "category",
+        "value": "전공(심화)"
+      }
+    ]
+  },
+  {
+    "id": "personalized_lookup_17",
+    "category": "personalized_lookup",
+    "query": "2022년 2학기에 들은 전공(핵심) 과목 알려줘",
+    "grading": "execution",
+    "reference_sql": "SELECT e.subject_code, s.subject_name, s.category, e.enroll_year, e.semester FROM enrollment AS e JOIN subject AS s ON s.subject_code = e.subject_code WHERE e.student_id = '202102671' AND e.enroll_year = 2022 AND e.semester = '2' AND s.category LIKE '%전공(핵심)%'",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": "202102671",
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 1행.",
+    "gold_values": [
+      {
+        "column": "semester",
+        "value": "2"
+      },
+      {
+        "column": "category",
+        "value": "전공(핵심)"
+      }
+    ]
+  },
+  {
+    "id": "personalized_lookup_18",
+    "category": "personalized_lookup",
+    "query": "2023년 1학기에 A+ 받은 과목 알려줘",
+    "grading": "execution",
+    "reference_sql": "SELECT e.subject_code, s.subject_name, e.letter_grade FROM enrollment AS e JOIN subject AS s ON s.subject_code = e.subject_code WHERE e.student_id = '202102671' AND e.enroll_year = 2023 AND e.semester = '1' AND e.letter_grade = 'A+'",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": "202102671",
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 1행.",
+    "gold_values": [
+      {
+        "column": "semester",
+        "value": "1"
+      },
+      {
+        "column": "letter_grade",
+        "value": "A+"
+      }
+    ]
+  },
+  {
+    "id": "personalized_lookup_19",
+    "category": "personalized_lookup",
+    "query": "2022년에 들은 3학점짜리 전공(핵심) 과목 뭐 있어",
+    "grading": "execution",
+    "reference_sql": "SELECT e.subject_code, s.subject_name, s.category, s.credit_hours FROM enrollment AS e JOIN subject AS s ON s.subject_code = e.subject_code WHERE e.student_id = '202102671' AND e.enroll_year = 2022 AND s.credit_hours LIKE '3/%' AND s.category LIKE '%전공(핵심)%'",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": "202102671",
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 4행.",
+    "gold_values": [
+      {
+        "column": "category",
+        "value": "전공(핵심)"
+      }
+    ]
+  },
+  {
+    "id": "personalized_lookup_20",
+    "category": "personalized_lookup",
+    "query": "교양(소양필수) 과목 중에 내가 들은 거 있어?",
+    "grading": "execution",
+    "reference_sql": "SELECT e.subject_code, s.subject_name, s.category FROM enrollment AS e JOIN subject AS s ON s.subject_code = e.subject_code WHERE e.student_id = '202102671' AND s.category LIKE '%교양(소양필수)%'",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": "202102671",
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 1행.",
+    "gold_values": [
+      {
+        "column": "category",
+        "value": "교양(소양필수)"
+      }
+    ]
+  },
+  {
+    "id": "personalized_lookup_21",
+    "category": "personalized_lookup",
+    "query": "2023년에 들은 과목 중 3학점짜리는 몇 개야",
+    "grading": "execution",
+    "reference_sql": "SELECT COUNT(DISTINCT e.subject_code) AS course_count FROM enrollment AS e JOIN subject AS s ON s.subject_code = e.subject_code WHERE e.student_id = '202102671' AND e.enroll_year = 2023 AND s.credit_hours LIKE '3/%'",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": "202102671",
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 1행."
+  },
+  {
+    "id": "personalized_lookup_22",
+    "category": "personalized_lookup",
+    "query": "학기별로 전공(심화) 과목을 몇 개씩 들었는지 알려줘",
+    "grading": "execution",
+    "reference_sql": "SELECT e.enroll_year, e.semester, COUNT(DISTINCT e.subject_code) AS course_count FROM enrollment AS e JOIN subject AS s ON s.subject_code = e.subject_code WHERE e.student_id = '202102671' AND s.category LIKE '%전공(심화)%' GROUP BY e.enroll_year, e.semester",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": "202102671",
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 7행.",
+    "gold_values": [
+      {
+        "column": "category",
+        "value": "전공(심화)"
+      }
+    ]
+  },
+  {
+    "id": "personalized_lookup_23",
+    "category": "personalized_lookup",
+    "query": "내 학과 개설 과목 중 월요일에 하는 수업 알려줘",
+    "grading": "execution",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name = (SELECT d.dept_name FROM student AS s JOIN department AS d ON d.dept_code = s.dept_code WHERE s.student_id = '202102671') AND day_of_week = '월'",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": "202102671",
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 29행.",
+    "gold_values": [
+      {
+        "column": "dept_name",
+        "value": "공과대학 컴퓨터융합학부"
+      },
+      {
+        "column": "day_of_week",
+        "value": "월"
+      }
+    ]
+  },
+  {
+    "id": "personalized_lookup_24",
+    "category": "personalized_lookup",
+    "query": "우리 학과에서 열리는 전공(핵심) 과목 보여줘",
+    "grading": "execution",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name = (SELECT d.dept_name FROM student AS s JOIN department AS d ON d.dept_code = s.dept_code WHERE s.student_id = '202102671') AND category LIKE '%전공(핵심)%'",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": "202102671",
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 29행.",
+    "gold_values": [
+      {
+        "column": "dept_name",
+        "value": "공과대학 컴퓨터융합학부"
+      },
+      {
+        "column": "category",
+        "value": "전공(핵심)"
+      }
+    ]
+  },
+  {
+    "id": "personalized_lookup_25",
+    "category": "personalized_lookup",
+    "query": "내 학과 4학년 전공(심화) 과목 중에 월요일 수업 알려줘",
+    "grading": "execution",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name = (SELECT d.dept_name FROM student AS s JOIN department AS d ON d.dept_code = s.dept_code WHERE s.student_id = '202102671') AND target_year = 4 AND category LIKE '%전공(심화)%' AND day_of_week = '월'",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": "202102671",
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 8행.",
+    "gold_values": [
+      {
+        "column": "dept_name",
+        "value": "공과대학 컴퓨터융합학부"
+      },
+      {
+        "column": "category",
+        "value": "전공(심화)"
+      },
+      {
+        "column": "day_of_week",
+        "value": "월"
+      }
+    ]
+  },
+  {
+    "id": "personalized_lookup_26",
+    "category": "personalized_lookup",
+    "query": "우리 학과 과목 중에 여석 남은 것만 보여줘",
+    "grading": "execution",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name = (SELECT d.dept_name FROM student AS s JOIN department AS d ON d.dept_code = s.dept_code WHERE s.student_id = '202102671') AND enrolled < capacity AND capacity > 0",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": "202102671",
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 58행.",
+    "gold_values": [
+      {
+        "column": "dept_name",
+        "value": "공과대학 컴퓨터융합학부"
+      }
+    ]
+  },
+  {
+    "id": "personalized_lookup_27",
+    "category": "personalized_lookup",
+    "query": "내 학과 3학년 전공(핵심) 과목 중에 자리 남은 거 알려줘",
+    "grading": "execution",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name = (SELECT d.dept_name FROM student AS s JOIN department AS d ON d.dept_code = s.dept_code WHERE s.student_id = '202102671') AND target_year = 3 AND category LIKE '%전공(핵심)%' AND enrolled < capacity AND capacity > 0",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": "202102671",
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 8행.",
+    "gold_values": [
+      {
+        "column": "dept_name",
+        "value": "공과대학 컴퓨터융합학부"
+      },
+      {
+        "column": "category",
+        "value": "전공(핵심)"
+      }
+    ]
+  },
+  {
+    "id": "personalized_lookup_28",
+    "category": "personalized_lookup",
+    "query": "내 학년에 맞는 우리 학과 과목 보여줘",
+    "grading": "execution",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name = (SELECT d.dept_name FROM student AS s JOIN department AS d ON d.dept_code = s.dept_code WHERE s.student_id = '202102671') AND target_year = (SELECT grade FROM student WHERE student_id = '202102671')",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": "202102671",
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 19행.",
+    "gold_values": [
+      {
+        "column": "dept_name",
+        "value": "공과대학 컴퓨터융합학부"
+      }
+    ]
+  },
+  {
+    "id": "personalized_lookup_29",
+    "category": "personalized_lookup",
+    "query": "내 학과 전공(심화) 과목 중에 수요일에 하는 수업 알려줘",
+    "grading": "execution",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name = (SELECT d.dept_name FROM student AS s JOIN department AS d ON d.dept_code = s.dept_code WHERE s.student_id = '202102671') AND category LIKE '%전공(심화)%' AND day_of_week = '수'",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": "202102671",
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 13행.",
+    "gold_values": [
+      {
+        "column": "dept_name",
+        "value": "공과대학 컴퓨터융합학부"
+      },
+      {
+        "column": "category",
+        "value": "전공(심화)"
+      },
+      {
+        "column": "day_of_week",
+        "value": "수"
+      }
+    ]
+  },
+  {
+    "id": "personalized_lookup_30",
+    "category": "personalized_lookup",
+    "query": "우리 학과 전공(심화) 과목 중에 내가 이미 들은 것만 보여줘",
+    "grading": "execution",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name = (SELECT d.dept_name FROM student AS s JOIN department AS d ON d.dept_code = s.dept_code WHERE s.student_id = '202102671') AND category LIKE '%전공(심화)%' AND EXISTS (SELECT 1 FROM enrollment AS e WHERE e.student_id = '202102671' AND e.subject_code = v_course_info.subject_code)",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": "202102671",
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 32행.",
+    "gold_values": [
+      {
+        "column": "dept_name",
+        "value": "공과대학 컴퓨터융합학부"
+      },
+      {
+        "column": "category",
+        "value": "전공(심화)"
+      }
+    ]
   },
   {
     "id": "graduation_requirement_01",
