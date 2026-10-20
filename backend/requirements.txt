@@ -9,3 +9,4 @@ sqlglot
 numpy
 safetensors
 pytest
+pyyaml

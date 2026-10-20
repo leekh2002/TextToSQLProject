@@ -1,0 +1,56 @@
+tables:
+  - name: v_course_info
+    description: 강의 개설 정보. 한 과목·분반이 요일·시간 수만큼 여러 행으로 나온다
+    columns:
+      - {name: course_year, type: INTEGER, description: 교과목 편성 학년(질문의 대상 학년에는 쓰지 않음), values: auto}
+      - {name: subject_code, type: VARCHAR, description: 교과목 코드, values: auto}
+      - {name: section, type: VARCHAR, description: 분반 번호(문자열), values: auto}
+      - {name: subject_name, type: VARCHAR, description: 과목명, values: auto}
+      - {name: category, type: VARCHAR, description: 이수구분(전공핵심=전공(핵심) 등 괄호 표기), values: auto}
+      - {name: credit_hours, type: VARCHAR, description: "학점/이론/실습 (예: '3/3/0', 학점 조건은 LIKE '3/%')", values: auto}
+      - {name: target_year, type: INTEGER, description: 수강 대상 학년(질문의 'N학년 대상/N학년 과목'), values: auto}
+      - {name: professor, type: VARCHAR, description: 담당 교수, values: auto}
+      - {name: capacity, type: INTEGER, description: 정원, values: none}
+      - {name: enrolled, type: INTEGER, description: 수강 신청 인원, values: none}
+      - {name: grading_method, type: VARCHAR, description: 성적 산출 방식, values: auto}
+      - {name: eval_type, type: VARCHAR, description: 평가 유형(상대평가/절대평가), values: auto}
+      - {name: class_mode, type: VARCHAR, description: 수업 방식, values: auto}
+      - {name: dept_name, type: VARCHAR, description: 개설 학과(대학명 포함 전체 이름), values: auto}
+      - {name: day_of_week, type: VARCHAR, description: 요일 한 글자, values: auto}
+      - {name: start_time, type: TIME, description: 시작 시각, values: auto}
+      - {name: end_time, type: TIME, description: 종료 시각, values: auto}
+      - {name: classroom, type: VARCHAR, description: 강의실, values: auto}
+      - {name: prereq_subject_codes, type: TEXT, description: "선수과목 코드 목록(쉼표 구분, 없으면 '없음')", values: auto}
+      - {name: prereq_subject_names, type: TEXT, description: "선수과목명 목록(쉼표 구분, 없으면 '없음')", values: auto}
+  - name: student
+    description: 학생. 로그인한 본인 행만 조회 가능
+    columns:
+      - {name: student_id, type: VARCHAR, description: 학번, values: none}
+      - {name: dept_code, type: VARCHAR, description: 소속 학과 코드(department.dept_code), values: none}
+      - {name: grade, type: INTEGER, description: 현재 학년, values: none}
+      - {name: admission_year, type: INTEGER, description: 입학 연도, values: none}
+  - name: enrollment
+    description: 학생의 수강 이력. 로그인한 본인 행만 조회 가능
+    columns:
+      - {name: student_id, type: VARCHAR, description: 학번, values: none}
+      - {name: subject_code, type: VARCHAR, description: 이수한 교과목 코드, values: none}
+      - {name: letter_grade, type: VARCHAR, description: 성적, values: auto}
+      - {name: enroll_year, type: INTEGER, description: 수강 연도, values: auto}
+      - {name: semester, type: VARCHAR, description: 학기, values: auto}
+  - name: subject
+    description: 교과목 마스터(과목명·이수구분·학점)
+    columns:
+      - {name: subject_code, type: VARCHAR, description: 교과목 코드, values: none}
+      - {name: subject_name, type: VARCHAR, description: 과목명, values: none}
+      - {name: category, type: VARCHAR, description: 이수구분, values: auto}
+      - {name: credit_hours, type: VARCHAR, description: 학점/이론/실습, values: none}
+  - name: department
+    description: 학과
+    columns:
+      - {name: dept_code, type: VARCHAR, description: 학과 코드, values: none}
+      - {name: dept_name, type: VARCHAR, description: 학과 전체 이름(v_course_info.dept_name과 같은 값), values: none}
+foreign_keys:
+  - enrollment.student_id → student.student_id
+  - enrollment.subject_code → subject.subject_code
+  - student.dept_code → department.dept_code
+  - department.dept_name → v_course_info.dept_name
