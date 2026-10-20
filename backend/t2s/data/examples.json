@@ -307,7 +307,7 @@
   {
     "id": "ex_062",
     "question": "데이터베이스 들으려면 뭘 먼저 들어야 돼?",
-    "sql": "SELECT subject_code, section, subject_name, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE subject_name LIKE '%데이터베이스%' AND dept_name LIKE '%컴퓨터융합학부%'"
+    "sql": "SELECT subject_code, section, subject_name, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE subject_name LIKE '%데이터베이스%'"
   },
   {
     "id": "ex_063",
@@ -432,7 +432,7 @@
   {
     "id": "ex_087",
     "question": "간호학과 평균 정원이 몇 명이야",
-    "sql": "SELECT AVG(capacity) AS avg_capacity FROM v_course_info WHERE dept_name LIKE '%간호학과%'"
+    "sql": "SELECT AVG(capacity) AS avg_capacity FROM (SELECT DISTINCT subject_code, section, capacity FROM v_course_info WHERE dept_name LIKE '%간호학과%') AS sections"
   },
   {
     "id": "ex_088",
@@ -477,7 +477,7 @@
   {
     "id": "ex_096",
     "question": "개설된 과목이 총 몇 개야",
-    "sql": "SELECT COUNT(DISTINCT subject_code) AS subject_count FROM v_course_info"
+    "sql": "SELECT COUNT(DISTINCT subject_code || '-' || section) AS course_count FROM v_course_info"
   },
   {
     "id": "ex_097",
@@ -492,7 +492,7 @@
   {
     "id": "ex_099",
     "question": "3학점 전핵 분반 수를 학과별로 알려줘",
-    "sql": "SELECT dept_name, COUNT(DISTINCT subject_code || '-' || section) AS course_count FROM v_course_info WHERE category = '전공(핵심)' AND credit_hours LIKE '3/%' GROUP BY dept_name ORDER BY course_count DESC LIMIT 10"
+    "sql": "SELECT dept_name, COUNT(DISTINCT subject_code || '-' || section) AS course_count FROM v_course_info WHERE category = '전공(핵심)' AND credit_hours LIKE '3/%' GROUP BY dept_name"
   },
   {
     "id": "ex_100",
