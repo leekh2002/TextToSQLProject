@@ -179,12 +179,7 @@
     "exclude_completed_courses": false,
     "structural_checks": null,
     "notes": "실제 DB 기준 5행.",
-    "gold_values": [
-      {
-        "column": "subject_name",
-        "value": "알고리즘"
-      }
-    ]
+    "gold_values": []
   },
   {
     "id": "course_filter_10",
@@ -1738,12 +1733,7 @@
     "exclude_completed_courses": true,
     "structural_checks": null,
     "notes": "제외 전 5행 -> 제외 후 3행.",
-    "gold_values": [
-      {
-        "column": "subject_name",
-        "value": "알고리즘"
-      }
-    ]
+    "gold_values": []
   },
   {
     "id": "exclude_completed_courses_03",
@@ -3065,12 +3055,7 @@
     "exclude_completed_courses": false,
     "structural_checks": null,
     "notes": "course_filter_09는 raw 5행, distinct는 3. 정답은 3.",
-    "gold_values": [
-      {
-        "column": "subject_name",
-        "value": "알고리즘"
-      }
-    ]
+    "gold_values": []
   },
   {
     "id": "enrollment_aggregate_05",
@@ -3339,12 +3324,7 @@
     "exclude_completed_courses": false,
     "structural_checks": null,
     "notes": "실제 DB 기준 3행.",
-    "gold_values": [
-      {
-        "column": "dept_name",
-        "value": "경상대학"
-      }
-    ]
+    "gold_values": []
   },
   {
     "id": "enrollment_aggregate_21",
@@ -3495,12 +3475,7 @@
     "exclude_completed_courses": false,
     "structural_checks": null,
     "notes": "실제 DB 기준 18행.",
-    "gold_values": [
-      {
-        "column": "dept_name",
-        "value": "공과대학"
-      }
-    ]
+    "gold_values": []
   },
   {
     "id": "enrollment_aggregate_29",
@@ -3648,12 +3623,7 @@
     "exclude_completed_courses": false,
     "structural_checks": null,
     "notes": "실제 DB 기준 6행.",
-    "gold_values": [
-      {
-        "column": "dept_name",
-        "value": "공과대학"
-      }
-    ]
+    "gold_values": []
   },
   {
     "id": "personalized_lookup_01",

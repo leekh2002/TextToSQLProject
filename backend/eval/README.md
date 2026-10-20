@@ -118,8 +118,8 @@ python -m backend.eval.validate_golden
 
 - `gold_values`: `[{"column": "dept_name", "value": "공과대학 컴퓨터융합학부"}, ...]`. `--decoupled`가 값 힌트로 주입한다.
   `column`/`value`는 모두 문자열이다. 정답 조건 중 **문자열 값 조건만** 적고(숫자 `target_year = 3`, 시간 `start_time`, `<>` 조건 제외),
-  값이 없는 질의는 `[]`. `LIKE` 조건이 DB에서 값 하나로 특정되면 그 실제 DB 값(예: `공과대학 컴퓨터융합학부`)을, 여러 값에
-  걸리면 질의에 나온 키워드를 쓴다. reject 케이스는 항상 `[]`.
+  값이 없는 질의는 `[]`. `value`는 DB에 실제로 있는 정확한 문자열이어야 한다. `LIKE` 조건이 DB에서 값 하나로 특정되면 그 실제 DB 값
+  (예: `공과대학 컴퓨터융합학부`)을 쓰고, 키워드가 여러 값에 걸리면(예: `%알고리즘%`) 그 조건은 `gold_values`에서 뺀다(키워드 자체를 쓰지 않는다). reject 케이스는 항상 `[]`.
 - `empty_gold`: 정답 결과가 0행인 케이스에만 `true`. 0행인데 `empty_gold`가 없으면 `validate_golden`이 ERROR로 잡는다.
 
 작성 규칙:
