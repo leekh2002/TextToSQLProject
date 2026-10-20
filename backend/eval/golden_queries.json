@@ -38,12 +38,7 @@
     "exclude_completed_courses": false,
     "structural_checks": null,
     "notes": "단순 과목명 LIKE 검색. 실제 DB 기준 10행.",
-    "gold_values": [
-      {
-        "column": "subject_name",
-        "value": "데이터베이스"
-      }
-    ]
+    "gold_values": []
   },
   {
     "id": "course_filter_03",
@@ -456,12 +451,7 @@
     "exclude_completed_courses": false,
     "structural_checks": null,
     "notes": "실제 DB 기준 100행.",
-    "gold_values": [
-      {
-        "column": "subject_name",
-        "value": "컴퓨터프로그래밍 1"
-      }
-    ]
+    "gold_values": []
   },
   {
     "id": "course_filter_24",
@@ -494,12 +484,7 @@
     "exclude_completed_courses": false,
     "structural_checks": null,
     "notes": "실제 DB 기준 6행.",
-    "gold_values": [
-      {
-        "column": "subject_name",
-        "value": "선형대수1및실습"
-      }
-    ]
+    "gold_values": []
   },
   {
     "id": "course_filter_26",
@@ -513,12 +498,7 @@
     "exclude_completed_courses": false,
     "structural_checks": null,
     "notes": "실제 DB 기준 8행.",
-    "gold_values": [
-      {
-        "column": "subject_name",
-        "value": "운영체제및실습"
-      }
-    ]
+    "gold_values": []
   },
   {
     "id": "course_filter_27",
@@ -665,12 +645,7 @@
     "exclude_completed_courses": false,
     "structural_checks": null,
     "notes": "실제 DB 기준 25행.",
-    "gold_values": [
-      {
-        "column": "subject_name",
-        "value": "경영통계학"
-      }
-    ]
+    "gold_values": []
   },
   {
     "id": "course_filter_35",
@@ -1154,12 +1129,7 @@
     "exclude_completed_courses": false,
     "structural_checks": null,
     "notes": "실제 DB 기준 32행.",
-    "gold_values": [
-      {
-        "column": "subject_name",
-        "value": "컴퓨터프로그래밍 1"
-      }
-    ]
+    "gold_values": []
   },
   {
     "id": "course_filter_58",
@@ -1174,10 +1144,6 @@
     "structural_checks": null,
     "notes": "실제 DB 기준 29행.",
     "gold_values": [
-      {
-        "column": "subject_name",
-        "value": "데이터베이스"
-      },
       {
         "column": "day_of_week",
         "value": "화"
@@ -1196,12 +1162,7 @@
     "exclude_completed_courses": false,
     "structural_checks": null,
     "notes": "실제 DB 기준 34행.",
-    "gold_values": [
-      {
-        "column": "subject_name",
-        "value": "미적분학1"
-      }
-    ]
+    "gold_values": []
   },
   {
     "id": "course_filter_60",
@@ -1215,12 +1176,7 @@
     "exclude_completed_courses": false,
     "structural_checks": null,
     "notes": "실제 DB 기준 71행.",
-    "gold_values": [
-      {
-        "column": "subject_name",
-        "value": "물리학 1"
-      }
-    ]
+    "gold_values": []
   },
   {
     "id": "course_filter_61",
@@ -1670,10 +1626,6 @@
     "notes": "실제 DB 기준 4행.",
     "gold_values": [
       {
-        "column": "subject_name",
-        "value": "컴퓨터프로그래밍 1"
-      },
-      {
         "column": "dept_name",
         "value": "공과대학 컴퓨터융합학부"
       }
@@ -1714,12 +1666,7 @@
     "exclude_completed_courses": true,
     "structural_checks": null,
     "notes": "제외 전 10행 -> 제외 후 2행(202102671은 1214-3033을 이미 수강).",
-    "gold_values": [
-      {
-        "column": "subject_name",
-        "value": "데이터베이스"
-      }
-    ]
+    "gold_values": []
   },
   {
     "id": "exclude_completed_courses_02",
@@ -1832,12 +1779,7 @@
     "exclude_completed_courses": true,
     "structural_checks": null,
     "notes": "제외 전 8행 -> 제외 후 2행.",
-    "gold_values": [
-      {
-        "column": "subject_name",
-        "value": "운영체제및실습"
-      }
-    ]
+    "gold_values": []
   },
   {
     "id": "exclude_completed_courses_08",
@@ -2039,12 +1981,7 @@
     "exclude_completed_courses": true,
     "structural_checks": null,
     "notes": "제외 전 100행 -> 제외 후 54행.",
-    "gold_values": [
-      {
-        "column": "subject_name",
-        "value": "컴퓨터프로그래밍 1"
-      }
-    ]
+    "gold_values": []
   },
   {
     "id": "exclude_completed_courses_17",
@@ -2058,12 +1995,7 @@
     "exclude_completed_courses": true,
     "structural_checks": null,
     "notes": "제외 전 72행 -> 제외 후 56행.",
-    "gold_values": [
-      {
-        "column": "subject_name",
-        "value": "데이터베이스"
-      }
-    ]
+    "gold_values": []
   },
   {
     "id": "exclude_completed_courses_18",
@@ -2077,12 +2009,7 @@
     "exclude_completed_courses": true,
     "structural_checks": null,
     "notes": "제외 전 41행 -> 제외 후 35행.",
-    "gold_values": [
-      {
-        "column": "subject_name",
-        "value": "종합설계1"
-      }
-    ]
+    "gold_values": []
   },
   {
     "id": "exclude_completed_courses_19",
@@ -2096,12 +2023,7 @@
     "exclude_completed_courses": true,
     "structural_checks": null,
     "notes": "제외 전 107행 -> 제외 후 64행.",
-    "gold_values": [
-      {
-        "column": "subject_name",
-        "value": "컴퓨터프로그래밍3"
-      }
-    ]
+    "gold_values": []
   },
   {
     "id": "exclude_completed_courses_20",
@@ -2115,12 +2037,7 @@
     "exclude_completed_courses": true,
     "structural_checks": null,
     "notes": "제외 전 62행 -> 제외 후 53행.",
-    "gold_values": [
-      {
-        "column": "subject_name",
-        "value": "논리회로"
-      }
-    ]
+    "gold_values": []
   },
   {
     "id": "exclude_completed_courses_21",
@@ -2134,12 +2051,7 @@
     "exclude_completed_courses": true,
     "structural_checks": null,
     "notes": "제외 전 5행 -> 제외 후 3행.",
-    "gold_values": [
-      {
-        "column": "subject_name",
-        "value": "임베디드소프트웨어"
-      }
-    ]
+    "gold_values": []
   },
   {
     "id": "exclude_completed_courses_22",
@@ -2176,12 +2088,7 @@
     "exclude_completed_courses": true,
     "structural_checks": null,
     "notes": "제외 전 10행 -> 제외 후 6행.",
-    "gold_values": [
-      {
-        "column": "subject_name",
-        "value": "기초프로젝트랩"
-      }
-    ]
+    "gold_values": []
   },
   {
     "id": "exclude_completed_courses_24",
@@ -2367,12 +2274,7 @@
     "exclude_completed_courses": false,
     "structural_checks": null,
     "notes": "필터 컬럼이 prereq_subject_names라는 점(과목명 자체가 아님)을 모델이 구분하는지 확인. 실제 DB 기준 24행.",
-    "gold_values": [
-      {
-        "column": "prereq_subject_names",
-        "value": "자료구조"
-      }
-    ]
+    "gold_values": []
   },
   {
     "id": "prerequisite_03",
@@ -2386,12 +2288,7 @@
     "exclude_completed_courses": false,
     "structural_checks": null,
     "notes": "'자료구조'와 '자료구조및실습'을 모두 포함하는 실제 DB 기준 16행.",
-    "gold_values": [
-      {
-        "column": "subject_name",
-        "value": "자료구조"
-      }
-    ]
+    "gold_values": []
   },
   {
     "id": "prerequisite_04",
@@ -2603,10 +2500,6 @@
       {
         "column": "dept_name",
         "value": "공과대학 컴퓨터융합학부"
-      },
-      {
-        "column": "prereq_subject_names",
-        "value": "운영체제및실습"
       }
     ]
   },
@@ -2649,10 +2542,6 @@
       {
         "column": "dept_name",
         "value": "공과대학 컴퓨터융합학부"
-      },
-      {
-        "column": "subject_name",
-        "value": "종합설계1"
       }
     ]
   },
@@ -2692,10 +2581,6 @@
     "structural_checks": null,
     "notes": "실제 DB 기준 12행.",
     "gold_values": [
-      {
-        "column": "prereq_subject_names",
-        "value": "자료구조"
-      },
       {
         "column": "category",
         "value": "전공(심화)"
@@ -3004,7 +2889,7 @@
   {
     "id": "enrollment_aggregate_02",
     "category": "enrollment_aggregate",
-    "query": "컴퓨터융합학부 과목 중 정원이 다 찬 과목은 몇 개야",
+    "query": "컴퓨터융합학부 과목 중 정원이 다 찬 분반은 몇 개야",
     "grading": "execution",
     "reference_sql": "SELECT COUNT(DISTINCT subject_code || '-' || section) AS course_count FROM v_course_info WHERE dept_name LIKE '%컴퓨터융합학부%' AND enrolled >= capacity AND capacity > 0",
     "order_sensitive": false,
@@ -3060,7 +2945,7 @@
   {
     "id": "enrollment_aggregate_05",
     "category": "enrollment_aggregate",
-    "query": "컴퓨터융합학부 4학년 대상 과목은 몇 개야",
+    "query": "컴퓨터융합학부 4학년 대상 분반은 몇 개야",
     "grading": "execution",
     "reference_sql": "SELECT COUNT(DISTINCT subject_code || '-' || section) AS course_count FROM v_course_info WHERE dept_name LIKE '%컴퓨터융합학부%' AND target_year = 4",
     "order_sensitive": false,
@@ -4024,10 +3909,6 @@
     "notes": "실제 DB 기준 29행.",
     "gold_values": [
       {
-        "column": "dept_name",
-        "value": "공과대학 컴퓨터융합학부"
-      },
-      {
         "column": "day_of_week",
         "value": "월"
       }
@@ -4047,10 +3928,6 @@
     "notes": "실제 DB 기준 29행.",
     "gold_values": [
       {
-        "column": "dept_name",
-        "value": "공과대학 컴퓨터융합학부"
-      },
-      {
         "column": "category",
         "value": "전공(핵심)"
       }
@@ -4069,10 +3946,6 @@
     "structural_checks": null,
     "notes": "실제 DB 기준 8행.",
     "gold_values": [
-      {
-        "column": "dept_name",
-        "value": "공과대학 컴퓨터융합학부"
-      },
       {
         "column": "category",
         "value": "전공(심화)"
@@ -4095,12 +3968,7 @@
     "exclude_completed_courses": false,
     "structural_checks": null,
     "notes": "실제 DB 기준 58행.",
-    "gold_values": [
-      {
-        "column": "dept_name",
-        "value": "공과대학 컴퓨터융합학부"
-      }
-    ]
+    "gold_values": []
   },
   {
     "id": "personalized_lookup_27",
@@ -4115,10 +3983,6 @@
     "structural_checks": null,
     "notes": "실제 DB 기준 8행.",
     "gold_values": [
-      {
-        "column": "dept_name",
-        "value": "공과대학 컴퓨터융합학부"
-      },
       {
         "column": "category",
         "value": "전공(핵심)"
@@ -4137,12 +4001,7 @@
     "exclude_completed_courses": false,
     "structural_checks": null,
     "notes": "실제 DB 기준 19행.",
-    "gold_values": [
-      {
-        "column": "dept_name",
-        "value": "공과대학 컴퓨터융합학부"
-      }
-    ]
+    "gold_values": []
   },
   {
     "id": "personalized_lookup_29",
@@ -4157,10 +4016,6 @@
     "structural_checks": null,
     "notes": "실제 DB 기준 13행.",
     "gold_values": [
-      {
-        "column": "dept_name",
-        "value": "공과대학 컴퓨터융합학부"
-      },
       {
         "column": "category",
         "value": "전공(심화)"
@@ -4185,10 +4040,6 @@
     "notes": "실제 DB 기준 32행.",
     "gold_values": [
       {
-        "column": "dept_name",
-        "value": "공과대학 컴퓨터융합학부"
-      },
-      {
         "column": "category",
         "value": "전공(심화)"
       }
@@ -4205,7 +4056,8 @@
     "student_id": null,
     "exclude_completed_courses": false,
     "structural_checks": {"required_tables": ["required_subject"], "required_columns": ["required_subject.subject_code"], "student_scoped": false},
-    "notes": "required_subject 테이블은 현재 0행이라 실행 결과 비교는 무의미하다. SQL이 올바른 테이블/컬럼을 참조하는지만 검증한다."
+    "notes": "required_subject 테이블은 현재 0행이라 실행 결과 비교는 무의미하다. SQL이 올바른 테이블/컬럼을 참조하는지만 검증한다.",
+    "gold_values": []
   },
   {
     "id": "graduation_requirement_02",
@@ -4218,7 +4070,8 @@
     "student_id": null,
     "exclude_completed_courses": false,
     "structural_checks": {"required_tables": ["required_subject"], "required_columns": ["required_subject.subject_code"], "student_scoped": false},
-    "notes": "graduation_requirement_01과 동일한 사유."
+    "notes": "graduation_requirement_01과 동일한 사유.",
+    "gold_values": []
   },
   {
     "id": "graduation_requirement_03",
@@ -4231,7 +4084,8 @@
     "student_id": "202102671",
     "exclude_completed_courses": false,
     "structural_checks": {"required_tables": ["student", "required_subject"], "required_columns": [], "student_scoped": true},
-    "notes": "required_subject 데이터 부재 + personalized_lookup과 동일한 student 스코프 갭이 동시에 적용되는 케이스."
+    "notes": "required_subject 데이터 부재 + personalized_lookup과 동일한 student 스코프 갭이 동시에 적용되는 케이스.",
+    "gold_values": []
   },
   {
     "id": "ambiguous_reject_01",
