@@ -41,10 +41,29 @@ def is_course_row_query(sql: str) -> bool:
     return not (distinct is not None and distinct.args.get("on"))
 
 
+def _has_positional_order(tree) -> bool:
+    order = tree.args.get("order")
+    if order is None:
+        return False
+    return any(isinstance(ordered.this, exp.Literal) and ordered.this.is_int for ordered in order.expressions)
+
+
+def _has_shadowing_alias(tree) -> bool:
+    for expression in tree.expressions:
+        if not isinstance(expression, exp.Alias) or expression.alias not in STANDARD_COLUMNS:
+            continue
+        inner = expression.this
+        if not (isinstance(inner, exp.Column) and inner.name == expression.alias):
+            return True
+    return False
+
+
 def normalize_projection(sql: str) -> str:
     if not is_course_row_query(sql):
         return sql
     tree = _parse(sql)
+    if _has_positional_order(tree) or _has_shadowing_alias(tree):
+        return sql
     alias = _course_source_alias(tree)
     extras = [
         expression for expression in tree.expressions

@@ -55,3 +55,23 @@ def test_ensure_limit_adds_only_when_missing():
     assert ensure_limit("SELECT 1 FROM v_course_info", 50) == "SELECT 1 FROM v_course_info LIMIT 50"
     assert ensure_limit("SELECT 1 FROM v_course_info LIMIT 5", 50) == "SELECT 1 FROM v_course_info LIMIT 5"
     assert ensure_limit("garbage (", 50) == "garbage ("
+
+
+def test_normalize_projection_leaves_positional_order_by_untouched():
+    sql = "SELECT subject_name, credit_hours FROM v_course_info ORDER BY 2 DESC LIMIT 5"
+
+    assert normalize_projection(sql) == sql
+
+
+def test_normalize_projection_leaves_shadowing_alias_untouched():
+    sql = "SELECT subject_name, credit_hours*2 AS credit_hours FROM v_course_info ORDER BY credit_hours DESC"
+
+    assert normalize_projection(sql) == sql
+
+
+def test_normalize_projection_normalizes_same_column_alias():
+    sql = normalize_projection("SELECT c.credit_hours AS credit_hours FROM v_course_info c")
+
+    assert sql.startswith("SELECT c.course_year, c.subject_code, c.section")
+    assert sql.endswith("c.prereq_subject_names FROM v_course_info AS c")
+    assert sql.count("credit_hours") == 1
