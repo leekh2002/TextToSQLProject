@@ -69,13 +69,13 @@
     "category": "course_filter",
     "query": "경제학과 전공핵심 과목 알려줘",
     "grading": "execution",
-    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%경제학과%' AND category LIKE '%전공(핵심)%'",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%경상대학 경제학과%' AND category LIKE '%전공(핵심)%'",
     "order_sensitive": false,
     "expects_error": false,
     "student_id": null,
     "exclude_completed_courses": false,
     "structural_checks": null,
-    "notes": "'전공핵심'을 category 값 '전공(핵심)'으로 정규화하는지 확인. 실제 DB 기준 27행."
+    "notes": "'전공핵심'을 category 값 '전공(핵심)'으로 정규화하는지 확인. 실제 DB 기준 23행. 2026-10-20 학과 한정으로 수정(수정 전 27행: 농업경제학과 포함)."
   },
   {
     "id": "course_filter_07",
@@ -1717,6 +1717,553 @@
     "notes": "'없음'은 NULL이 아니라 리터럴 문자열이다(prompt.py에 명시됨, 실제 DB로 확인됨). 실제 DB 기준 34행."
   },
   {
+    "id": "prerequisite_06",
+    "category": "prerequisite",
+    "query": "알고리즘응용 선수과목 뭐야",
+    "grading": "execution",
+    "reference_sql": "SELECT subject_code, section, subject_name, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE subject_name LIKE '%알고리즘응용%'",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 2행.",
+    "gold_values": [
+      {
+        "column": "subject_name",
+        "value": "알고리즘응용"
+      }
+    ]
+  },
+  {
+    "id": "prerequisite_07",
+    "category": "prerequisite",
+    "query": "임베디드소프트웨어 들으려면 먼저 들어야 하는 과목이 뭐예요",
+    "grading": "execution",
+    "reference_sql": "SELECT subject_code, section, subject_name, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE subject_name LIKE '%임베디드소프트웨어%'",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 2행.",
+    "gold_values": [
+      {
+        "column": "subject_name",
+        "value": "임베디드소프트웨어"
+      }
+    ]
+  },
+  {
+    "id": "prerequisite_08",
+    "category": "prerequisite",
+    "query": "네트워크및웹보안 선수과목 알려줘",
+    "grading": "execution",
+    "reference_sql": "SELECT subject_code, section, subject_name, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE subject_name LIKE '%네트워크및웹보안%'",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 4행.",
+    "gold_values": [
+      {
+        "column": "subject_name",
+        "value": "네트워크및웹보안"
+      }
+    ]
+  },
+  {
+    "id": "prerequisite_09",
+    "category": "prerequisite",
+    "query": "디지털신호처리 선수 과목좀",
+    "grading": "execution",
+    "reference_sql": "SELECT subject_code, section, subject_name, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE subject_name LIKE '%디지털신호처리%'",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 2행.",
+    "gold_values": [
+      {
+        "column": "subject_name",
+        "value": "디지털신호처리"
+      }
+    ]
+  },
+  {
+    "id": "prerequisite_10",
+    "category": "prerequisite",
+    "query": "가상혼합현실 수업 듣기 전에 들어야 할 과목 있어?",
+    "grading": "execution",
+    "reference_sql": "SELECT subject_code, section, subject_name, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE subject_name LIKE '%가상혼합현실%'",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 2행.",
+    "gold_values": [
+      {
+        "column": "subject_name",
+        "value": "가상혼합현실"
+      }
+    ]
+  },
+  {
+    "id": "prerequisite_11",
+    "category": "prerequisite",
+    "query": "데이터통신을 선수과목으로 요구하는 과목 알려줘",
+    "grading": "execution",
+    "reference_sql": "SELECT subject_code, section, subject_name, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE prereq_subject_names LIKE '%데이터통신%'",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 4행.",
+    "gold_values": [
+      {
+        "column": "prereq_subject_names",
+        "value": "데이터통신"
+      }
+    ]
+  },
+  {
+    "id": "prerequisite_12",
+    "category": "prerequisite",
+    "query": "논리회로 선수로 하는 과목 뭐 있어",
+    "grading": "execution",
+    "reference_sql": "SELECT subject_code, section, subject_name, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE prereq_subject_names LIKE '%논리회로%'",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 2행.",
+    "gold_values": [
+      {
+        "column": "prereq_subject_names",
+        "value": "논리회로"
+      }
+    ]
+  },
+  {
+    "id": "prerequisite_13",
+    "category": "prerequisite",
+    "query": "이산수학을 먼저 들어야 하는 과목이 있어?",
+    "grading": "execution",
+    "reference_sql": "SELECT subject_code, section, subject_name, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE prereq_subject_names LIKE '%이산수학%'",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 2행.",
+    "gold_values": [
+      {
+        "column": "prereq_subject_names",
+        "value": "이산수학, 자료구조"
+      }
+    ]
+  },
+  {
+    "id": "prerequisite_14",
+    "category": "prerequisite",
+    "query": "컴융 과목 중에 운영체제및실습이 선수인 과목 알려줘",
+    "grading": "execution",
+    "reference_sql": "SELECT subject_code, section, subject_name, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%컴퓨터융합학부%' AND prereq_subject_names LIKE '%운영체제및실습%'",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 6행.",
+    "gold_values": [
+      {
+        "column": "dept_name",
+        "value": "공과대학 컴퓨터융합학부"
+      },
+      {
+        "column": "prereq_subject_names",
+        "value": "운영체제및실습"
+      }
+    ]
+  },
+  {
+    "id": "prerequisite_15",
+    "category": "prerequisite",
+    "query": "컴퓨터융합학부 과목 중 확률 및 통계가 선수과목인 과목",
+    "grading": "execution",
+    "reference_sql": "SELECT subject_code, section, subject_name, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%컴퓨터융합학부%' AND prereq_subject_names LIKE '%확률 및 통계%'",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 2행.",
+    "gold_values": [
+      {
+        "column": "dept_name",
+        "value": "공과대학 컴퓨터융합학부"
+      },
+      {
+        "column": "prereq_subject_names",
+        "value": "확률 및 통계"
+      }
+    ]
+  },
+  {
+    "id": "prerequisite_16",
+    "category": "prerequisite",
+    "query": "컴퓨터융합학부 종합설계1 선수과목 알려줘",
+    "grading": "execution",
+    "reference_sql": "SELECT subject_code, section, subject_name, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%컴퓨터융합학부%' AND subject_name LIKE '%종합설계1%'",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 4행.",
+    "gold_values": [
+      {
+        "column": "dept_name",
+        "value": "공과대학 컴퓨터융합학부"
+      },
+      {
+        "column": "subject_name",
+        "value": "종합설계1"
+      }
+    ]
+  },
+  {
+    "id": "prerequisite_17",
+    "category": "prerequisite",
+    "query": "컴융 딥러닝 선수 뭐야",
+    "grading": "execution",
+    "reference_sql": "SELECT subject_code, section, subject_name, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%컴퓨터융합학부%' AND subject_name LIKE '%딥러닝%'",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 2행.",
+    "gold_values": [
+      {
+        "column": "dept_name",
+        "value": "공과대학 컴퓨터융합학부"
+      },
+      {
+        "column": "subject_name",
+        "value": "딥러닝"
+      }
+    ]
+  },
+  {
+    "id": "prerequisite_18",
+    "category": "prerequisite",
+    "query": "자료구조를 선수로 요구하는 전공(심화) 과목 알려줘",
+    "grading": "execution",
+    "reference_sql": "SELECT subject_code, section, subject_name, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE prereq_subject_names LIKE '%자료구조%' AND category LIKE '%전공(심화)%'",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 12행.",
+    "gold_values": [
+      {
+        "column": "prereq_subject_names",
+        "value": "자료구조"
+      },
+      {
+        "column": "category",
+        "value": "전공(심화)"
+      }
+    ]
+  },
+  {
+    "id": "prerequisite_19",
+    "category": "prerequisite",
+    "query": "교필 중에 선수과목 없는 과목 알려줘",
+    "grading": "execution",
+    "reference_sql": "SELECT subject_code, section, subject_name, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE category LIKE '%교양(소양필수)%' AND prereq_subject_names = '없음'",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 115행.",
+    "gold_values": [
+      {
+        "column": "category",
+        "value": "교양(소양필수)"
+      },
+      {
+        "column": "prereq_subject_names",
+        "value": "없음"
+      }
+    ]
+  },
+  {
+    "id": "prerequisite_20",
+    "category": "prerequisite",
+    "query": "컴융 과목 중 선수과목 있는거 알려줘",
+    "grading": "execution",
+    "reference_sql": "SELECT subject_code, section, subject_name, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%컴퓨터융합학부%' AND prereq_subject_names <> '없음'",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 48행.",
+    "gold_values": [
+      {
+        "column": "dept_name",
+        "value": "공과대학 컴퓨터융합학부"
+      }
+    ]
+  },
+  {
+    "id": "prerequisite_21",
+    "category": "prerequisite",
+    "query": "수학과 선수과목 없는 과목 보여줘",
+    "grading": "execution",
+    "reference_sql": "SELECT subject_code, section, subject_name, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%수학과%' AND prereq_subject_names = '없음'",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 155행.",
+    "gold_values": [
+      {
+        "column": "dept_name",
+        "value": "자연과학대학 수학과"
+      },
+      {
+        "column": "prereq_subject_names",
+        "value": "없음"
+      }
+    ]
+  },
+  {
+    "id": "prerequisite_22",
+    "category": "prerequisite",
+    "query": "컴융에서 선수과목이 여러 개 필요한 과목 알려줘",
+    "grading": "execution",
+    "reference_sql": "SELECT subject_code, section, subject_name, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%컴퓨터융합학부%' AND prereq_subject_codes LIKE '%,%'",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 6행.",
+    "gold_values": [
+      {
+        "column": "dept_name",
+        "value": "공과대학 컴퓨터융합학부"
+      }
+    ]
+  },
+  {
+    "id": "prerequisite_23",
+    "category": "prerequisite",
+    "query": "교직 과목 중 선수과목 없는 과목 알려줘",
+    "grading": "execution",
+    "reference_sql": "SELECT subject_code, section, subject_name, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE category LIKE '%교직%' AND prereq_subject_names = '없음'",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 73행.",
+    "gold_values": [
+      {
+        "column": "category",
+        "value": "교직"
+      },
+      {
+        "column": "prereq_subject_names",
+        "value": "없음"
+      }
+    ]
+  },
+  {
+    "id": "prerequisite_24",
+    "category": "prerequisite",
+    "query": "컴퓨터융합학부 전공핵심 중에 선수과목 있는 과목 알려줘",
+    "grading": "execution",
+    "reference_sql": "SELECT subject_code, section, subject_name, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%컴퓨터융합학부%' AND category LIKE '%전공(핵심)%' AND prereq_subject_names <> '없음'",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 18행.",
+    "gold_values": [
+      {
+        "column": "dept_name",
+        "value": "공과대학 컴퓨터융합학부"
+      },
+      {
+        "column": "category",
+        "value": "전공(핵심)"
+      }
+    ]
+  },
+  {
+    "id": "prerequisite_25",
+    "category": "prerequisite",
+    "query": "컴융 전심 과목 중 선수과목이 있는 과목은 뭐야",
+    "grading": "execution",
+    "reference_sql": "SELECT subject_code, section, subject_name, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%컴퓨터융합학부%' AND category LIKE '%전공(심화)%' AND prereq_subject_names <> '없음'",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 22행.",
+    "gold_values": [
+      {
+        "column": "dept_name",
+        "value": "공과대학 컴퓨터융합학부"
+      },
+      {
+        "column": "category",
+        "value": "전공(심화)"
+      }
+    ]
+  },
+  {
+    "id": "prerequisite_26",
+    "category": "prerequisite",
+    "query": "수학과 전공(핵심) 과목 중 선수과목 없는 것 알려줘",
+    "grading": "execution",
+    "reference_sql": "SELECT subject_code, section, subject_name, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%수학과%' AND category LIKE '%전공(핵심)%' AND prereq_subject_names = '없음'",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 30행.",
+    "gold_values": [
+      {
+        "column": "dept_name",
+        "value": "자연과학대학 수학과"
+      },
+      {
+        "column": "category",
+        "value": "전공(핵심)"
+      },
+      {
+        "column": "prereq_subject_names",
+        "value": "없음"
+      }
+    ]
+  },
+  {
+    "id": "prerequisite_27",
+    "category": "prerequisite",
+    "query": "경영학부 3학년 대상 과목 중 선수과목 없는 과목",
+    "grading": "execution",
+    "reference_sql": "SELECT subject_code, section, subject_name, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%경영학부%' AND target_year = 3 AND prereq_subject_names = '없음'",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 64행.",
+    "gold_values": [
+      {
+        "column": "dept_name",
+        "value": "경상대학 경영학부"
+      },
+      {
+        "column": "prereq_subject_names",
+        "value": "없음"
+      }
+    ]
+  },
+  {
+    "id": "prerequisite_28",
+    "category": "prerequisite",
+    "query": "컴융 3학년 전핵 중에 선수과목 없는거 알려줘",
+    "grading": "execution",
+    "reference_sql": "SELECT subject_code, section, subject_name, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%컴퓨터융합학부%' AND target_year = 3 AND category LIKE '%전공(핵심)%' AND prereq_subject_names = '없음'",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 2행.",
+    "gold_values": [
+      {
+        "column": "dept_name",
+        "value": "공과대학 컴퓨터융합학부"
+      },
+      {
+        "column": "category",
+        "value": "전공(핵심)"
+      },
+      {
+        "column": "prereq_subject_names",
+        "value": "없음"
+      }
+    ]
+  },
+  {
+    "id": "prerequisite_29",
+    "category": "prerequisite",
+    "query": "물리학과 3학년 전공(심화) 과목 중 선수과목 없는 과목 알려줘",
+    "grading": "execution",
+    "reference_sql": "SELECT subject_code, section, subject_name, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%물리학과%' AND target_year = 3 AND category LIKE '%전공(심화)%' AND prereq_subject_names = '없음'",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 3행.",
+    "gold_values": [
+      {
+        "column": "dept_name",
+        "value": "자연과학대학 물리학과"
+      },
+      {
+        "column": "category",
+        "value": "전공(심화)"
+      },
+      {
+        "column": "prereq_subject_names",
+        "value": "없음"
+      }
+    ]
+  },
+  {
+    "id": "prerequisite_30",
+    "category": "prerequisite",
+    "query": "컴퓨터융합학부 선수과목 있는 과목 중 목요일 수업 알려줘",
+    "grading": "execution",
+    "reference_sql": "SELECT subject_code, section, subject_name, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%컴퓨터융합학부%' AND prereq_subject_names <> '없음' AND day_of_week = '목'",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 10행.",
+    "gold_values": [
+      {
+        "column": "dept_name",
+        "value": "공과대학 컴퓨터융합학부"
+      },
+      {
+        "column": "day_of_week",
+        "value": "목"
+      }
+    ]
+  },
+  {
     "id": "enrollment_aggregate_01",
     "category": "enrollment_aggregate",
     "query": "컴퓨터융합학부에서 수강인원이 가장 많은 과목이 뭐야",
@@ -1747,13 +2294,13 @@
     "category": "enrollment_aggregate",
     "query": "경제학과 전공핵심 과목은 총 몇 개 분반이야",
     "grading": "execution",
-    "reference_sql": "SELECT COUNT(DISTINCT subject_code || '-' || section) AS course_count FROM v_course_info WHERE dept_name LIKE '%경제학과%' AND category LIKE '%전공(핵심)%'",
+    "reference_sql": "SELECT COUNT(DISTINCT subject_code || '-' || section) AS course_count FROM v_course_info WHERE dept_name LIKE '%경상대학 경제학과%' AND category LIKE '%전공(핵심)%'",
     "order_sensitive": false,
     "expects_error": false,
     "student_id": null,
     "exclude_completed_courses": false,
     "structural_checks": null,
-    "notes": "enrollment_aggregate_02와 동일한 팬아웃 이슈. course_filter_06은 raw 27행, distinct는 17. 정답은 17."
+    "notes": "enrollment_aggregate_02와 동일한 팬아웃 이슈. course_filter_06은 raw 23행, distinct는 13. 정답은 13. 2026-10-20 학과 한정으로 수정(수정 전 정답 17: 농업경제학과 포함)."
   },
   {
     "id": "enrollment_aggregate_04",
@@ -1780,6 +2327,546 @@
     "exclude_completed_courses": false,
     "structural_checks": null,
     "notes": "course_filter_14는 raw 19행, distinct는 11. 정답은 11."
+  },
+  {
+    "id": "enrollment_aggregate_06",
+    "category": "enrollment_aggregate",
+    "query": "경영학부 분반 총 몇개 개설돼?",
+    "grading": "execution",
+    "reference_sql": "SELECT COUNT(DISTINCT subject_code || '-' || section) AS course_count FROM v_course_info WHERE dept_name LIKE '%경영학부%'",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "정답은 110. 실제 DB 기준 1행.",
+    "gold_values": [
+      {
+        "column": "dept_name",
+        "value": "경상대학 경영학부"
+      }
+    ]
+  },
+  {
+    "id": "enrollment_aggregate_07",
+    "category": "enrollment_aggregate",
+    "query": "균형교양 분반 몇개야",
+    "grading": "execution",
+    "reference_sql": "SELECT COUNT(DISTINCT subject_code || '-' || section) AS course_count FROM v_course_info WHERE category LIKE '%교양(균형)%'",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "정답은 236. 실제 DB 기준 1행.",
+    "gold_values": [
+      {
+        "column": "category",
+        "value": "교양(균형)"
+      }
+    ]
+  },
+  {
+    "id": "enrollment_aggregate_08",
+    "category": "enrollment_aggregate",
+    "query": "정원 꽉 찬 분반 전체 몇 개?",
+    "grading": "execution",
+    "reference_sql": "SELECT COUNT(DISTINCT subject_code || '-' || section) AS course_count FROM v_course_info WHERE enrolled >= capacity AND capacity > 0",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "정답은 1021. 실제 DB 기준 1행."
+  },
+  {
+    "id": "enrollment_aggregate_09",
+    "category": "enrollment_aggregate",
+    "query": "수강인원이 가장 많은 과목이 뭐야",
+    "grading": "execution",
+    "reference_sql": "SELECT subject_code, section, subject_name, enrolled, capacity FROM v_course_info ORDER BY enrolled DESC LIMIT 1",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "동점 없음 확인: 1위 값 493, 2위 값 310. 실제 DB 기준 1행."
+  },
+  {
+    "id": "enrollment_aggregate_10",
+    "category": "enrollment_aggregate",
+    "query": "이수구분별 분반 수 알려줘",
+    "grading": "execution",
+    "reference_sql": "SELECT category, COUNT(DISTINCT subject_code || '-' || section) AS course_count FROM v_course_info GROUP BY category",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 9행."
+  },
+  {
+    "id": "enrollment_aggregate_11",
+    "category": "enrollment_aggregate",
+    "query": "평가방식별로 분반이 몇 개씩이야",
+    "grading": "execution",
+    "reference_sql": "SELECT eval_type, COUNT(DISTINCT subject_code || '-' || section) AS course_count FROM v_course_info GROUP BY eval_type",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 2행."
+  },
+  {
+    "id": "enrollment_aggregate_12",
+    "category": "enrollment_aggregate",
+    "query": "컴융 수업 중 가장 큰 정원이 몇 명이야",
+    "grading": "execution",
+    "reference_sql": "SELECT MAX(capacity) AS max_capacity FROM v_course_info WHERE dept_name LIKE '%컴퓨터융합학부%'",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "정답은 200. 실제 DB 기준 1행.",
+    "gold_values": [
+      {
+        "column": "dept_name",
+        "value": "공과대학 컴퓨터융합학부"
+      }
+    ]
+  },
+  {
+    "id": "enrollment_aggregate_13",
+    "category": "enrollment_aggregate",
+    "query": "정원 넘은 분반 총 몇개야",
+    "grading": "execution",
+    "reference_sql": "SELECT COUNT(DISTINCT subject_code || '-' || section) AS course_count FROM v_course_info WHERE enrolled > capacity AND capacity > 0",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "정답은 60. 실제 DB 기준 1행."
+  },
+  {
+    "id": "enrollment_aggregate_14",
+    "category": "enrollment_aggregate",
+    "query": "수강신청 인원이 0명인 분반은 몇 개 있어",
+    "grading": "execution",
+    "reference_sql": "SELECT COUNT(DISTINCT subject_code || '-' || section) AS course_count FROM v_course_info WHERE enrolled = 0",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "정답은 103. 실제 DB 기준 1행."
+  },
+  {
+    "id": "enrollment_aggregate_15",
+    "category": "enrollment_aggregate",
+    "query": "교필 정원 마감된 분반 몇 개?",
+    "grading": "execution",
+    "reference_sql": "SELECT COUNT(DISTINCT subject_code || '-' || section) AS course_count FROM v_course_info WHERE category LIKE '%교양(소양필수)%' AND enrolled >= capacity AND capacity > 0",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "정답은 19. 실제 DB 기준 1행.",
+    "gold_values": [
+      {
+        "column": "category",
+        "value": "교양(소양필수)"
+      }
+    ]
+  },
+  {
+    "id": "enrollment_aggregate_16",
+    "category": "enrollment_aggregate",
+    "query": "물리학과 정원 꽉찬 과목 몇개?",
+    "grading": "execution",
+    "reference_sql": "SELECT COUNT(DISTINCT subject_code || '-' || section) AS course_count FROM v_course_info WHERE dept_name LIKE '%물리학과%' AND enrolled >= capacity AND capacity > 0",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "정답은 8. 실제 DB 기준 1행.",
+    "gold_values": [
+      {
+        "column": "dept_name",
+        "value": "자연과학대학 물리학과"
+      }
+    ]
+  },
+  {
+    "id": "enrollment_aggregate_17",
+    "category": "enrollment_aggregate",
+    "query": "수학과에 자리 남은 분반은 몇 개야",
+    "grading": "execution",
+    "reference_sql": "SELECT COUNT(DISTINCT subject_code || '-' || section) AS course_count FROM v_course_info WHERE dept_name LIKE '%수학과%' AND enrolled < capacity AND capacity > 0",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "정답은 42. 실제 DB 기준 1행.",
+    "gold_values": [
+      {
+        "column": "dept_name",
+        "value": "자연과학대학 수학과"
+      }
+    ]
+  },
+  {
+    "id": "enrollment_aggregate_18",
+    "category": "enrollment_aggregate",
+    "query": "교직 과목 중 정원을 초과한 분반 수 알려줘",
+    "grading": "execution",
+    "reference_sql": "SELECT COUNT(DISTINCT subject_code || '-' || section) AS course_count FROM v_course_info WHERE category LIKE '%교직%' AND enrolled > capacity AND capacity > 0",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "정답은 1. 실제 DB 기준 1행.",
+    "gold_values": [
+      {
+        "column": "category",
+        "value": "교직"
+      }
+    ]
+  },
+  {
+    "id": "enrollment_aggregate_19",
+    "category": "enrollment_aggregate",
+    "query": "컴퓨터융합학부 이수구분별 분반 수 알려줘",
+    "grading": "execution",
+    "reference_sql": "SELECT category, COUNT(DISTINCT subject_code || '-' || section) AS course_count FROM v_course_info WHERE dept_name LIKE '%컴퓨터융합학부%' GROUP BY category",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 3행.",
+    "gold_values": [
+      {
+        "column": "dept_name",
+        "value": "공과대학 컴퓨터융합학부"
+      }
+    ]
+  },
+  {
+    "id": "enrollment_aggregate_20",
+    "category": "enrollment_aggregate",
+    "query": "경상대학 학과별 분반 수 알려줘",
+    "grading": "execution",
+    "reference_sql": "SELECT dept_name, COUNT(DISTINCT subject_code || '-' || section) AS course_count FROM v_course_info WHERE dept_name LIKE '%경상대학%' GROUP BY dept_name",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 3행."
+  },
+  {
+    "id": "enrollment_aggregate_21",
+    "category": "enrollment_aggregate",
+    "query": "물리학과에서 수강인원 제일 많은 과목 알려줘",
+    "grading": "execution",
+    "reference_sql": "SELECT subject_code, section, subject_name, enrolled, capacity FROM v_course_info WHERE dept_name LIKE '%물리학과%' ORDER BY enrolled DESC LIMIT 1",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "동점 없음 확인: 1위 값 70, 2위 값 69. 실제 DB 기준 1행.",
+    "gold_values": [
+      {
+        "column": "dept_name",
+        "value": "자연과학대학 물리학과"
+      }
+    ]
+  },
+  {
+    "id": "enrollment_aggregate_22",
+    "category": "enrollment_aggregate",
+    "query": "화학과 과목 중 수강인원이 가장 많은 과목은 뭐야",
+    "grading": "execution",
+    "reference_sql": "SELECT subject_code, section, subject_name, enrolled, capacity FROM v_course_info WHERE dept_name LIKE '%자연과학대학 화학과%' ORDER BY enrolled DESC LIMIT 1",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "동점 없음 확인: 1위 값 80, 2위 값 79. 실제 DB 기준 1행.",
+    "gold_values": [
+      {
+        "column": "dept_name",
+        "value": "자연과학대학 화학과"
+      }
+    ]
+  },
+  {
+    "id": "enrollment_aggregate_23",
+    "category": "enrollment_aggregate",
+    "query": "심리학과 수강인원 최대 과목 뭐야",
+    "grading": "execution",
+    "reference_sql": "SELECT subject_code, section, subject_name, enrolled, capacity FROM v_course_info WHERE dept_name LIKE '%심리학과%' ORDER BY enrolled DESC LIMIT 1",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "동점 없음 확인: 1위 값 295, 2위 값 188. 실제 DB 기준 1행.",
+    "gold_values": [
+      {
+        "column": "dept_name",
+        "value": "사회과학대학 심리학과"
+      }
+    ]
+  },
+  {
+    "id": "enrollment_aggregate_24",
+    "category": "enrollment_aggregate",
+    "query": "교양(소양필수) 중에서 수강인원이 가장 많은 과목 알려줘",
+    "grading": "execution",
+    "reference_sql": "SELECT subject_code, section, subject_name, enrolled, capacity FROM v_course_info WHERE category LIKE '%교양(소양필수)%' ORDER BY enrolled DESC LIMIT 1",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "동점 없음 확인: 1위 값 493, 2위 값 169. 실제 DB 기준 1행.",
+    "gold_values": [
+      {
+        "column": "category",
+        "value": "교양(소양필수)"
+      }
+    ]
+  },
+  {
+    "id": "enrollment_aggregate_25",
+    "category": "enrollment_aggregate",
+    "query": "영어영문학과 마감된 분반 수 알려줘",
+    "grading": "execution",
+    "reference_sql": "SELECT COUNT(DISTINCT subject_code || '-' || section) AS course_count FROM v_course_info WHERE dept_name LIKE '%영어영문학과%' AND enrolled >= capacity AND capacity > 0",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "정답은 17. 실제 DB 기준 1행.",
+    "gold_values": [
+      {
+        "column": "dept_name",
+        "value": "인문대학 영어영문학과"
+      }
+    ]
+  },
+  {
+    "id": "enrollment_aggregate_26",
+    "category": "enrollment_aggregate",
+    "query": "컴퓨터융합학부 여석이 가장 많은 과목 3개 알려줘",
+    "grading": "execution",
+    "reference_sql": "SELECT DISTINCT subject_code, section, subject_name, enrolled, capacity, capacity - enrolled AS remaining_seats FROM v_course_info WHERE dept_name LIKE '%컴퓨터융합학부%' AND capacity > 0 ORDER BY capacity - enrolled DESC LIMIT 3",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "동점 없음 확인: 3위 값 121, 4위 값 28. 실제 DB 기준 3행.",
+    "gold_values": [
+      {
+        "column": "dept_name",
+        "value": "공과대학 컴퓨터융합학부"
+      }
+    ]
+  },
+  {
+    "id": "enrollment_aggregate_27",
+    "category": "enrollment_aggregate",
+    "query": "컴융 전핵 3학점 과목 중 정원 다 찬 분반 몇 개야",
+    "grading": "execution",
+    "reference_sql": "SELECT COUNT(DISTINCT subject_code || '-' || section) AS course_count FROM v_course_info WHERE dept_name LIKE '%컴퓨터융합학부%' AND category LIKE '%전공(핵심)%' AND credit_hours LIKE '3/%' AND enrolled >= capacity AND capacity > 0",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "정답은 6. 실제 DB 기준 1행.",
+    "gold_values": [
+      {
+        "column": "dept_name",
+        "value": "공과대학 컴퓨터융합학부"
+      },
+      {
+        "column": "category",
+        "value": "전공(핵심)"
+      }
+    ]
+  },
+  {
+    "id": "enrollment_aggregate_28",
+    "category": "enrollment_aggregate",
+    "query": "공과대학 학과별로 정원이 다 찬 분반이 몇 개씩인지 알려줘",
+    "grading": "execution",
+    "reference_sql": "SELECT dept_name, COUNT(DISTINCT subject_code || '-' || section) AS course_count FROM v_course_info WHERE dept_name LIKE '%공과대학%' AND enrolled >= capacity AND capacity > 0 GROUP BY dept_name",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 18행."
+  },
+  {
+    "id": "enrollment_aggregate_29",
+    "category": "enrollment_aggregate",
+    "query": "컴퓨터융합학부 3학년 전공(핵심) 과목 중 여석 있는 분반은 몇 개야",
+    "grading": "execution",
+    "reference_sql": "SELECT COUNT(DISTINCT subject_code || '-' || section) AS course_count FROM v_course_info WHERE dept_name LIKE '%컴퓨터융합학부%' AND target_year = 3 AND category LIKE '%전공(핵심)%' AND enrolled < capacity AND capacity > 0",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "정답은 5. 실제 DB 기준 1행.",
+    "gold_values": [
+      {
+        "column": "dept_name",
+        "value": "공과대학 컴퓨터융합학부"
+      },
+      {
+        "column": "category",
+        "value": "전공(핵심)"
+      }
+    ]
+  },
+  {
+    "id": "enrollment_aggregate_30",
+    "category": "enrollment_aggregate",
+    "query": "경영학부 전공핵심 과목 중 정원 다 찬 분반 몇 개",
+    "grading": "execution",
+    "reference_sql": "SELECT COUNT(DISTINCT subject_code || '-' || section) AS course_count FROM v_course_info WHERE dept_name LIKE '%경영학부%' AND category LIKE '%전공(핵심)%' AND enrolled >= capacity AND capacity > 0",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "정답은 2. 실제 DB 기준 1행.",
+    "gold_values": [
+      {
+        "column": "dept_name",
+        "value": "경상대학 경영학부"
+      },
+      {
+        "column": "category",
+        "value": "전공(핵심)"
+      }
+    ]
+  },
+  {
+    "id": "enrollment_aggregate_31",
+    "category": "enrollment_aggregate",
+    "query": "컴퓨터융합학부 3학점 상대평가 과목은 몇 분반이야",
+    "grading": "execution",
+    "reference_sql": "SELECT COUNT(DISTINCT subject_code || '-' || section) AS course_count FROM v_course_info WHERE dept_name LIKE '%컴퓨터융합학부%' AND eval_type = '상대평가' AND credit_hours LIKE '3/%'",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "정답은 22. 실제 DB 기준 1행.",
+    "gold_values": [
+      {
+        "column": "dept_name",
+        "value": "공과대학 컴퓨터융합학부"
+      },
+      {
+        "column": "eval_type",
+        "value": "상대평가"
+      }
+    ]
+  },
+  {
+    "id": "enrollment_aggregate_32",
+    "category": "enrollment_aggregate",
+    "query": "국어국문학과 상대평가 과목 중 정원이 다 찬 분반 수 알려줘",
+    "grading": "execution",
+    "reference_sql": "SELECT COUNT(DISTINCT subject_code || '-' || section) AS course_count FROM v_course_info WHERE dept_name LIKE '%국어국문학과%' AND eval_type = '상대평가' AND enrolled >= capacity AND capacity > 0",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "정답은 57. 실제 DB 기준 1행.",
+    "gold_values": [
+      {
+        "column": "dept_name",
+        "value": "인문대학 국어국문학과"
+      },
+      {
+        "column": "eval_type",
+        "value": "상대평가"
+      }
+    ]
+  },
+  {
+    "id": "enrollment_aggregate_33",
+    "category": "enrollment_aggregate",
+    "query": "컴융 1명 이상 신청한 과목 중에 수강인원이 제일 적은 과목 알려줘",
+    "grading": "execution",
+    "reference_sql": "SELECT subject_code, section, subject_name, enrolled, capacity FROM v_course_info WHERE dept_name LIKE '%컴퓨터융합학부%' AND enrolled > 0 ORDER BY enrolled ASC LIMIT 1",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "동점 없음 확인: 1위 값 8, 2위 값 12. 실제 DB 기준 1행.",
+    "gold_values": [
+      {
+        "column": "dept_name",
+        "value": "공과대학 컴퓨터융합학부"
+      }
+    ]
+  },
+  {
+    "id": "enrollment_aggregate_34",
+    "category": "enrollment_aggregate",
+    "query": "기계공학부 전공(심화) 과목 중 여석이 제일 많은 과목 알려줘",
+    "grading": "execution",
+    "reference_sql": "SELECT subject_code, section, subject_name, enrolled, capacity, capacity - enrolled AS remaining_seats FROM v_course_info WHERE dept_name LIKE '%기계공학부%' AND category LIKE '%전공(심화)%' AND capacity > 0 ORDER BY capacity - enrolled DESC LIMIT 1",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "동점 없음 확인: 1위 값 77, 2위 값 19. 실제 DB 기준 1행.",
+    "gold_values": [
+      {
+        "column": "dept_name",
+        "value": "공과대학 기계공학부"
+      },
+      {
+        "column": "category",
+        "value": "전공(심화)"
+      }
+    ]
+  },
+  {
+    "id": "enrollment_aggregate_35",
+    "category": "enrollment_aggregate",
+    "query": "공과대학 학과 중 분반이 35개를 넘는 학과와 분반 수 알려줘",
+    "grading": "execution",
+    "reference_sql": "SELECT dept_name, COUNT(DISTINCT subject_code || '-' || section) AS course_count FROM v_course_info WHERE dept_name LIKE '%공과대학%' GROUP BY dept_name HAVING COUNT(DISTINCT subject_code || '-' || section) > 35",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": null,
+    "exclude_completed_courses": false,
+    "structural_checks": null,
+    "notes": "실제 DB 기준 6행."
   },
   {
     "id": "personalized_lookup_01",
