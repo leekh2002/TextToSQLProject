@@ -67,10 +67,21 @@ def match_columns(
             matched[column] = column
             used.add(column)
 
+    capped = len(generated_rows) == row_cap()
     for column in reference_columns:
         if column in matched:
             continue
         reference_values = _column_values(reference_rows, column)
+        if capped:
+            reference_set = set(reference_values)
+            candidates = [
+                candidate for candidate in generated_columns
+                if candidate not in used and set(_column_values(generated_rows, candidate)) <= reference_set
+            ]
+            if len(candidates) == 1:
+                matched[column] = candidates[0]
+                used.add(candidates[0])
+            continue
         for candidate in generated_columns:
             if candidate in used:
                 continue
@@ -123,7 +134,7 @@ def compare_execution(
     # exactly that many rows, all of which belong to the reference (as a prefix when order
     # matters), is a pass.
     cap = row_cap()
-    if len(generated_rows) == cap:
+    if len(generated_rows) == cap and len(set(generated_projection)) == len(generated_projection):
         if order_sensitive:
             if generated_projection == reference_projection[:cap]:
                 return True, None

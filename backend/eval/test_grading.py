@@ -480,3 +480,39 @@ def test_grade_case_reports_reference_sql_failure_as_infra_error(monkeypatch):
     assert grade["reason"].startswith("정답 SQL 실행 실패: ")
     assert "connection refused" in grade["reason"]
     assert classify_failure(case, result, grade) == "infra_error"
+
+
+def test_capped_result_with_duplicate_rows_does_not_pass(monkeypatch):
+    monkeypatch.setenv("T2S_ROW_CAP", "3")
+    reference = [{"subject_code": c, "section": "00"} for c in "ABCDE"]
+    generated = [{"subject_code": "A", "section": "00"}] * 3
+
+    ok, _ = compare_execution(reference, generated)
+
+    assert ok is False
+
+
+def test_capped_distinct_subset_still_passes(monkeypatch):
+    monkeypatch.setenv("T2S_ROW_CAP", "3")
+    reference = [{"subject_code": c, "section": "00"} for c in "ABCDE"]
+    generated = [{"subject_code": c, "section": "00"} for c in "ABC"]
+
+    assert compare_execution(reference, generated) == (True, None)
+
+
+def test_capped_renamed_column_matches_by_value_subset(monkeypatch):
+    monkeypatch.setenv("T2S_ROW_CAP", "2")
+    reference = [{"course_count": n} for n in (1, 2, 3)]
+    generated = [{"cnt": n} for n in (1, 2)]
+
+    assert compare_execution(reference, generated) == (True, None)
+
+
+def test_capped_renamed_column_is_not_matched_when_ambiguous(monkeypatch):
+    monkeypatch.setenv("T2S_ROW_CAP", "2")
+    reference = [{"course_count": n} for n in (1, 2, 3)]
+    generated = [{"a": 1, "b": 1}, {"a": 2, "b": 2}]
+
+    ok, reason = compare_execution(reference, generated)
+
+    assert ok is False and "course_count" in reason
