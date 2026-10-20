@@ -1,3 +1,5 @@
+import pytest
+
 from backend.t2s.config import load_settings
 
 
@@ -25,3 +27,11 @@ def test_overrides(monkeypatch):
     s = load_settings()
 
     assert (s.model, s.candidates, s.use_examples, s.value_sources, s.review_log) == ("x", 1, False, ("ngram",), False)
+
+
+def test_missing_model_fails_fast(monkeypatch):
+    monkeypatch.delenv("T2S_MODEL", raising=False)
+    monkeypatch.delenv("OLLAMA_MODEL", raising=False)
+
+    with pytest.raises(RuntimeError, match="T2S_MODEL"):
+        load_settings()

@@ -5,6 +5,9 @@ import os
 from dataclasses import dataclass
 
 
+MISSING_MODEL_ERROR = "LLM 모델이 설정되지 않았습니다. T2S_MODEL 또는 OLLAMA_MODEL을 지정하세요."
+
+
 @dataclass(frozen=True)
 class Settings:
     model: str
@@ -24,8 +27,11 @@ def _flag(name: str, default: str) -> bool:
 
 def load_settings() -> Settings:
     sources = os.getenv("T2S_VALUE_SOURCES", "ner,ngram")
+    model = os.getenv("T2S_MODEL") or os.getenv("OLLAMA_MODEL", "")
+    if not model.strip():
+        raise RuntimeError(MISSING_MODEL_ERROR)
     return Settings(
-        model=os.getenv("T2S_MODEL") or os.getenv("OLLAMA_MODEL", ""),
+        model=model,
         candidates=int(os.getenv("T2S_CANDIDATES", "5")),
         temperature=float(os.getenv("T2S_TEMPERATURE", "0.7")),
         examples_k=int(os.getenv("T2S_EXAMPLES_K", "4")),

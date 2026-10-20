@@ -56,17 +56,22 @@ def ollama_chat(messages, *, model, temperature, seed=None, timeout: float = 120
     return content
 
 
-def generate_candidates(message_sets, *, model, temperature, chat=ollama_chat) -> list[str | None]:
+def generate_with_errors(message_sets, *, model, temperature, chat=ollama_chat) -> list[tuple[str | None, str | None]]:
+    """One (text, error) pair per candidate; error is the chat exception text when the call failed."""
     def one(index_and_messages):
         index, messages = index_and_messages
         try:
             if index == 0:
-                return chat(messages, model=model, temperature=0.0)
-            return chat(messages, model=model, temperature=temperature, seed=index)
-        except Exception:
-            return None
+                return chat(messages, model=model, temperature=0.0), None
+            return chat(messages, model=model, temperature=temperature, seed=index), None
+        except Exception as exc:
+            return None, str(exc) or type(exc).__name__
 
     if not message_sets:
         return []
     with ThreadPoolExecutor(max_workers=len(message_sets)) as pool:
         return list(pool.map(one, enumerate(message_sets)))
+
+
+def generate_candidates(message_sets, *, model, temperature, chat=ollama_chat) -> list[str | None]:
+    return [text for text, _ in generate_with_errors(message_sets, model=model, temperature=temperature, chat=chat)]

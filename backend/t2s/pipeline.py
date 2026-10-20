@@ -9,16 +9,17 @@ from datetime import datetime, timezone
 from functools import lru_cache
 from typing import Callable
 
-from .config import Settings
+from .config import MISSING_MODEL_ERROR, Settings
 from .examples import REVIEW_LOG_PATH
 from .execute import CandidateOutcome, run_candidate
-from .generate import generate_candidates
+from .generate import generate_with_errors
 from .prompt import build_messages
 from .values import find_value_candidates, from_hints
 from .vote import decide
 
 REJECTED_ERROR = "질문이 모호합니다."
 NO_SQL_ERROR = "SQL을 생성하지 못했습니다."
+LLM_ERROR_PREFIX = "LLM 호출 실패: "
 
 
 @dataclass
@@ -43,26 +44,34 @@ def _default_references() -> dict:
     return load_value_references(db.run_query)
 
 
+def _build_store(settings: Settings):
+    if not settings.use_examples:
+        return None
+    from .examples import default_store
+
+    return default_store()
+
+
 def default_deps() -> Deps:
     from ..keyword_extract import preprocess_query
     from ..validate import validate_generated_sql
     from .config import load_settings
-    from .examples import default_store
     from .execute import run_sql
     from .generate import ollama_chat
     from .schema_doc import get_mschema
 
+    settings = load_settings()
     return Deps(
         preprocess=lambda q: preprocess_query(q, fail_open=True),
         references=_default_references(),
-        store=default_store(),
+        store=_build_store(settings),
         schema=get_mschema(),
         chat=ollama_chat,
         run=run_sql,
         validate=validate_generated_sql,
         expand=None,
         exclude=None,
-        settings=load_settings(),
+        settings=settings,
     )
 
 
@@ -71,7 +80,7 @@ def _write_review_log(query, outcome: CandidateOutcome | None, error) -> None:
         record = {
             "ts": datetime.now(timezone.utc).isoformat(),
             "query": query,
-            "sql": outcome.sql if outcome else None,
+            "sql": outcome.extracted_sql if outcome else None,
             "rows": len(outcome.rows) if outcome and outcome.rows is not None else None,
             "error": error,
         }
@@ -86,6 +95,8 @@ def run_v2(query, *, exclude_completed_courses=False, student_id=None, value_hin
     started = time.perf_counter()
     deps = deps or default_deps()
     settings = deps.settings
+    if not (settings.model or "").strip():
+        raise RuntimeError(MISSING_MODEL_ERROR)
 
     t0 = time.perf_counter()
     preprocessing = deps.preprocess(query) or {}
@@ -113,7 +124,9 @@ def run_v2(query, *, exclude_completed_courses=False, student_id=None, value_hin
         sets.append(messages_for(order))
 
     t0 = time.perf_counter()
-    raws = generate_candidates(sets, model=settings.model, temperature=settings.temperature, chat=deps.chat)
+    generated = generate_with_errors(sets, model=settings.model, temperature=settings.temperature, chat=deps.chat)
+    raws = [text for text, _ in generated]
+    llm_errors = [err for _, err in generated]
     llm_ms = (time.perf_counter() - t0) * 1000
 
     def execute(index, raw):
@@ -128,16 +141,22 @@ def run_v2(query, *, exclude_completed_courses=False, student_id=None, value_hin
 
     if decision.kind in ("none", "empty") and sets:
         first = outcomes[0]
-        feedback = "오류: " + first.error if first.error else "0행"
+        if first.rejected or first.sql is None:
+            note = "위 답변은 실행할 SQL이 아니었다. 질문에 맞는 SQL을 작성해서 SQL만 출력해."
+        elif first.error:
+            note = f"위 SQL은 실행 결과가 오류: {first.error}였다. 질문 의도에 맞게 고친 SQL만 출력해."
+        else:
+            note = "위 SQL은 실행 결과가 0행이었다. 질문 의도에 맞게 고친 SQL만 출력해."
         retry_messages = sets[0] + [
             {"role": "assistant", "content": raws[0] or ""},
-            {"role": "user", "content": f"위 SQL은 실행 결과가 {feedback}였다. 질문 의도에 맞게 고친 SQL만 출력해."},
+            {"role": "user", "content": note},
         ]
         t0 = time.perf_counter()
         try:
             retry_raw = deps.chat(retry_messages, model=settings.model, temperature=0.0)
-        except Exception:
+        except Exception as exc:
             retry_raw = None
+            llm_errors.append(str(exc) or type(exc).__name__)
         llm_ms += (time.perf_counter() - t0) * 1000
 
         t0 = time.perf_counter()
@@ -150,6 +169,8 @@ def run_v2(query, *, exclude_completed_courses=False, student_id=None, value_hin
     chosen = outcomes[decision.index] if decision.index is not None else None
     if decision.kind == "rejected":
         sql, data, error, rejected = None, [], REJECTED_ERROR, True
+    elif decision.kind == "none" and all(llm_errors) and len(llm_errors) > len(raws):
+        sql, data, error, rejected = None, [], LLM_ERROR_PREFIX + llm_errors[0], False
     elif decision.kind == "none":
         errors = [o.error for o in outcomes if o.error]
         last_sql = next((o.sql for o in reversed(outcomes) if o.sql), None)

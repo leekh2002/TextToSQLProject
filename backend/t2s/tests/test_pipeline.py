@@ -110,4 +110,65 @@ def test_review_log_record_keys(tmp_path, monkeypatch):
 
     record = json.loads(log.read_text(encoding="utf-8").splitlines()[0])
     assert set(record) == {"ts", "query", "sql", "rows", "error"}
+    assert record["sql"] == "SELECT 1 FROM v_course_info"
     assert record["query"] == "질문" and record["rows"] == 1 and record["error"] is None
+
+
+def test_all_llm_calls_failing_reports_llm_error():
+    def chat(messages, *, model, temperature, seed=None):
+        raise RuntimeError("connection refused")
+
+    result = run_v2("q", deps=deps(chat, lambda *a: []))
+
+    assert result["error"] == "LLM 호출 실패: connection refused"
+    assert result["rejected"] is False and result["data"] == []
+
+
+def test_partial_llm_failure_is_not_an_llm_error():
+    def chat(messages, *, model, temperature, seed=None):
+        if seed == 1:
+            raise RuntimeError("down")
+        return "UNKNOWN"
+
+    result = run_v2("q", deps=deps(chat, lambda *a: []))
+
+    assert result["rejected"] is True
+
+
+def test_empty_model_fails_fast():
+    import pytest
+
+    with pytest.raises(RuntimeError, match="모델"):
+        run_v2("q", deps=deps(lambda *a, **k: "UNKNOWN", lambda *a: [], settings=settings(model="")))
+
+
+def _retry_feedback(first_reply, run):
+    calls = []
+
+    def chat(messages, *, model, temperature, seed=None):
+        calls.append(messages)
+        is_retry = messages[-1]["content"].startswith("위 ")
+        is_first_candidate = seed is None and not is_retry
+        return first_reply if is_first_candidate else "SELECT a FROM v_course_info"
+
+    run_v2("q", deps=deps(chat, run))
+    return max(calls, key=len)[-1]["content"]
+
+
+def test_retry_feedback_depends_on_first_candidate_state():
+    def failing_run(sql, params, timeout_ms):
+        raise RuntimeError("boom")
+
+    assert "오류: boom" in _retry_feedback("SELECT a FROM v_course_info", failing_run)
+    assert "0행" in _retry_feedback("SELECT a FROM v_course_info", lambda *a: [])
+    for reply in ("모르겠어요", "UNKNOWN"):
+        feedback = _retry_feedback(reply, lambda *a: [])
+        assert "0행" not in feedback and "오류" not in feedback and "SQL" in feedback
+
+
+def test_store_not_built_when_examples_disabled(monkeypatch):
+    from backend.t2s import examples
+
+    monkeypatch.setattr(examples, "default_store", lambda: (_ for _ in ()).throw(AssertionError("built")))
+
+    assert pipeline_module._build_store(settings(use_examples=False)) is None

@@ -1,6 +1,6 @@
 import pytest
 
-from backend.t2s.generate import extract_sql, generate_candidates
+from backend.t2s.generate import extract_sql, generate_candidates, generate_with_errors
 
 
 @pytest.mark.parametrize("text, expected", [
@@ -32,3 +32,14 @@ def test_generate_candidates_uses_greedy_first_and_keeps_order():
 
     assert out == ["SELECT a", None, "SELECT c"]
     assert sorted(calls) == sorted([("a", 0.0, None), ("boom", 0.7, 1), ("c", 0.7, 2)])
+
+
+def test_generate_with_errors_keeps_exception_text():
+    def chat(messages, *, model, temperature, seed=None):
+        if seed == 1:
+            raise RuntimeError("model not found")
+        return "SELECT 1"
+
+    sets = [[{"role": "user", "content": "x"}]] * 2
+
+    assert generate_with_errors(sets, model="m", temperature=0.7, chat=chat) == [("SELECT 1", None), (None, "model not found")]
