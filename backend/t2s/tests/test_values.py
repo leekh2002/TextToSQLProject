@@ -63,3 +63,11 @@ def test_find_value_candidates_respects_sources():
 
     assert [c.value for c in ner_only] == ["공과대학 컴퓨터융합학부"]
     assert {c.value for c in both} == {"공과대학 컴퓨터융합학부", "운영체제"}
+
+
+def test_short_value_inside_longer_matching_value_is_dropped():
+    refs = {"class_mode": ["대면", "비대면"]}
+
+    assert [c.value for c in from_ngrams("비대면 수업", refs)] == ["비대면"]
+    assert [c.value for c in from_ngrams("대면 수업", refs)] == ["대면"]
+    assert from_ngrams("가 수업", {"x": ["가"]}) == []

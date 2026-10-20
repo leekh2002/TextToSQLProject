@@ -16,6 +16,7 @@ LABEL_TO_COLUMN = {
     "PROFESSOR": "professor",
 }
 MIN_TOKEN_LENGTH = 3
+MIN_FULL_LENGTH = 2
 
 
 @dataclass(frozen=True)
@@ -45,10 +46,14 @@ def from_ngrams(question: str, references: dict[str, list[str]]) -> list[ValueCa
     question_key = value_key(question)
     found = []
     for column, values in references.items():
+        keys = {value: value_key(value) for value in values}
+        full_matches = {v: k for v, k in keys.items() if len(k) >= MIN_FULL_LENGTH and k in question_key}
         for value in values:
-            full = value_key(value)
-            if full and full in question_key:
-                found.append(ValueCandidate(column, value, 100.0, "ngram"))
+            full = full_matches.get(value)
+            if full is not None:
+                # '대면' also appears inside '비대면': keep only the longer value when both match.
+                if not any(full != other and full in other for other in full_matches.values()):
+                    found.append(ValueCandidate(column, value, 100.0, "ngram"))
                 continue
             tokens = [value_key(t) for t in str(value).split()]
             if any(len(t) >= MIN_TOKEN_LENGTH and t in question_key for t in tokens):
