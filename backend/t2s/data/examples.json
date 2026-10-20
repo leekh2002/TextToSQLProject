@@ -1,1 +1,757 @@
-[]
+[
+  {
+    "id": "ex_001",
+    "question": "사회학과 전핵 뭐 열려있어?",
+    "sql": "SELECT * FROM v_course_info WHERE dept_name LIKE '%사회학과%' AND category = '전공(핵심)'"
+  },
+  {
+    "id": "ex_002",
+    "question": "철학과 2학년 대상 과목 알려줘",
+    "sql": "SELECT * FROM v_course_info WHERE dept_name LIKE '%철학과%' AND target_year = 2"
+  },
+  {
+    "id": "ex_003",
+    "question": "건축학과 월요일 오후 수업 뭐 있어",
+    "sql": "SELECT * FROM v_course_info WHERE dept_name LIKE '%건축학과%' AND day_of_week = '월' AND start_time >= '12:00:00'"
+  },
+  {
+    "id": "ex_004",
+    "question": "정치외교학과 금요일 수업 있어?",
+    "sql": "SELECT * FROM v_course_info WHERE dept_name LIKE '%정치외교학과%' AND day_of_week = '금'"
+  },
+  {
+    "id": "ex_005",
+    "question": "행정학부 전심 과목 좀 보여줘",
+    "sql": "SELECT * FROM v_course_info WHERE dept_name LIKE '%행정학부%' AND category = '전공(심화)'"
+  },
+  {
+    "id": "ex_006",
+    "question": "문헌정보학과 3학점짜리 과목 알려줘",
+    "sql": "SELECT * FROM v_course_info WHERE dept_name LIKE '%문헌정보학과%' AND credit_hours LIKE '3/%'"
+  },
+  {
+    "id": "ex_007",
+    "question": "전기공학과 졸업반이 들을 수 있는 심화 전공 수업 뭐 있는지 궁금해",
+    "sql": "SELECT * FROM v_course_info WHERE dept_name LIKE '%전기공학과%' AND target_year = 4 AND category = '전공(심화)'"
+  },
+  {
+    "id": "ex_008",
+    "question": "토목공학과 목요일 오전 수업 뭐있어",
+    "sql": "SELECT * FROM v_course_info WHERE dept_name LIKE '%토목공학과%' AND day_of_week = '목' AND start_time < '12:00:00'"
+  },
+  {
+    "id": "ex_009",
+    "question": "생물과학과 기초 전공 강의 뭐 있나요",
+    "sql": "SELECT * FROM v_course_info WHERE dept_name LIKE '%생물과학과%' AND category = '전공(기초)'"
+  },
+  {
+    "id": "ex_010",
+    "question": "의류학과 자리 남은 수업 있어?",
+    "sql": "SELECT * FROM v_course_info WHERE dept_name LIKE '%의류학과%' AND enrolled < capacity AND capacity > 0"
+  },
+  {
+    "id": "ex_011",
+    "question": "식품영양학과 절대평가 과목 보여줘",
+    "sql": "SELECT * FROM v_course_info WHERE dept_name LIKE '%식품영양학과%' AND eval_type = '절대평가'"
+  },
+  {
+    "id": "ex_012",
+    "question": "소비자학과 수요일 3시 수업",
+    "sql": "SELECT * FROM v_course_info WHERE dept_name LIKE '%소비자학과%' AND day_of_week = '수' AND start_time = '15:00:00'"
+  },
+  {
+    "id": "ex_013",
+    "question": "일어일문학과 1학년 과목 뭐 있어",
+    "sql": "SELECT * FROM v_course_info WHERE dept_name LIKE '%일어일문학과%' AND target_year = 1"
+  },
+  {
+    "id": "ex_014",
+    "question": "독문과 전공핵심 과목 알려줘",
+    "sql": "SELECT * FROM v_course_info WHERE dept_name LIKE '%독어독문학과%' AND category = '전공(핵심)'"
+  },
+  {
+    "id": "ex_015",
+    "question": "의학과 마감된 과목 있어?",
+    "sql": "SELECT * FROM v_course_info WHERE dept_name LIKE '%의과대학 의학과%' AND enrolled >= capacity AND capacity > 0"
+  },
+  {
+    "id": "ex_016",
+    "question": "정보통계학과 화요일 오후 수업 알려줘",
+    "sql": "SELECT * FROM v_course_info WHERE dept_name LIKE '%정보통계학과%' AND day_of_week = '화' AND start_time >= '12:00:00'"
+  },
+  {
+    "id": "ex_017",
+    "question": "천문우주과학과 과목 뭐 개설돼?",
+    "sql": "SELECT * FROM v_course_info WHERE dept_name LIKE '%천문우주과학과%'"
+  },
+  {
+    "id": "ex_018",
+    "question": "환경공학과 2학년 전핵 과목",
+    "sql": "SELECT * FROM v_course_info WHERE dept_name LIKE '%환경공학과%' AND target_year = 2 AND category = '전공(핵심)'"
+  },
+  {
+    "id": "ex_019",
+    "question": "항공우주공학과 목요일 수업 알려줘",
+    "sql": "SELECT * FROM v_course_info WHERE dept_name LIKE '%항공우주공학과%' AND day_of_week = '목'"
+  },
+  {
+    "id": "ex_020",
+    "question": "응용화학공학과 2학년 수업 보여줘",
+    "sql": "SELECT * FROM v_course_info WHERE dept_name LIKE '%응용화학공학과%' AND target_year = 2"
+  },
+  {
+    "id": "ex_021",
+    "question": "체육교육과 금요일 오전 과목 있어?",
+    "sql": "SELECT * FROM v_course_info WHERE dept_name LIKE '%체육교육과%' AND day_of_week = '금' AND start_time < '12:00:00'"
+  },
+  {
+    "id": "ex_022",
+    "question": "농업경제학과 과목 전부 알려줘",
+    "sql": "SELECT * FROM v_course_info WHERE dept_name LIKE '%농업경제학과%'"
+  },
+  {
+    "id": "ex_023",
+    "question": "회계 들어간 과목 알려줘",
+    "sql": "SELECT * FROM v_course_info WHERE subject_name LIKE '%회계%'"
+  },
+  {
+    "id": "ex_024",
+    "question": "통계 과목 중에 3학점짜리 뭐 있어",
+    "sql": "SELECT * FROM v_course_info WHERE subject_name LIKE '%통계%' AND credit_hours LIKE '3/%'"
+  },
+  {
+    "id": "ex_025",
+    "question": "영어회화 수업 월요일에 하는 거 있어?",
+    "sql": "SELECT * FROM v_course_info WHERE subject_name LIKE '%영어회화%' AND day_of_week = '월'"
+  },
+  {
+    "id": "ex_026",
+    "question": "공학수학 과목 알려줘",
+    "sql": "SELECT * FROM v_course_info WHERE subject_name LIKE '%공학수학%'"
+  },
+  {
+    "id": "ex_027",
+    "question": "물리학실험 오후 수업 알려줘",
+    "sql": "SELECT * FROM v_course_info WHERE subject_name LIKE '%물리학실험%' AND start_time >= '12:00:00'"
+  },
+  {
+    "id": "ex_028",
+    "question": "대학글쓰기 목요일 수업 보여줘",
+    "sql": "SELECT * FROM v_course_info WHERE subject_name LIKE '%대학글쓰기%' AND day_of_week = '목'"
+  },
+  {
+    "id": "ex_029",
+    "question": "미적분학 여석 있는 분반 알려줘",
+    "sql": "SELECT * FROM v_course_info WHERE subject_name LIKE '%미적분학%' AND enrolled < capacity AND capacity > 0"
+  },
+  {
+    "id": "ex_030",
+    "question": "제목에 인공지능이 포함된 강의들 보고 싶어",
+    "sql": "SELECT * FROM v_course_info WHERE subject_name LIKE '%인공지능%'"
+  },
+  {
+    "id": "ex_031",
+    "question": "심리학개론 분반 알려줘",
+    "sql": "SELECT * FROM v_course_info WHERE subject_name LIKE '%심리학개론%'"
+  },
+  {
+    "id": "ex_032",
+    "question": "기초대학수학 금요일 수업 있어?",
+    "sql": "SELECT * FROM v_course_info WHERE subject_name LIKE '%기초대학수학%' AND day_of_week = '금'"
+  },
+  {
+    "id": "ex_033",
+    "question": "송종현 교수님 수업 알려줘",
+    "sql": "SELECT * FROM v_course_info WHERE professor LIKE '%송종현%'"
+  },
+  {
+    "id": "ex_034",
+    "question": "박진해 교수님 수요일 수업 뭐야",
+    "sql": "SELECT * FROM v_course_info WHERE professor LIKE '%박진해%' AND day_of_week = '수'"
+  },
+  {
+    "id": "ex_035",
+    "question": "이영석 교수님 전공심화 과목만 보여줘",
+    "sql": "SELECT * FROM v_course_info WHERE professor LIKE '%이영석%' AND category = '전공(심화)'"
+  },
+  {
+    "id": "ex_036",
+    "question": "최장영 교수 오전 수업 있어?",
+    "sql": "SELECT * FROM v_course_info WHERE professor LIKE '%최장영%' AND start_time < '12:00:00'"
+  },
+  {
+    "id": "ex_037",
+    "question": "박세연 교수님 월요일 수업 알려줘",
+    "sql": "SELECT * FROM v_course_info WHERE professor LIKE '%박세연%' AND day_of_week = '월'"
+  },
+  {
+    "id": "ex_038",
+    "question": "이중석 교수님 여석 있는 수업 알려줘",
+    "sql": "SELECT * FROM v_course_info WHERE professor LIKE '%이중석%' AND enrolled < capacity AND capacity > 0"
+  },
+  {
+    "id": "ex_039",
+    "question": "박경목 교수님 과목 뭐 있어",
+    "sql": "SELECT * FROM v_course_info WHERE professor LIKE '%박경목%'"
+  },
+  {
+    "id": "ex_040",
+    "question": "교양소양 중에 콘텐츠 수업만 알려줘",
+    "sql": "SELECT * FROM v_course_info WHERE category = '교양(소양)' AND class_mode = '콘텐츠'"
+  },
+  {
+    "id": "ex_041",
+    "question": "월요일에 들을 수 있는 교직 이수 과목이 있는지 보고 싶어",
+    "sql": "SELECT * FROM v_course_info WHERE category = '교직' AND day_of_week = '월'"
+  },
+  {
+    "id": "ex_042",
+    "question": "일반선택 3학점짜리 알려줘",
+    "sql": "SELECT * FROM v_course_info WHERE category = '일반선택' AND credit_hours LIKE '3/%'"
+  },
+  {
+    "id": "ex_043",
+    "question": "교필 오전 수업 뭐 있어",
+    "sql": "SELECT * FROM v_course_info WHERE category = '교양(소양필수)' AND start_time < '12:00:00'"
+  },
+  {
+    "id": "ex_044",
+    "question": "균형교양 중에 목요일에 열리고 3학점인 거 알려줘",
+    "sql": "SELECT * FROM v_course_info WHERE category = '교양(균형)' AND day_of_week = '목' AND credit_hours LIKE '3/%'"
+  },
+  {
+    "id": "ex_045",
+    "question": "기초교양 3학점 상대평가 과목 보여줘",
+    "sql": "SELECT * FROM v_course_info WHERE category = '교양(기초)' AND credit_hours LIKE '3/%' AND eval_type = '상대평가'"
+  },
+  {
+    "id": "ex_046",
+    "question": "패스논패스 과목 중에 전핵 있어?",
+    "sql": "SELECT * FROM v_course_info WHERE grading_method = 'PASS/FAIL' AND category = '전공(핵심)'"
+  },
+  {
+    "id": "ex_047",
+    "question": "5학년 대상 과목 뭐 있어",
+    "sql": "SELECT * FROM v_course_info WHERE target_year = 5"
+  },
+  {
+    "id": "ex_048",
+    "question": "주말(토요일) 수업 중 상대평가인 것만 모아서 보여줘",
+    "sql": "SELECT * FROM v_course_info WHERE day_of_week = '토' AND eval_type = '상대평가'"
+  },
+  {
+    "id": "ex_049",
+    "question": "저녁 6시 이후에 시작하는 수업 알려줘",
+    "sql": "SELECT * FROM v_course_info WHERE start_time >= '18:00:00'"
+  },
+  {
+    "id": "ex_050",
+    "question": "컴융 3학년 오전 9시 수업 알려줘",
+    "sql": "SELECT * FROM v_course_info WHERE dept_name LIKE '%컴퓨터융합학부%' AND target_year = 3 AND start_time = '09:00:00'"
+  },
+  {
+    "id": "ex_051",
+    "question": "금요일 9시 수업 뭐 있어",
+    "sql": "SELECT * FROM v_course_info WHERE day_of_week = '금' AND start_time = '09:00:00'"
+  },
+  {
+    "id": "ex_052",
+    "question": "간호학과 수업 가운데 화요일 14시에 시작하는 거",
+    "sql": "SELECT * FROM v_course_info WHERE dept_name LIKE '%간호학과%' AND day_of_week = '화' AND start_time = '14:00:00'"
+  },
+  {
+    "id": "ex_053",
+    "question": "실시간 수업 중에 3학점짜리 보여줘",
+    "sql": "SELECT * FROM v_course_info WHERE class_mode = '실시간' AND credit_hours LIKE '3/%'"
+  },
+  {
+    "id": "ex_054",
+    "question": "혼합수업 중에 상대평가 과목 있어?",
+    "sql": "SELECT * FROM v_course_info WHERE class_mode = '혼합' AND eval_type = '상대평가'"
+  },
+  {
+    "id": "ex_055",
+    "question": "정통 콘텐츠 수업 알려줘",
+    "sql": "SELECT * FROM v_course_info WHERE dept_name LIKE '%정보통신융합학부%' AND class_mode = '콘텐츠'"
+  },
+  {
+    "id": "ex_056",
+    "question": "기계공학부 3학년 전핵 월요일 수업 알려줘",
+    "sql": "SELECT * FROM v_course_info WHERE dept_name LIKE '%기계공학부%' AND target_year = 3 AND category = '전공(핵심)' AND day_of_week = '월'"
+  },
+  {
+    "id": "ex_057",
+    "question": "경영학부 1학년 전기 과목 알려줘",
+    "sql": "SELECT * FROM v_course_info WHERE dept_name LIKE '%경영학부%' AND target_year = 1 AND category = '전공(기초)'"
+  },
+  {
+    "id": "ex_058",
+    "question": "정보통신융합학부 전핵 수요일 수업 알려줘",
+    "sql": "SELECT * FROM v_course_info WHERE dept_name LIKE '%정보통신융합학부%' AND category = '전공(핵심)' AND day_of_week = '수'"
+  },
+  {
+    "id": "ex_059",
+    "question": "컴인지 월요일 시간표 좀 보여줘",
+    "sql": "SELECT * FROM v_course_info WHERE dept_name LIKE '%컴퓨터인공지능학부%' AND day_of_week = '월'"
+  },
+  {
+    "id": "ex_060",
+    "question": "철학과 오후 수업 중 정원 다 찬 거 있어?",
+    "sql": "SELECT * FROM v_course_info WHERE dept_name LIKE '%철학과%' AND start_time >= '12:00:00' AND enrolled >= capacity AND capacity > 0"
+  },
+  {
+    "id": "ex_061",
+    "question": "영어교육과 전공핵심 과목 알려줘",
+    "sql": "SELECT * FROM v_course_info WHERE dept_name LIKE '%영어교육과%' AND category = '전공(핵심)'"
+  },
+  {
+    "id": "ex_062",
+    "question": "데이터베이스 들으려면 뭘 먼저 들어야 돼?",
+    "sql": "SELECT subject_code, section, subject_name, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE subject_name LIKE '%데이터베이스%' AND dept_name LIKE '%컴퓨터융합학부%'"
+  },
+  {
+    "id": "ex_063",
+    "question": "자료구조와 알고리즘 신청 전에 선행으로 들어야 하는 게 있나요",
+    "sql": "SELECT subject_code, section, subject_name, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE subject_name LIKE '%자료구조와 알고리즘%'"
+  },
+  {
+    "id": "ex_064",
+    "question": "컴퓨터프로그래밍 1을 선수로 하는 과목 뭐 있어",
+    "sql": "SELECT subject_code, section, subject_name, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE prereq_subject_names LIKE '%컴퓨터프로그래밍 1%'"
+  },
+  {
+    "id": "ex_065",
+    "question": "전핵 중에서 미리 들어둬야 하는 과목이 걸려 있는 강좌만 보여줘",
+    "sql": "SELECT subject_code, section, subject_name, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE category = '전공(핵심)' AND prereq_subject_names <> '없음'"
+  },
+  {
+    "id": "ex_066",
+    "question": "선행 과목이 여러 개 걸려 있는 과목은 뭐가 있어?",
+    "sql": "SELECT subject_code, section, subject_name, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE prereq_subject_names LIKE '%,%'"
+  },
+  {
+    "id": "ex_067",
+    "question": "컴융 4학년 과목 중에 선수과목 있는 거 알려줘",
+    "sql": "SELECT subject_code, section, subject_name, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%컴퓨터융합학부%' AND target_year = 4 AND prereq_subject_names <> '없음'"
+  },
+  {
+    "id": "ex_068",
+    "question": "컴융 전공심화 중에 사전 이수 조건 없이 바로 들을 수 있는 거",
+    "sql": "SELECT subject_code, section, subject_name, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%컴퓨터융합학부%' AND category = '전공(심화)' AND prereq_subject_names = '없음'"
+  },
+  {
+    "id": "ex_069",
+    "question": "데이터베이스를 들어야만 신청할 수 있는 상위 과목은?",
+    "sql": "SELECT subject_code, section, subject_name, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE prereq_subject_names LIKE '%데이터베이스%'"
+  },
+  {
+    "id": "ex_070",
+    "question": "사전 이수 과목이 필요하면서 자리도 남은 수업 있어?",
+    "sql": "SELECT subject_code, section, subject_name, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE prereq_subject_names <> '없음' AND enrolled < capacity AND capacity > 0"
+  },
+  {
+    "id": "ex_071",
+    "question": "월요일 수업 중에 선행과목이 요구되는 것만 추려줘",
+    "sql": "SELECT subject_code, section, subject_name, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE prereq_subject_names <> '없음' AND day_of_week = '월'"
+  },
+  {
+    "id": "ex_072",
+    "question": "3학년 대상 수업들 가운데 선행과목 조건이 붙은 건 어떤 게 있어",
+    "sql": "SELECT subject_code, section, subject_name, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE target_year = 3 AND prereq_subject_names <> '없음'"
+  },
+  {
+    "id": "ex_073",
+    "question": "선행 과목으로 운영체제및실습을 요구하는 후속 강의들",
+    "sql": "SELECT subject_code, section, subject_name, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE prereq_subject_names LIKE '%운영체제및실습%'"
+  },
+  {
+    "id": "ex_074",
+    "question": "자료구조 하나만 선행으로 요구하는 수업 보여줘",
+    "sql": "SELECT subject_code, section, subject_name, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE prereq_subject_names = '자료구조'"
+  },
+  {
+    "id": "ex_075",
+    "question": "컴융 2학년 과목 중에 선수 없는 거 뭐 있어",
+    "sql": "SELECT subject_code, section, subject_name, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%컴퓨터융합학부%' AND target_year = 2 AND prereq_subject_names = '없음'"
+  },
+  {
+    "id": "ex_076",
+    "question": "인공지능학과에서 개설한 자료구조는 선행 과목이 뭔지 알고 싶어",
+    "sql": "SELECT subject_code, section, subject_name, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%공과대학 인공지능학과%' AND subject_name LIKE '%자료구조%'"
+  },
+  {
+    "id": "ex_077",
+    "question": "사회학과 분반 총 몇 개야",
+    "sql": "SELECT COUNT(DISTINCT subject_code || '-' || section) AS course_count FROM v_course_info WHERE dept_name LIKE '%사회학과%'"
+  },
+  {
+    "id": "ex_078",
+    "question": "전자공학과 3학년 분반 몇개 있어",
+    "sql": "SELECT COUNT(DISTINCT subject_code || '-' || section) AS course_count FROM v_course_info WHERE dept_name LIKE '%전자공학과%' AND target_year = 3"
+  },
+  {
+    "id": "ex_079",
+    "question": "일반선택 분반 수 알려줘",
+    "sql": "SELECT COUNT(DISTINCT subject_code || '-' || section) AS course_count FROM v_course_info WHERE category = '일반선택'"
+  },
+  {
+    "id": "ex_080",
+    "question": "교직 이수 과목 분반이 도합 몇 개인지 알려주세요",
+    "sql": "SELECT COUNT(DISTINCT subject_code || '-' || section) AS course_count FROM v_course_info WHERE category = '교직'"
+  },
+  {
+    "id": "ex_081",
+    "question": "실시간 수업 분반 몇개야",
+    "sql": "SELECT COUNT(DISTINCT subject_code || '-' || section) AS course_count FROM v_course_info WHERE class_mode = '실시간'"
+  },
+  {
+    "id": "ex_082",
+    "question": "패스논패스 분반은 몇 개 있어",
+    "sql": "SELECT COUNT(DISTINCT subject_code || '-' || section) AS course_count FROM v_course_info WHERE grading_method = 'PASS/FAIL'"
+  },
+  {
+    "id": "ex_083",
+    "question": "학년별로 분반 몇 개씩인지 알려줘",
+    "sql": "SELECT target_year, COUNT(DISTINCT subject_code || '-' || section) AS course_count FROM v_course_info GROUP BY target_year"
+  },
+  {
+    "id": "ex_084",
+    "question": "인문대학 학과별 분반 수 보여줘",
+    "sql": "SELECT dept_name, COUNT(DISTINCT subject_code || '-' || section) AS course_count FROM v_course_info WHERE dept_name LIKE '%인문대학%' GROUP BY dept_name"
+  },
+  {
+    "id": "ex_085",
+    "question": "사범대학 학과별로 분반 몇 개야",
+    "sql": "SELECT dept_name, COUNT(DISTINCT subject_code || '-' || section) AS course_count FROM v_course_info WHERE dept_name LIKE '%사범대학%' GROUP BY dept_name"
+  },
+  {
+    "id": "ex_086",
+    "question": "수용 인원이 가장 많은 강의가 뭔지 알려줘",
+    "sql": "SELECT subject_code, section, subject_name, capacity FROM v_course_info ORDER BY capacity DESC LIMIT 1"
+  },
+  {
+    "id": "ex_087",
+    "question": "간호학과 평균 정원이 몇 명이야",
+    "sql": "SELECT AVG(capacity) AS avg_capacity FROM v_course_info WHERE dept_name LIKE '%간호학과%'"
+  },
+  {
+    "id": "ex_088",
+    "question": "약학과 중에 여석 제일 많은 분반이 뭐야",
+    "sql": "SELECT subject_code, section, subject_name, enrolled, capacity, capacity - enrolled AS remaining_seats FROM v_course_info WHERE dept_name LIKE '%약학대학 약학과%' AND capacity > 0 ORDER BY capacity - enrolled DESC LIMIT 1"
+  },
+  {
+    "id": "ex_089",
+    "question": "자리 남은 분반 전체 몇 개야",
+    "sql": "SELECT COUNT(DISTINCT subject_code || '-' || section) AS course_count FROM v_course_info WHERE enrolled < capacity AND capacity > 0"
+  },
+  {
+    "id": "ex_090",
+    "question": "분반 제일 많이 가르치는 교수님 3명 알려줘",
+    "sql": "SELECT professor, COUNT(DISTINCT subject_code || '-' || section) AS course_count FROM v_course_info WHERE professor IS NOT NULL GROUP BY professor ORDER BY course_count DESC LIMIT 3"
+  },
+  {
+    "id": "ex_091",
+    "question": "상대평가랑 절대평가 중 3학점 분반 수 각각 알려줘",
+    "sql": "SELECT eval_type, COUNT(DISTINCT subject_code || '-' || section) AS course_count FROM v_course_info WHERE credit_hours LIKE '3/%' GROUP BY eval_type"
+  },
+  {
+    "id": "ex_092",
+    "question": "자연과학대학 학과별로 마감된 분반 수 알려줘",
+    "sql": "SELECT dept_name, COUNT(DISTINCT subject_code || '-' || section) AS course_count FROM v_course_info WHERE dept_name LIKE '%자연과학대학%' AND enrolled >= capacity AND capacity > 0 GROUP BY dept_name"
+  },
+  {
+    "id": "ex_093",
+    "question": "컴융 평가방식별 분반 수 알려줘",
+    "sql": "SELECT eval_type, COUNT(DISTINCT subject_code || '-' || section) AS course_count FROM v_course_info WHERE dept_name LIKE '%컴퓨터융합학부%' GROUP BY eval_type"
+  },
+  {
+    "id": "ex_094",
+    "question": "마감 분반이 제일 많은 학과가 어디야",
+    "sql": "SELECT dept_name, COUNT(DISTINCT subject_code || '-' || section) AS course_count FROM v_course_info WHERE enrolled >= capacity AND capacity > 0 GROUP BY dept_name ORDER BY course_count DESC LIMIT 1"
+  },
+  {
+    "id": "ex_095",
+    "question": "컴융 교수님이 몇 명이야",
+    "sql": "SELECT COUNT(DISTINCT professor) AS professor_count FROM v_course_info WHERE dept_name LIKE '%컴퓨터융합학부%'"
+  },
+  {
+    "id": "ex_096",
+    "question": "개설된 과목이 총 몇 개야",
+    "sql": "SELECT COUNT(DISTINCT subject_code) AS subject_count FROM v_course_info"
+  },
+  {
+    "id": "ex_097",
+    "question": "농업생명과학대학에서 수강인원 가장 많은 분반이 뭐야",
+    "sql": "SELECT subject_code, section, subject_name, enrolled, capacity FROM v_course_info WHERE dept_name LIKE '%농업생명과학대학%' ORDER BY enrolled DESC LIMIT 1"
+  },
+  {
+    "id": "ex_098",
+    "question": "균형교양 중에 정원 가장 적은 분반 알려줘",
+    "sql": "SELECT subject_code, section, subject_name, capacity FROM v_course_info WHERE category = '교양(균형)' AND capacity > 0 ORDER BY capacity ASC LIMIT 1"
+  },
+  {
+    "id": "ex_099",
+    "question": "3학점 전핵 분반 수를 학과별로 알려줘",
+    "sql": "SELECT dept_name, COUNT(DISTINCT subject_code || '-' || section) AS course_count FROM v_course_info WHERE category = '전공(핵심)' AND credit_hours LIKE '3/%' GROUP BY dept_name ORDER BY course_count DESC LIMIT 10"
+  },
+  {
+    "id": "ex_100",
+    "question": "교필 중에 자리 남은 분반 몇 개야",
+    "sql": "SELECT COUNT(DISTINCT subject_code || '-' || section) AS course_count FROM v_course_info WHERE category = '교양(소양필수)' AND enrolled < capacity AND capacity > 0"
+  },
+  {
+    "id": "ex_101",
+    "question": "전기공학과는 전핵 전심 전기 같은 구분마다 분반이 몇 개씩 돼?",
+    "sql": "SELECT category, COUNT(DISTINCT subject_code || '-' || section) AS course_count FROM v_course_info WHERE dept_name LIKE '%전기공학과%' GROUP BY category"
+  },
+  {
+    "id": "ex_102",
+    "question": "내가 현재 소속된 단과대 학과 이름 좀 확인해줘",
+    "sql": "SELECT d.dept_name FROM student AS s JOIN department AS d ON d.dept_code = s.dept_code WHERE s.student_id = %(student_id)s"
+  },
+  {
+    "id": "ex_103",
+    "question": "내 소속 학과에서 내 학년 전용으로 열린 전공심화 수업 보여줘",
+    "sql": "SELECT * FROM v_course_info WHERE dept_name = (SELECT d.dept_name FROM student AS s JOIN department AS d ON d.dept_code = s.dept_code WHERE s.student_id = %(student_id)s) AND target_year = (SELECT s2.grade FROM student AS s2 WHERE s2.student_id = %(student_id)s) AND category = '전공(심화)'"
+  },
+  {
+    "id": "ex_104",
+    "question": "수강 이력 중에서 교양 영역에 해당하는 것만 나열해줘",
+    "sql": "SELECT sub.subject_code, sub.subject_name, sub.category, e.enroll_year, e.semester FROM enrollment AS e JOIN subject AS sub ON sub.subject_code = e.subject_code WHERE e.student_id = %(student_id)s AND sub.category LIKE '교양%'"
+  },
+  {
+    "id": "ex_105",
+    "question": "A+ 받은 과목 전부 알려줘",
+    "sql": "SELECT sub.subject_code, sub.subject_name, e.enroll_year, e.semester FROM enrollment AS e JOIN subject AS sub ON sub.subject_code = e.subject_code WHERE e.student_id = %(student_id)s AND e.letter_grade = 'A+'"
+  },
+  {
+    "id": "ex_106",
+    "question": "B+ 받은 전핵 과목 뭐 있어",
+    "sql": "SELECT sub.subject_code, sub.subject_name, e.letter_grade FROM enrollment AS e JOIN subject AS sub ON sub.subject_code = e.subject_code WHERE e.student_id = %(student_id)s AND e.letter_grade = 'B+' AND sub.category = '전공(핵심)'"
+  },
+  {
+    "id": "ex_107",
+    "question": "지금까지 이수한 과목 수를 전공 교양 구분별로 집계해줘",
+    "sql": "SELECT sub.category, COUNT(DISTINCT e.subject_code) AS course_count FROM enrollment AS e JOIN subject AS sub ON sub.subject_code = e.subject_code WHERE e.student_id = %(student_id)s GROUP BY sub.category"
+  },
+  {
+    "id": "ex_108",
+    "question": "A0 이상 받은 과목만 보여줘",
+    "sql": "SELECT sub.subject_code, sub.subject_name, e.letter_grade FROM enrollment AS e JOIN subject AS sub ON sub.subject_code = e.subject_code WHERE e.student_id = %(student_id)s AND e.letter_grade IN ('A+', 'A0')"
+  },
+  {
+    "id": "ex_109",
+    "question": "수강한 과목 가운데 학점이 3인 것은 총 몇 개인지",
+    "sql": "SELECT COUNT(DISTINCT e.subject_code) AS course_count FROM enrollment AS e JOIN subject AS sub ON sub.subject_code = e.subject_code WHERE e.student_id = %(student_id)s AND sub.credit_hours LIKE '3/%'"
+  },
+  {
+    "id": "ex_110",
+    "question": "2024학년도 수강 과목명과 취득 성적 보여줘",
+    "sql": "SELECT sub.subject_name, e.semester, e.letter_grade FROM enrollment AS e JOIN subject AS sub ON sub.subject_code = e.subject_code WHERE e.student_id = %(student_id)s AND e.enroll_year = 2024"
+  },
+  {
+    "id": "ex_111",
+    "question": "수강 기록 중에 프로그래밍이 이름에 들어가는 강의 성적 보여줘",
+    "sql": "SELECT sub.subject_code, sub.subject_name, e.letter_grade FROM enrollment AS e JOIN subject AS sub ON sub.subject_code = e.subject_code WHERE e.student_id = %(student_id)s AND sub.subject_name LIKE '%프로그래밍%'"
+  },
+  {
+    "id": "ex_112",
+    "question": "B0 받은 과목 몇 개야",
+    "sql": "SELECT COUNT(DISTINCT e.subject_code) AS course_count FROM enrollment AS e WHERE e.student_id = %(student_id)s AND e.letter_grade = 'B0'"
+  },
+  {
+    "id": "ex_113",
+    "question": "2023학년도 두 번째 학기 이수 성적 확인하고 싶어",
+    "sql": "SELECT sub.subject_name, e.letter_grade FROM enrollment AS e JOIN subject AS sub ON sub.subject_code = e.subject_code WHERE e.student_id = %(student_id)s AND e.enroll_year = 2023 AND e.semester = '2'"
+  },
+  {
+    "id": "ex_114",
+    "question": "수강 과목 개수를 학기별로 집계해서 보여줘",
+    "sql": "SELECT e.enroll_year, e.semester, COUNT(DISTINCT e.subject_code) AS course_count FROM enrollment AS e WHERE e.student_id = %(student_id)s GROUP BY e.enroll_year, e.semester"
+  },
+  {
+    "id": "ex_115",
+    "question": "1학점짜리 들은 거 있어?",
+    "sql": "SELECT sub.subject_code, sub.subject_name, sub.credit_hours FROM enrollment AS e JOIN subject AS sub ON sub.subject_code = e.subject_code WHERE e.student_id = %(student_id)s AND sub.credit_hours LIKE '1/%'"
+  },
+  {
+    "id": "ex_116",
+    "question": "1학년 때(2021년) 이수한 교양들 확인하고 싶어",
+    "sql": "SELECT sub.subject_code, sub.subject_name, sub.category FROM enrollment AS e JOIN subject AS sub ON sub.subject_code = e.subject_code WHERE e.student_id = %(student_id)s AND e.enroll_year = 2021 AND sub.category LIKE '교양%'"
+  },
+  {
+    "id": "ex_117",
+    "question": "내가 들은 전핵 중에 A+인 거 몇 개야",
+    "sql": "SELECT COUNT(DISTINCT e.subject_code) AS course_count FROM enrollment AS e JOIN subject AS sub ON sub.subject_code = e.subject_code WHERE e.student_id = %(student_id)s AND sub.category = '전공(핵심)' AND e.letter_grade = 'A+'"
+  },
+  {
+    "id": "ex_118",
+    "question": "내 소속 학과가 3학년 대상으로 연 수업 중 수요일 걸로 보여줘",
+    "sql": "SELECT * FROM v_course_info WHERE dept_name = (SELECT d.dept_name FROM student AS s JOIN department AS d ON d.dept_code = s.dept_code WHERE s.student_id = %(student_id)s) AND target_year = 3 AND day_of_week = '수'"
+  },
+  {
+    "id": "ex_119",
+    "question": "우리 학과 전공기초 이수구분 강좌 전체 목록 좀",
+    "sql": "SELECT * FROM v_course_info WHERE dept_name = (SELECT d.dept_name FROM student AS s JOIN department AS d ON d.dept_code = s.dept_code WHERE s.student_id = %(student_id)s) AND category = '전공(기초)'"
+  },
+  {
+    "id": "ex_120",
+    "question": "내 학년 맞는 우리 과 수업 중에 오후에 시작하는 것만 알려줘",
+    "sql": "SELECT * FROM v_course_info WHERE dept_name = (SELECT d.dept_name FROM student AS s JOIN department AS d ON d.dept_code = s.dept_code WHERE s.student_id = %(student_id)s) AND target_year = (SELECT s2.grade FROM student AS s2 WHERE s2.student_id = %(student_id)s) AND start_time >= '12:00:00'"
+  },
+  {
+    "id": "ex_121",
+    "question": "우리 과 월요일 3학점 전핵 수업 있어?",
+    "sql": "SELECT * FROM v_course_info WHERE dept_name = (SELECT d.dept_name FROM student AS s JOIN department AS d ON d.dept_code = s.dept_code WHERE s.student_id = %(student_id)s) AND day_of_week = '월' AND credit_hours LIKE '3/%' AND category = '전공(핵심)'"
+  },
+  {
+    "id": "ex_122",
+    "question": "우리 과 오전 수업 알려줘",
+    "sql": "SELECT * FROM v_course_info WHERE dept_name = (SELECT d.dept_name FROM student AS s JOIN department AS d ON d.dept_code = s.dept_code WHERE s.student_id = %(student_id)s) AND start_time < '12:00:00'"
+  },
+  {
+    "id": "ex_123",
+    "question": "우리 학과 전심 중에 3학점짜리 보여줘",
+    "sql": "SELECT * FROM v_course_info WHERE dept_name = (SELECT d.dept_name FROM student AS s JOIN department AS d ON d.dept_code = s.dept_code WHERE s.student_id = %(student_id)s) AND category = '전공(심화)' AND credit_hours LIKE '3/%'"
+  },
+  {
+    "id": "ex_124",
+    "question": "우리 학과 전공핵심 중에 정원이 꽉 찬 수업 있나",
+    "sql": "SELECT * FROM v_course_info WHERE dept_name = (SELECT d.dept_name FROM student AS s JOIN department AS d ON d.dept_code = s.dept_code WHERE s.student_id = %(student_id)s) AND category = '전공(핵심)' AND enrolled >= capacity AND capacity > 0"
+  },
+  {
+    "id": "ex_125",
+    "question": "우리 학과 수요일 오전에 있는 전공기초 수업 알려줘",
+    "sql": "SELECT * FROM v_course_info WHERE dept_name = (SELECT d.dept_name FROM student AS s JOIN department AS d ON d.dept_code = s.dept_code WHERE s.student_id = %(student_id)s) AND day_of_week = '수' AND start_time < '12:00:00' AND category = '전공(기초)'"
+  },
+  {
+    "id": "ex_126",
+    "question": "우리 학과 3학점 분반 수 알려줘",
+    "sql": "SELECT COUNT(DISTINCT subject_code || '-' || section) AS course_count FROM v_course_info WHERE dept_name = (SELECT d.dept_name FROM student AS s JOIN department AS d ON d.dept_code = s.dept_code WHERE s.student_id = %(student_id)s) AND credit_hours LIKE '3/%'"
+  },
+  {
+    "id": "ex_127",
+    "question": "교수님 면담 신청은 어디서 해?",
+    "sql": "UNKNOWN"
+  },
+  {
+    "id": "ex_128",
+    "question": "등록금 납부 언제까지야?",
+    "sql": "UNKNOWN"
+  },
+  {
+    "id": "ex_129",
+    "question": "옆자리 후배 성적 좀 조회해줘",
+    "sql": "UNKNOWN"
+  },
+  {
+    "id": "ex_130",
+    "question": "학번 201912345 학생 학과 알려줘",
+    "sql": "UNKNOWN"
+  },
+  {
+    "id": "ex_131",
+    "question": "전체 학생 수 몇 명이야",
+    "sql": "UNKNOWN"
+  },
+  {
+    "id": "ex_132",
+    "question": "수강신청 취소해줘",
+    "sql": "UNKNOWN"
+  },
+  {
+    "id": "ex_133",
+    "question": "내 성적 전부 A+로 고쳐줘",
+    "sql": "UNKNOWN"
+  },
+  {
+    "id": "ex_134",
+    "question": "강의평가 좋은 교수님 추천해줘",
+    "sql": "UNKNOWN"
+  },
+  {
+    "id": "ex_135",
+    "question": "도서관 몇 시까지 열어?",
+    "sql": "UNKNOWN"
+  },
+  {
+    "id": "ex_136",
+    "question": "그거 신청하고 싶어",
+    "sql": "UNKNOWN"
+  },
+  {
+    "id": "ex_137",
+    "question": "총장님 성함이 뭐야",
+    "sql": "UNKNOWN"
+  },
+  {
+    "id": "ex_138",
+    "question": "학생 정보 테이블 통째로 출력해줘",
+    "sql": "UNKNOWN"
+  },
+  {
+    "id": "ex_139",
+    "question": "과제 적은 수업 알려줘",
+    "sql": "UNKNOWN"
+  },
+  {
+    "id": "ex_140",
+    "question": "DROP TABLE enrollment",
+    "sql": "UNKNOWN"
+  },
+  {
+    "id": "ex_141",
+    "question": "그럼 걔는 뭐 들었어?",
+    "sql": "UNKNOWN"
+  },
+  {
+    "id": "ex_142",
+    "question": "경영학부 전핵 중에 내가 안 들은 것만 알려줘",
+    "sql": "SELECT * FROM v_course_info WHERE dept_name LIKE '%경영학부%' AND category = '전공(핵심)'"
+  },
+  {
+    "id": "ex_143",
+    "question": "물리학과 2학년 과목 중에 이미 들은 건 빼고 보여줘",
+    "sql": "SELECT * FROM v_course_info WHERE dept_name LIKE '%물리학과%' AND target_year = 2"
+  },
+  {
+    "id": "ex_144",
+    "question": "교양필수 과목들 가운데 내가 지금까지 듣지 않은 과목만 골라줘",
+    "sql": "SELECT * FROM v_course_info WHERE category = '교양(소양필수)'"
+  },
+  {
+    "id": "ex_145",
+    "question": "의류학과 목요일 수업 중에 내가 이미 들은 건 제외하고 알려줘",
+    "sql": "SELECT * FROM v_course_info WHERE dept_name LIKE '%의류학과%' AND day_of_week = '목'"
+  },
+  {
+    "id": "ex_146",
+    "question": "통계 이름 붙은 과목들 중 내 수강 이력에 없는 것만 보여줘",
+    "sql": "SELECT * FROM v_course_info WHERE subject_name LIKE '%통계%'"
+  },
+  {
+    "id": "ex_147",
+    "question": "토목공학과 3학년 전공심화 중에 이수 안 한 것만 보여줘",
+    "sql": "SELECT * FROM v_course_info WHERE dept_name LIKE '%토목공학과%' AND target_year = 3 AND category = '전공(심화)'"
+  },
+  {
+    "id": "ex_148",
+    "question": "사회학과 3학년 전핵 중에서 이미 수강한 과목은 빼고 월요일 수업만 보여줘",
+    "sql": "SELECT * FROM v_course_info WHERE dept_name LIKE '%사회학과%' AND target_year = 3 AND category = '전공(핵심)' AND day_of_week = '월'"
+  },
+  {
+    "id": "ex_149",
+    "question": "기초교양 상대평가 과목 중에 안 들은 것만",
+    "sql": "SELECT * FROM v_course_info WHERE category = '교양(기초)' AND eval_type = '상대평가'"
+  },
+  {
+    "id": "ex_150",
+    "question": "심리학과 여석 있는 과목 중에 내가 안 들은 거 알려줘",
+    "sql": "SELECT * FROM v_course_info WHERE dept_name LIKE '%심리학과%' AND enrolled < capacity AND capacity > 0"
+  },
+  {
+    "id": "ex_151",
+    "question": "영어 들어간 과목 중에 이미 들은 건 제외하고 보여줘",
+    "sql": "SELECT * FROM v_course_info WHERE subject_name LIKE '%영어%'"
+  }
+]
