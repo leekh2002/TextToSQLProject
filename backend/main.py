@@ -666,8 +666,14 @@ def _run_query(req: QueryRequest, authorization: str | None = None):
     try:
         student_no = None
         use_v2 = os.getenv("T2S_PIPELINE", "v1").strip().lower() == "v2"
-        if req.excludeCompletedCourses or (use_v2 and authorization):
+        if req.excludeCompletedCourses:
             student_no = _student_from_authorization(authorization)["studentNo"]
+        elif use_v2 and authorization:
+            # Anonymous queries must keep working with a stale token.
+            try:
+                student_no = _student_from_authorization(authorization)["studentNo"]
+            except Exception:
+                student_no = None
         if use_v2:
             from .t2s.pipeline import run_v2
 
