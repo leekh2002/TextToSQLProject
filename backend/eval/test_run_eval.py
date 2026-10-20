@@ -378,7 +378,7 @@ def test_rejection_patterns_track_validate_reasons():
         ("select * from subject where x = 1 or drop_me() is null and 1 = 1 or true limit 50 -- drop", None),
         ("select * from users limit 50", None),
         ("select s.name from student as s where s.student_id = :student_id limit 50", None),
-        ("select s.grade from student as s where s.student_id = :student_id limit 50", None),
+        ("select s.grade from student as s limit 50", None),
         ("select * from enrollment as e limit 50", "202102671"),
     ]
     seen_reasons = set()

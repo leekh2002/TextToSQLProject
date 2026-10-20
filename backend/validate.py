@@ -123,12 +123,19 @@ def has_scoped_student_filter(sql: str, table_aliases: set[str], requested_stude
         allowed_rhs_patterns.add(f"'{requested_student_id}'")
         allowed_rhs_patterns.add(f'"{requested_student_id}"')
 
+    # An unqualified `student_id` can only belong to the table being checked when the query
+    # references no other table; multi-table queries must qualify the column.
+    single_table_query = len(extract_table_references(sql)) == 1
+
     if ast:
         for eq in ast.find_all(exp.EQ):
             left, right = eq.left, eq.right
-            
+
             def is_student_id_col(node):
-                return isinstance(node, exp.Column) and node.table.lower() in table_aliases and node.name.lower() == "student_id"
+                if not isinstance(node, exp.Column) or node.name.lower() != "student_id":
+                    return False
+                qualifier = node.table.lower()
+                return qualifier in table_aliases or (single_table_query and not qualifier)
                 
             def matches_rhs(node):
                 if isinstance(node, (exp.Literal, exp.Identifier, exp.Var, exp.Parameter)):
@@ -153,7 +160,11 @@ def has_scoped_student_filter(sql: str, table_aliases: set[str], requested_stude
         pattern = rf"\b{re.escape(alias)}\.student_id\s*=\s*(?:{rhs_group})(?![a-z0-9_])"
         if re.search(pattern, sql):
             return True
-            
+    if single_table_query:
+        pattern = rf"(?<![a-z0-9_.])student_id\s*=\s*(?:{rhs_group})(?![a-z0-9_])"
+        if re.search(pattern, sql):
+            return True
+
     return False
 
 
@@ -196,7 +207,10 @@ def validate_generated_sql(
                 "reason": f"student에서 허용되지 않은 컬럼 참조: {', '.join(sorted(disallowed_student_columns))}",
             }
 
-        if selects_student_data(sql_without_trailing_semicolon, student_aliases):
+        # A student may read their own allowed columns; anything else keeps student filter-only.
+        if selects_student_data(sql_without_trailing_semicolon, student_aliases) and not has_scoped_student_filter(
+            sql_without_trailing_semicolon, student_aliases, requested_student_id
+        ):
             return {"ok": False, "reason": "student 테이블은 필터 조건으로만 사용할 수 있습니다."}
 
     for table_name in STUDENT_SCOPED_TABLES & table_references:
