@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from dotenv import load_dotenv
 from pathlib import Path
+import os
 import re
 import threading
 
@@ -664,8 +665,17 @@ def list_courses(
 def _run_query(req: QueryRequest, authorization: str | None = None):
     try:
         student_no = None
-        if req.excludeCompletedCourses:
+        use_v2 = os.getenv("T2S_PIPELINE", "v1").strip().lower() == "v2"
+        if req.excludeCompletedCourses or (use_v2 and authorization):
             student_no = _student_from_authorization(authorization)["studentNo"]
+        if use_v2:
+            from .t2s.pipeline import run_v2
+
+            return run_v2(
+                req.query,
+                exclude_completed_courses=req.excludeCompletedCourses,
+                student_id=student_no,
+            )
         return process(
             req.query,
             exclude_completed_courses=req.excludeCompletedCourses,

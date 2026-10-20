@@ -1,0 +1,113 @@
+import json
+
+import numpy as np
+
+from backend.t2s import pipeline as pipeline_module
+from backend.t2s.config import Settings
+from backend.t2s.examples import Example, ExampleStore
+from backend.t2s.pipeline import Deps, run_v2
+
+
+def settings(**kw):
+    base = dict(model="m", candidates=3, temperature=0.7, examples_k=1, use_examples=True,
+                value_sources=("ngram",), row_cap=50, statement_timeout_ms=3000, review_log=False)
+    base.update(kw)
+    return Settings(**base)
+
+
+def deps(chat, run, **kw):
+    store = ExampleStore([Example("e1", "예시", "SELECT 1")], lambda t: np.array([1.0], dtype=np.float32))
+    return Deps(
+        preprocess=lambda q: {"corrected_entities": []},
+        references={"dept_name": ["공과대학 컴퓨터융합학부"]},
+        store=store, schema="# Table: v_course_info", chat=chat, run=run,
+        validate=lambda sql, requested_student_id=None: {"ok": True, "reason": None},
+        expand=lambda sql: sql, exclude=lambda sql, sid: sql, settings=kw.get("settings", settings()),
+    )
+
+
+def test_majority_answer_and_response_shape():
+    answers = iter(["SELECT COUNT(*) FROM v_course_info", "SELECT 2 FROM v_course_info", "SELECT COUNT(*) FROM v_course_info"])
+    seen = []
+
+    def chat(messages, *, model, temperature, seed=None):
+        seen.append(messages)
+        return next(answers)
+
+    def run(sql, params, timeout_ms):
+        return [{"n": 1}] if "COUNT" in sql else [{"n": 2}]
+
+    result = run_v2("컴퓨터융합학부 과목 수", deps=deps(chat, run))
+
+    assert result["data"] == [{"n": 1}] and result["error"] is None and result["rejected"] is False
+    assert len(result["candidates"]) == 3 and result["cache_hit"] is False
+    assert result["value_candidates"] == [{"column": "dept_name", "value": "공과대학 컴퓨터융합학부", "source": "ngram"}]
+    assert any(m["content"] == "질문: 예시" for m in seen[0])
+
+
+def test_hints_replace_value_search():
+    captured = []
+
+    def chat(messages, *, model, temperature, seed=None):
+        captured.append(messages[-1]["content"])
+        return "UNKNOWN"
+
+    result = run_v2("q", value_hints=[{"column": "category", "value": "전공(핵심)"}], deps=deps(chat, lambda *a: []))
+
+    assert "category = '전공(핵심)'" in captured[0] and "dept_name" not in captured[0]
+    assert result["rejected"] is True and result["error"] == "질문이 모호합니다."
+
+
+def test_retry_when_all_candidates_empty():
+    replies = iter(["SELECT a FROM v_course_info"] * 3 + ["SELECT b FROM v_course_info"])
+
+    def chat(messages, *, model, temperature, seed=None):
+        return next(replies)
+
+    result = run_v2("q", deps=deps(chat, lambda sql, p, t: []))
+
+    assert len(result["candidates"]) == 4
+    assert result["data"] == [] and result["error"] is None
+
+
+def test_errors_everywhere_return_error_response():
+    def chat(messages, *, model, temperature, seed=None):
+        raise RuntimeError("down")
+
+    result = run_v2("q", deps=deps(chat, lambda *a: []))
+
+    assert result["data"] == [] and result["error"] and result["rejected"] is False
+
+
+def test_retry_recovers_with_non_empty_result():
+    calls = []
+
+    def chat(messages, *, model, temperature, seed=None):
+        calls.append(messages)
+        return "SELECT a FROM v_course_info" if len(calls) <= 3 else "SELECT b FROM v_course_info"
+
+    runs = []
+
+    def run(sql, params, timeout_ms):
+        runs.append(sql)
+        return [{"b": 1}] if len(runs) > 3 else []
+
+    result = run_v2("q", deps=deps(chat, run))
+
+    retry = max(calls, key=len)
+    assert retry[-2]["role"] == "assistant" and "0행" in retry[-1]["content"]
+    assert result["data"] == [{"b": 1}] and len(result["candidates"]) == 4
+
+
+def test_review_log_record_keys(tmp_path, monkeypatch):
+    log = tmp_path / "logs" / "review.jsonl"
+    monkeypatch.setattr(pipeline_module, "REVIEW_LOG_PATH", log)
+
+    def chat(messages, *, model, temperature, seed=None):
+        return "SELECT 1 FROM v_course_info"
+
+    run_v2("질문", deps=deps(chat, lambda *a: [{"n": 1}], settings=settings(review_log=True)))
+
+    record = json.loads(log.read_text(encoding="utf-8").splitlines()[0])
+    assert set(record) == {"ts", "query", "sql", "rows", "error"}
+    assert record["query"] == "질문" and record["rows"] == 1 and record["error"] is None

@@ -492,3 +492,8 @@ def test_main_writes_hints_used_into_report_config(monkeypatch, tmp_path):
     assert report["config"]["hints_used"] is True
     assert report["config"]["filter"] == "c"
     assert report["config"]["env"]["VECTOR_CACHE_ENABLED"] == "0"
+
+
+def test_v2_is_registered_and_accepts_hints():
+    assert "v2" in run_eval.PIPELINES
+    assert getattr(run_eval.PIPELINES["v2"], "accepts_value_hints", False) is True

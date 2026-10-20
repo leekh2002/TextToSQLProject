@@ -73,6 +73,17 @@ v1_pipeline.accepts_value_hints = False
 PIPELINES: dict[str, Callable] = {"v1": v1_pipeline}
 
 
+def v2_pipeline(query, *, exclude_completed_courses=False, student_id=None, value_hints=None):
+    from ..t2s.pipeline import run_v2
+
+    return run_v2(query, exclude_completed_courses=exclude_completed_courses,
+                  student_id=student_id, value_hints=value_hints)
+
+
+v2_pipeline.accepts_value_hints = True
+PIPELINES["v2"] = v2_pipeline
+
+
 def _case_record(case: dict, ok: bool, reason: str | None, sql=None, error=None,
                  failure_type: str = "ok", latency_ms: int = 0, soft_f1=None, cache_hit=None) -> dict:
     return {
@@ -316,6 +327,8 @@ def main(argv: list[str] | None = None) -> int:
     if not args.use_cache:
         # A cache hit replays an earlier answer instead of measuring generation.
         os.environ["VECTOR_CACHE_ENABLED"] = "0"
+    # Evaluation must not pollute the review queue.
+    os.environ.setdefault("T2S_REVIEW_LOG", "0")
 
     pipeline = PIPELINES[args.pipeline]
     accepts_hints = bool(getattr(pipeline, "accepts_value_hints", False))
