@@ -75,3 +75,42 @@ def test_normalize_projection_normalizes_same_column_alias():
     assert sql.startswith("SELECT c.course_year, c.subject_code, c.section")
     assert sql.endswith("c.prereq_subject_names FROM v_course_info AS c")
     assert sql.count("credit_hours") == 1
+
+
+def test_top_n_limit_detection():
+    from backend.t2s.postprocess import top_n_limit
+
+    assert top_n_limit("SELECT * FROM v_course_info ORDER BY capacity DESC LIMIT 3") == 3
+    assert top_n_limit("SELECT * FROM v_course_info LIMIT 3") is None
+    assert top_n_limit("SELECT * FROM v_course_info ORDER BY capacity") is None
+    assert top_n_limit("not sql at all (") is None
+
+
+def test_expand_top_n_course_rows_wraps_key_subquery():
+    import sqlglot
+    from sqlglot import exp
+
+    from backend.t2s.postprocess import expand_top_n_course_rows, normalize_projection
+
+    inner = normalize_projection(
+        "SELECT * FROM v_course_info WHERE start_time < '12:00:00' ORDER BY capacity DESC LIMIT 1")
+    wrapped = expand_top_n_course_rows(inner, 50)
+
+    tree = sqlglot.parse_one(wrapped, read="postgres")
+    assert isinstance(tree, exp.Select) and tree.args["limit"].expression.name == "50"
+    join = tree.args["joins"][0]
+    matched = join.this
+    assert matched.alias == "matched"
+    key_select = matched.this
+    assert key_select.args["distinct"] is not None
+    assert [e.sql() for e in key_select.expressions] == ["sub.subject_code", "sub.section"]
+    sub = key_select.args["from_"].this
+    assert sub.alias == "sub"
+    assert sub.this.args["limit"].expression.name == "1" and sub.this.args["order"] is not None
+    assert "IS NOT DISTINCT FROM" in wrapped and "c.start_time" in wrapped
+
+
+def test_expand_top_n_course_rows_needs_key_columns_in_projection():
+    from backend.t2s.postprocess import expand_top_n_course_rows
+
+    assert expand_top_n_course_rows("SELECT subject_name FROM v_course_info ORDER BY 1 LIMIT 2", 50) is None

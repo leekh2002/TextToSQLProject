@@ -81,3 +81,45 @@ def ensure_limit(sql: str, cap: int) -> str:
     if tree.args.get("limit") is not None:
         return sql
     return tree.limit(cap).sql(dialect="postgres")
+
+
+def top_n_limit(sql: str) -> int | None:
+    """The explicit integer LIMIT of an ordered query, or None (no ORDER BY, no LIMIT, unparseable)."""
+    tree = _parse(sql)
+    if not isinstance(tree, exp.Select) or tree.args.get("order") is None:
+        return None
+    limit = tree.args.get("limit")
+    value = limit.expression if limit is not None else None
+    if isinstance(value, exp.Literal) and value.is_int:
+        return int(value.name)
+    return None
+
+
+def _projects_course_keys(tree) -> bool:
+    names = set()
+    for expression in tree.expressions:
+        if isinstance(expression, exp.Star):
+            return True
+        names.add(expression.alias_or_name)
+    return {"subject_code", "section"} <= names
+
+
+_DAY_ORDER = "CASE c.day_of_week WHEN '월' THEN 1 WHEN '화' THEN 2 WHEN '수' THEN 3 WHEN '목' THEN 4 WHEN '금' THEN 5 WHEN '토' THEN 6 ELSE 7 END"
+
+
+def expand_top_n_course_rows(sql: str, cap: int) -> str | None:
+    """Expand a top-N course-row query to all of its sections' meeting rows, keeping the top-N key set.
+
+    process.expand_schedule_filtered_course_rows drops ORDER BY/LIMIT from the key subquery; this wraps the
+    whole query instead. Rows are ordered by subject, section, weekday (Mon-Sat, same CASE as process), time.
+    Returns None when the projection lacks subject_code/section (caller falls back to process' expansion).
+    """
+    tree = _parse(sql)
+    if not isinstance(tree, exp.Select) or not _projects_course_keys(tree):
+        return None
+    return (
+        "SELECT c.* FROM v_course_info AS c "
+        f"JOIN (SELECT DISTINCT sub.subject_code, sub.section FROM ({sql}) AS sub) AS matched "
+        "ON c.subject_code = matched.subject_code AND c.section IS NOT DISTINCT FROM matched.section "
+        f"ORDER BY c.subject_code, c.section, {_DAY_ORDER}, c.start_time LIMIT {int(cap)}"
+    )

@@ -7,9 +7,11 @@ from dataclasses import dataclass
 
 import psycopg2
 
-from ..validate import is_safety_rejection, validate_generated_sql
+from ..validate import extract_table_references, is_safety_rejection, validate_generated_sql
 from .generate import extract_sql
-from .postprocess import ensure_limit, is_course_row_query, normalize_projection
+from .postprocess import (
+    ensure_limit, expand_top_n_course_rows, is_course_row_query, normalize_projection, top_n_limit,
+)
 
 STUDENT_PLACEHOLDER = "%(student_id)s"
 SELECT_ONLY_REASON = "SELECT 문만 허용됩니다."
@@ -21,6 +23,7 @@ _WITH_PREFIX = re.compile(r"^\s*with\b", re.IGNORECASE)
 class CandidateOutcome:
     index: int
     raw: str | None
+    extracted_sql: str | None = None
     sql: str | None = None
     executed_sql: str | None = None
     rows: list[dict] | None = None
@@ -39,7 +42,7 @@ def run_sql(sql: str, params, timeout_ms: int) -> list[dict]:
     dsn = os.getenv("DATABASE_URL", "").strip()
     if not dsn:
         raise RuntimeError("DATABASE_URL is not set")
-    conn = psycopg2.connect(dsn, connect_timeout=5, options=f"-c statement_timeout={int(timeout_ms)}")
+    conn = psycopg2.connect(dsn, connect_timeout=5, options=f"-c statement_timeout={int(timeout_ms)} -c default_transaction_read_only=on")
     try:
         with conn.cursor() as cur:
             cur.execute(sql, params)
@@ -61,6 +64,12 @@ def _default_exclude(sql, student_id):
     return exclude_completed_courses_sql(sql, student_id)
 
 
+def _is_personal(sql: str) -> bool:
+    if STUDENT_PLACEHOLDER in sql:
+        return True
+    return bool(extract_table_references(sql) & {"student", "enrollment"})
+
+
 def run_candidate(index, raw, *, student_id, exclude_completed, settings,
                   run=run_sql, validate=validate_generated_sql, expand=None, exclude=None) -> CandidateOutcome:
     outcome = CandidateOutcome(index=index, raw=raw)
@@ -68,12 +77,19 @@ def run_candidate(index, raw, *, student_id, exclude_completed, settings,
     if sql is None:
         outcome.error = "SQL 없음"
         return outcome
+    outcome.extracted_sql = sql
     if sql == "UNKNOWN":
+        outcome.rejected = True
+        return outcome
+    if student_id is None and _is_personal(sql):
+        # Anonymous callers cannot answer personal queries: binding None would silently return no rows.
         outcome.rejected = True
         return outcome
 
     is_with = bool(_WITH_PREFIX.match(sql))
     course_rows = is_course_row_query(sql)
+    limit = top_n_limit(sql)
+    top_n = course_rows and limit is not None and limit < settings.row_cap
     sql = ensure_limit(normalize_projection(sql), settings.row_cap)
     outcome.sql = sql
     verdict = validate(sql, requested_student_id=student_id)
@@ -88,7 +104,11 @@ def run_candidate(index, raw, *, student_id, exclude_completed, settings,
         return outcome
 
     try:
-        executable = (expand or _default_expand)(sql) if course_rows else sql
+        executable = sql
+        if top_n:
+            executable = expand_top_n_course_rows(sql, settings.row_cap)
+        if executable is sql and course_rows:
+            executable = (expand or _default_expand)(sql)
         if exclude_completed and student_id:
             executable = (exclude or _default_exclude)(executable, student_id)
         outcome.executed_sql = executable

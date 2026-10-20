@@ -100,3 +100,109 @@ def test_rewrite_failure_is_recorded_as_error():
 
     assert outcome.rows is None and not outcome.rejected
     assert outcome.error == "v_course_info is required to exclude completed courses"
+
+
+def test_anonymous_personal_queries_are_rejected_without_running():
+    def boom(*a):
+        raise AssertionError("must not run")
+
+    for sql in (
+        "SELECT * FROM enrollment WHERE student_id = %(student_id)s",
+        "SELECT COUNT(*) FROM enrollment",
+        "SELECT name FROM student",
+    ):
+        outcome = run_candidate(0, sql, student_id=None, exclude_completed=False, settings=SETTINGS,
+                                run=boom, validate=ok_validate)
+        assert outcome.rejected and outcome.rows is None and outcome.error is None
+
+
+def test_real_validator_anonymous_enrollment_rejected_logged_in_runs():
+    from backend.validate import validate_generated_sql
+
+    sql = "SELECT subject_code FROM enrollment WHERE student_id = %(student_id)s"
+    boom = lambda *a: (_ for _ in ()).throw(AssertionError("must not run"))
+
+    anonymous = run_candidate(0, sql, student_id=None, exclude_completed=False, settings=SETTINGS,
+                              run=boom, validate=validate_generated_sql)
+    assert anonymous.rejected and anonymous.rows is None
+
+    seen = {}
+
+    def run(bound, params, timeout_ms):
+        seen["params"] = params
+        return [{"subject_code": "A"}]
+
+    member = run_candidate(0, sql, student_id="202102671", exclude_completed=False, settings=SETTINGS,
+                           run=run, validate=validate_generated_sql)
+    assert member.rows == [{"subject_code": "A"}] and not member.rejected
+    assert seen["params"] == {"student_id": "202102671"}
+
+
+def test_extracted_sql_is_kept_before_normalization():
+    outcome = run_candidate(0, "SELECT subject_name FROM v_course_info", student_id=None, exclude_completed=False,
+                            settings=SETTINGS, run=lambda *a: [], validate=ok_validate, expand=lambda s: s)
+
+    assert outcome.extracted_sql == "SELECT subject_name FROM v_course_info"
+    assert "course_year" in outcome.sql
+
+
+def test_top_n_course_rows_use_key_preserving_expansion():
+    seen = {}
+
+    def run(sql, params, timeout_ms):
+        seen["sql"] = sql
+        return [{"subject_code": "A"}]
+
+    def process_expand(sql):
+        raise AssertionError("process expansion drops ORDER BY/LIMIT")
+
+    run_candidate(
+        0, "SELECT * FROM v_course_info WHERE start_time < '12:00:00' ORDER BY capacity DESC LIMIT 1",
+        student_id=None, exclude_completed=False, settings=SETTINGS, run=run, validate=ok_validate,
+        expand=process_expand, exclude=lambda s, i: s,
+    )
+
+    assert "SELECT DISTINCT sub.subject_code, sub.section FROM (" in seen["sql"]
+    assert "ORDER BY capacity DESC LIMIT 1" in seen["sql"]
+
+
+def test_limit_at_or_above_cap_or_without_order_keeps_process_expansion():
+    seen = []
+    for sql in (
+        "SELECT * FROM v_course_info WHERE day_of_week = '월' ORDER BY capacity DESC LIMIT 50",
+        "SELECT * FROM v_course_info WHERE day_of_week = '월' LIMIT 3",
+        "SELECT * FROM v_course_info WHERE day_of_week = '월' ORDER BY capacity DESC",
+    ):
+        run_candidate(0, sql, student_id=None, exclude_completed=False, settings=SETTINGS,
+                      run=lambda *a: [], validate=ok_validate, expand=lambda s: seen.append(s) or s,
+                      exclude=lambda s, i: s)
+
+    assert len(seen) == 3
+
+
+def test_run_sql_session_is_read_only(monkeypatch):
+    from backend.t2s import execute
+
+    captured = {}
+
+    class Conn:
+        def cursor(self):
+            raise RuntimeError("stop")
+
+        def close(self):
+            pass
+
+    def connect(dsn, **kwargs):
+        captured.update(kwargs)
+        return Conn()
+
+    monkeypatch.setenv("DATABASE_URL", "postgresql://x")
+    monkeypatch.setattr(execute.psycopg2, "connect", connect)
+
+    try:
+        execute.run_sql("SELECT 1", None, 1234)
+    except RuntimeError:
+        pass
+
+    assert "-c default_transaction_read_only=on" in captured["options"]
+    assert "-c statement_timeout=1234" in captured["options"]
