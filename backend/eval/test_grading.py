@@ -516,3 +516,24 @@ def test_capped_renamed_column_is_not_matched_when_ambiguous(monkeypatch):
     ok, reason = compare_execution(reference, generated)
 
     assert ok is False and "course_count" in reason
+
+
+def test_expand_reference_sql_leaves_aggregate_with_day_filter_unchanged(monkeypatch):
+    from backend import process
+
+    monkeypatch.setattr(process, "expand_schedule_filtered_course_rows", lambda sql: sql + " /*expanded*/")
+    sql = (
+        "SELECT COUNT(DISTINCT subject_code || '-' || section) AS course_count "
+        "FROM v_course_info WHERE day_of_week = '목'"
+    )
+
+    assert grading.expand_reference_sql(sql) == sql
+
+
+def test_expand_reference_sql_still_expands_course_row_query(monkeypatch):
+    from backend import process
+
+    monkeypatch.setattr(process, "expand_schedule_filtered_course_rows", lambda sql: sql + " /*expanded*/")
+    sql = "SELECT subject_code, section, subject_name FROM v_course_info WHERE day_of_week = '목'"
+
+    assert grading.expand_reference_sql(sql) == sql + " /*expanded*/"

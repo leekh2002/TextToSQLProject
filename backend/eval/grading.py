@@ -242,7 +242,11 @@ def soft_f1(reference_rows: list[dict], generated_rows: list[dict]) -> float:
 def expand_reference_sql(sql: str) -> str:
     # Imported lazily: process.py pulls in the NER model and the vector cache.
     from ..process import expand_schedule_filtered_course_rows
+    from ..t2s.postprocess import is_course_row_query
 
+    # Same rule as the v2 pipeline: aggregates, GROUP BY and DISTINCT ON stay as written.
+    if not is_course_row_query(sql):
+        return sql
     return expand_schedule_filtered_course_rows(sql)
 
 
