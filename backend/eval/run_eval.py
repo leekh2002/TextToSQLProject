@@ -1,9 +1,12 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import math
 import os
+import re
+import subprocess
 import sys
 import time
 from collections import defaultdict
@@ -14,6 +17,7 @@ from typing import Callable
 from dotenv import load_dotenv
 
 from ..process import process
+from ..validate import BLOCKED_KEYWORDS, STUDENT_SCOPED_TABLES
 from .grading import classify_failure, grade_case
 
 load_dotenv()  # load workspace .env if present
@@ -39,16 +43,65 @@ def load_cases(path: Path = GOLDEN_QUERIES_PATH) -> list[dict]:
         return json.load(file)
 
 
+# process() returns this when the model answers UNKNOWN.
+AMBIGUOUS_QUERY_ERROR = "질문이 모호합니다."
+
+# Safety rejections raised by backend/validate.py::validate_generated_sql. validate.py keeps its
+# reasons as inline literals, so the patterns are anchored on their fixed text and built from the
+# constants it does export; test_rejection_patterns_track_validate_reasons probes validate.py so a
+# reworded reason fails the tests. "FROM 또는 JOIN 절이 필요합니다." and "기본 LIMIT가 필요합니다."
+# are malformed-SQL errors, not refusals, and are deliberately absent.
+SAFETY_REJECTION_PATTERNS = (
+    re.compile(r"^SELECT 문만 허용됩니다\.$"),
+    re.compile(r"^여러 문장은 허용되지 않습니다\.$"),
+    re.compile(rf"^금지 키워드 포함: (?:{'|'.join(map(re.escape, BLOCKED_KEYWORDS))})$"),
+    re.compile(r"^허용되지 않은 테이블 참조: "),
+    re.compile(r"^student에서 허용되지 않은 컬럼 참조: "),
+    re.compile(r"^student 테이블은 필터 조건으로만 사용할 수 있습니다\.$"),
+    re.compile(
+        rf"^(?:{'|'.join(map(re.escape, sorted(STUDENT_SCOPED_TABLES)))})"
+        r"를 사용할 때는 요청된 학생의 학번으로 범위를 고정해야 합니다\.$"
+    ),
+)
+
+
+def is_rejection_error(message) -> bool:
+    if not isinstance(message, str):
+        return False
+    message = message.strip()
+    return message == AMBIGUOUS_QUERY_ERROR or any(p.search(message) for p in SAFETY_REJECTION_PATTERNS)
+
+
 def v1_pipeline(query, *, exclude_completed_courses=False, student_id=None, value_hints=None):
     # value_hints is ignored: v1 has no hint input. Looks up `process` at call time.
-    return process(query, exclude_completed_courses=exclude_completed_courses, student_id=student_id)
+    try:
+        result = process(query, exclude_completed_courses=exclude_completed_courses, student_id=student_id)
+    except Exception as exc:
+        if is_rejection_error(str(exc)):
+            return {"error": str(exc), "rejected": True}
+        raise
+    if isinstance(result, dict) and is_rejection_error(result.get("error")):
+        result["rejected"] = True
+    return result
 
 
+v1_pipeline.accepts_value_hints = False
+
+# Pipeline registry.
+#
+# Contract: pipeline(query, *, exclude_completed_courses=False, student_id=None, value_hints=None) -> dict
+# with the keys process() returns: "sql", "data", "error", optional "cache_hit", plus
+#   "rejected": bool  -- True when the pipeline deliberately refused the query (ambiguous/unanswerable
+#                        or a safety rule). expects_error cases pass only on rejected=True; any other
+#                        error counts as a failure.
+# value_hints: None means the pipeline does its own value retrieval; a list (including []) means
+# "use exactly these hints". Each pipeline declares `accepts_value_hints` as a function attribute;
+# --decoupled refuses to run a pipeline whose accepts_value_hints is False.
 PIPELINES: dict[str, Callable] = {"v1": v1_pipeline}
 
 
 def _case_record(case: dict, ok: bool, reason: str | None, sql=None, error=None,
-                 failure_type: str = "ok", latency_ms: int = 0, soft_f1=None) -> dict:
+                 failure_type: str = "ok", latency_ms: int = 0, soft_f1=None, cache_hit=None) -> dict:
     return {
         "id": case["id"],
         "category": case["category"],
@@ -61,8 +114,16 @@ def _case_record(case: dict, ok: bool, reason: str | None, sql=None, error=None,
         "failure_type": failure_type,
         "latency_ms": latency_ms,
         "soft_f1": soft_f1,
+        "cache_hit": cache_hit,
         "empty_gold": bool(case.get("empty_gold", False)),
     }
+
+
+def _failed_soft_f1(case: dict) -> float | None:
+    """An execution case that produced no gradable result scores 0.0 rather than being skipped."""
+    if case.get("grading") == "execution" and not case.get("expects_error"):
+        return 0.0
+    return None
 
 
 def run_case(case: dict, pipeline: Callable | None = None, decoupled: bool = False) -> dict:
@@ -79,21 +140,30 @@ def run_case(case: dict, pipeline: Callable | None = None, decoupled: bool = Fal
     except Exception as exc:
         latency_ms = int((time.perf_counter() - started) * 1000)
         return _case_record(case, ok=False, reason=f"파이프라인 실행 중 예외 발생: {exc}",
-                            failure_type="exception", latency_ms=latency_ms)
+                            failure_type="exception", latency_ms=latency_ms,
+                            soft_f1=_failed_soft_f1(case))
     latency_ms = int((time.perf_counter() - started) * 1000)
 
-    warning = result.get("warning") if isinstance(result, dict) else None
+    if not isinstance(result, dict):
+        return _case_record(
+            case, ok=False,
+            reason=f"파이프라인이 dict가 아닌 결과를 반환했습니다: {type(result).__name__}",
+            failure_type="exception", latency_ms=latency_ms, soft_f1=_failed_soft_f1(case),
+        )
+
+    warning = result.get("warning")
     if isinstance(warning, str) and warning.startswith("DATABASE_URL is not set"):
         return _case_record(
             case, ok=False,
             reason=f"DATABASE_URL이 설정되지 않아 SQL-only 모드로 동작했습니다: {warning}",
             sql=result.get("sql"), failure_type="exception", latency_ms=latency_ms,
+            soft_f1=_failed_soft_f1(case), cache_hit=result.get("cache_hit"),
         )
 
     try:
         grade = grade_case(case, result)
     except Exception as exc:
-        grade = {"ok": False, "reason": f"채점 중 예외 발생: {exc}"}
+        grade = {"ok": False, "reason": f"채점 중 예외 발생: {exc}", "soft_f1": _failed_soft_f1(case)}
 
     return _case_record(
         case,
@@ -104,6 +174,7 @@ def run_case(case: dict, pipeline: Callable | None = None, decoupled: bool = Fal
         failure_type=classify_failure(case, result, grade),
         latency_ms=latency_ms,
         soft_f1=grade.get("soft_f1"),
+        cache_hit=result.get("cache_hit"),
     )
 
 
@@ -136,7 +207,9 @@ def summarize(records: list[dict]) -> dict:
     for record in records:
         failure_types[record.get("failure_type", "ok")] += 1
 
-    latencies = [record["latency_ms"] for record in records if record.get("latency_ms") is not None]
+    # The first case pays for loading NER/KURE/the LLM, so it is left out of the percentiles.
+    warmup = records[0].get("latency_ms") if records else None
+    latencies = [record["latency_ms"] for record in records[1:] if record.get("latency_ms") is not None]
     f1_values = [record["soft_f1"] for record in records if record.get("soft_f1") is not None]
 
     return {
@@ -144,16 +217,65 @@ def summarize(records: list[dict]) -> dict:
         "by_category": {category: _accuracy(items) for category, items in sorted(by_category.items())},
         "empty_gold": {"passed": sum(1 for r in empty if r["ok"]), "total": len(empty)},
         "failure_types": dict(sorted(failure_types.items())),
-        "latency_ms": {"p50": percentile(latencies, 50), "p95": percentile(latencies, 95)},
+        "latency_ms": {
+            "p50": percentile(latencies, 50),
+            "p95": percentile(latencies, 95),
+            "warmup_excluded_ms": warmup,
+        },
         "mean_soft_f1": round(sum(f1_values) / len(f1_values), 4) if f1_values else None,
     }
 
 
-def collect_config(pipeline_name: str, decoupled: bool) -> dict:
-    env = {key: value for key, value in sorted(os.environ.items()) if key.startswith("T2S_")}
-    if "OLLAMA_MODEL" in os.environ:
-        env["OLLAMA_MODEL"] = os.environ["OLLAMA_MODEL"]
-    return {"pipeline": pipeline_name, "decoupled": decoupled, "env": env}
+CONFIG_ENV_PREFIXES = ("T2S_", "VECTOR_CACHE_")
+CONFIG_ENV_KEYS = ("OLLAMA_MODEL", "OLLAMA_BASE_URL")
+
+
+def _git_sha() -> str | None:
+    try:
+        completed = subprocess.run(
+            ["git", "rev-parse", "--short", "HEAD"],
+            cwd=Path(__file__).resolve().parent,
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
+    except Exception:
+        return None
+    sha = completed.stdout.strip()
+    return sha if completed.returncode == 0 and sha else None
+
+
+def _golden_fingerprint(path: Path) -> dict:
+    try:
+        content = Path(path).read_bytes()
+    except OSError:
+        return {"sha256": None, "case_count": None}
+    return {
+        "sha256": hashlib.sha256(content).hexdigest(),
+        "case_count": len(json.loads(content.decode("utf-8"))),
+    }
+
+
+def collect_config(
+    pipeline_name: str,
+    decoupled: bool,
+    filter_value: str | None = None,
+    golden_path: Path | None = None,
+    hints_used: bool = False,
+) -> dict:
+    env = {
+        key: value for key, value in sorted(os.environ.items())
+        if key.startswith(CONFIG_ENV_PREFIXES) or key in CONFIG_ENV_KEYS
+    }
+    return {
+        "pipeline": pipeline_name,
+        "decoupled": decoupled,
+        "hints_used": hints_used,
+        "filter": filter_value,
+        "git_sha": _git_sha(),
+        "golden": _golden_fingerprint(golden_path or GOLDEN_QUERIES_PATH),
+        "env": env,
+    }
 
 
 def print_report(summary: dict, records: list[dict]) -> None:
@@ -165,7 +287,10 @@ def print_report(summary: dict, records: list[dict]) -> None:
     print(f"{'전체':<28} {overall['passed']:>3}/{overall['total']:<3} ({overall['accuracy']}%)")
     print(f"{'빈 정답(별도)':<28} {summary['empty_gold']['passed']:>3}/{summary['empty_gold']['total']:<3}")
     print(f"실패 유형: {summary['failure_types']}")
-    print(f"응답 시간 p50={summary['latency_ms']['p50']}ms p95={summary['latency_ms']['p95']}ms")
+    print(
+        f"응답 시간 p50={summary['latency_ms']['p50']}ms p95={summary['latency_ms']['p95']}ms "
+        f"(첫 케이스 워밍업 {summary['latency_ms'].get('warmup_excluded_ms')}ms 제외)"
+    )
     print(f"평균 Soft-F1: {summary['mean_soft_f1']}")
 
     failures = [record for record in records if not record["ok"]]
@@ -208,7 +333,25 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument("--pipeline", default="v1", choices=sorted(PIPELINES), help="평가할 파이프라인")
     parser.add_argument("--decoupled", action="store_true", help="정답 값 힌트(gold_values)를 주입해 생성 단계만 평가")
+    parser.add_argument(
+        "--use-cache",
+        action="store_true",
+        help="벡터 캐시를 켠 채로 평가 (기본값: VECTOR_CACHE_ENABLED=0으로 끄고 실행)",
+    )
     args = parser.parse_args(argv)
+
+    if not args.use_cache:
+        # A cache hit replays an earlier answer instead of measuring generation.
+        os.environ["VECTOR_CACHE_ENABLED"] = "0"
+
+    pipeline = PIPELINES[args.pipeline]
+    accepts_hints = bool(getattr(pipeline, "accepts_value_hints", False))
+    if args.decoupled and not accepts_hints:
+        print(
+            f"--decoupled: 파이프라인 '{args.pipeline}'은 value_hints를 받지 않으므로(accepts_value_hints=False) "
+            "디커플 평가가 의미 없습니다."
+        )
+        return 2
 
     cases = load_cases(GOLDEN_QUERIES_PATH)
     if args.filter:
@@ -218,12 +361,21 @@ def main(argv: list[str] | None = None) -> int:
         print("실행할 케이스가 없습니다.")
         return 1
 
-    records = [run_case(case, PIPELINES[args.pipeline], args.decoupled) for case in cases]
+    records = [run_case(case, pipeline, args.decoupled) for case in cases]
     summary = summarize(records)
     print_report(summary, records)
 
     report_path = write_report_file(
-        summary, records, Path(args.report_dir), config=collect_config(args.pipeline, args.decoupled)
+        summary,
+        records,
+        Path(args.report_dir),
+        config=collect_config(
+            args.pipeline,
+            args.decoupled,
+            filter_value=args.filter,
+            golden_path=GOLDEN_QUERIES_PATH,
+            hints_used=args.decoupled and accepts_hints,
+        ),
     )
     print(f"\n리포트 저장: {report_path}")
 
