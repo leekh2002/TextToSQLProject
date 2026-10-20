@@ -62,6 +62,10 @@ SAFETY_REJECTION_PATTERNS = (
         rf"^(?:{'|'.join(map(re.escape, sorted(STUDENT_SCOPED_TABLES)))})"
         r"를 사용할 때는 요청된 학생의 학번으로 범위를 고정해야 합니다\.$"
     ),
+    re.compile(
+        rf"^(?:{'|'.join(map(re.escape, sorted(STUDENT_SCOPED_TABLES)))})"
+        r"에 열 별칭 목록을 지정할 수 없습니다\.$"
+    ),
 )
 
 

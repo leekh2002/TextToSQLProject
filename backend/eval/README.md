@@ -39,9 +39,10 @@ python -m pytest backend/eval/ -v
   또는 안전 규칙 위반). `expects_error` 케이스는 `rejected`가 `true`일 때만 통과하고, 그 밖의 오류(DB 오류, 타임아웃 등)는
   `reject_missed`로 실패한다.
 - `v1` 어댑터는 `process()`의 `error`가 `"질문이 모호합니다."`(UNKNOWN)이거나 `backend/validate.py`의 안전 거부 사유
-  (SELECT 전용, 여러 문장, 금지 키워드, 허용되지 않은 테이블, student 컬럼/필터 전용, student·enrollment 학번 스코프)와
+  (SELECT 전용, 여러 문장, 금지 키워드, 허용되지 않은 테이블, student 컬럼/필터 전용, student·enrollment 학번 스코프,
+  student·enrollment 열 별칭 목록)와
   일치하면 `rejected: true`를 붙인다. `process()`가 그 사유로 예외를 던져도 같은 결과로 바꾼다. "FROM 또는 JOIN 절이 필요합니다.",
-  "기본 LIMIT가 필요합니다."는 잘못된 SQL이지 거부가 아니므로 제외한다. 사유 문구가 바뀌면
+  "기본 LIMIT가 필요합니다.", "SQL을 해석할 수 없습니다."는 잘못된 SQL이지 거부가 아니므로 제외한다. 사유 문구가 바뀌면
   `test_rejection_patterns_track_validate_reasons`가 실패한다.
 - **student 조회 정책**: 학생은 자기 자신의 허용 컬럼(`ALLOWED_STUDENT_COLUMNS`: `student_id`, `dept_code`, `grade`,
   `admission_year`, `completed_credits`)을 읽을 수 있다. `student` 컬럼을 SELECT하는 SQL은 요청된 학생의 학번으로 스코프돼
@@ -49,6 +50,13 @@ python -m pytest backend/eval/ -v
   거부된다. 허용되지 않은 컬럼(`*` 포함)은 스코프와 무관하게 "student에서 허용되지 않은 컬럼 참조: ..."로 거부된다.
   `student`만 참조하는 단일 테이블 질의에서는 한정자 없는 컬럼(`SELECT grade FROM student ...`)도 student 컬럼으로 보고
   같은 규칙을 적용한다.
+- **스코프 검사(AST, fail closed)**: 모든 판정은 sqlglot AST로 한다. sqlglot이 해석하지 못한 SQL은 "SQL을 해석할 수
+  없습니다."로 거부한다(주석·문자열 리터럴은 스코프로 인정되지 않는다). 서브쿼리·UNION 가지·파생 테이블을 포함해 `student`/
+  `enrollment`가 나오는 **모든 인스턴스**마다 그 인스턴스를 가진 SELECT의 WHERE(또는 그 인스턴스의 JOIN ... ON)에
+  `<별칭>.student_id = <학번 리터럴|플레이스홀더>`가 AND/괄호로만 연결된 항으로 있어야 한다(OR·NOT·CASE·함수 안은 불인정).
+  student를 가진 SELECT(와 그 안의 서브쿼리)에서 한정자 없는 컬럼은 student 컬럼일 수 있다고 보고 허용 컬럼이어야 한다
+  (출력 이름을 가리키는 ORDER BY는 예외). `row_to_json(s)`·`s.*`·student가 든 파생 테이블의 `*`는 `*`로, student/enrollment
+  별칭의 열 목록(`student AS s(a, b)`)은 "<테이블>에 열 별칭 목록을 지정할 수 없습니다."로 거부한다.
 - `value_hints`: `None`이면 파이프라인이 값 검색을 스스로 한다. 리스트(빈 리스트 `[]` 포함)이면 "정확히 이 힌트만 쓴다"는 뜻이다.
   `--decoupled`일 때만 케이스의 `gold_values`가 그대로 전달된다.
 - 각 파이프라인은 함수 속성 `accepts_value_hints`(bool)를 선언한다. 없으면 `False`로 본다.
@@ -115,7 +123,7 @@ python -m backend.eval.validate_golden
   4. **ROW_CAP 규칙(잘렸지만 정답)**: 파이프라인은 생성 SQL에 `LIMIT 50`을 붙인다. 생성 결과가 정확히 `T2S_ROW_CAP`(기본 50,
      호출 시점에 읽음)행이고 그 행이 모두 정답 집합에 들어 있으면 통과다(`order_sensitive` 케이스는 정답의 앞부분과 순서까지 같아야 한다).
   5. **학생 범위**: 케이스에 `student_id`가 있고 생성 SQL이 `student`나 `enrollment`를 참조하면, 참조한 테이블마다
-     `backend.validate.has_scoped_student_filter`(학번 리터럴 또는 플레이스홀더 허용)를 통과해야 한다. 아니면 "학생 범위 미지정"으로 실패한다.
+     `backend.validate.unscoped_student_tables`(학번 리터럴 또는 플레이스홀더 허용, 인스턴스별 AND 전용 스코프)를 통과해야 한다. 아니면 "학생 범위 미지정"으로 실패한다.
      한정자 없는 `student_id = ...`는 질의 전체가 그 테이블 하나만 참조할 때만 인정한다(`FROM enrollment WHERE student_id = '...'`).
      여러 테이블을 참조하면 `e.student_id`처럼 한정해야 한다.
      결과가 우연히 같아도 다른 학생 데이터를 읽을 수 있는 SQL은 정답이 아니다.

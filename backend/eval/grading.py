@@ -5,10 +5,10 @@ import re
 from collections import Counter
 
 from ..validate import (
-    STUDENT_SCOPED_TABLES,
     extract_table_aliases,
     extract_table_references,
     has_scoped_student_filter,
+    unscoped_student_tables,
 )
 
 from ..db import run_query
@@ -257,11 +257,11 @@ def classify_failure(case: dict, result: dict, grade: dict) -> str:
 
 def check_student_scope(sql: str, student_id: str | None) -> tuple[bool, str | None]:
     """Every student/enrollment table the SQL references must be pinned to the case's student."""
-    referenced = extract_table_references(sql)
-    unscoped = [
-        table for table in sorted(STUDENT_SCOPED_TABLES & referenced)
-        if not has_scoped_student_filter(sql, extract_table_aliases(sql, table), student_id)
-    ]
+    unscoped = unscoped_student_tables(sql, student_id)
+    if unscoped is None:
+        # Fail closed: SQL that cannot be parsed cannot be shown to be scoped.
+        return False, f"{UNSCOPED_STUDENT_REASON}: SQL을 해석할 수 없습니다"
+    unscoped = sorted(unscoped)
     if unscoped:
         return False, f"{UNSCOPED_STUDENT_REASON}: {', '.join(unscoped)}"
     return True, None

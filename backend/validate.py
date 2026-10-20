@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import re
-from typing import TypedDict
+from typing import Iterator, TypedDict
 import sqlglot
 from sqlglot import exp
 
@@ -36,189 +36,277 @@ ALLOWED_STUDENT_ID_PLACEHOLDERS = {
 }
 STUDENT_SCOPED_TABLES = {"student", "enrollment"}
 
+UNPARSEABLE_REASON = "SQL을 해석할 수 없습니다."
+ALIAS_COLUMN_LIST_REASON = "{table}에 열 별칭 목록을 지정할 수 없습니다."
+
+# Every security decision below is taken on the sqlglot AST of the SQL exactly as it will run
+# (never on a lowercased copy and never on a regex over the text), so comments and string
+# literals can never satisfy a check. SQL that sqlglot cannot parse is rejected (fail closed).
+
 
 def _parse_sql(sql: str) -> exp.Expression | None:
     try:
-        return sqlglot.parse_one(sql, read="postgres")
+        statements = [statement for statement in sqlglot.parse(sql, read="postgres") if statement is not None]
     except Exception:
         return None
+    if len(statements) != 1 or not isinstance(statements[0], exp.Query):
+        return None
+    return statements[0]
+
+
+def _ident(node) -> str:
+    """Identifier as PostgreSQL resolves it: unquoted names fold to lower case, quoted ones do not."""
+    if node is None:
+        return ""
+    if isinstance(node, exp.Identifier):
+        return node.this if node.quoted else node.this.lower()
+    return str(node).lower()
+
+
+def _table_ref(table: exp.Table) -> str:
+    """The name columns use to qualify this table instance: its alias, or its own name."""
+    alias = table.args.get("alias")
+    if alias is not None and alias.args.get("this") is not None:
+        return _ident(alias.args["this"])
+    return _ident(table.args.get("this"))
+
+
+def _column_qualifier(column: exp.Column) -> str:
+    return _ident(column.args.get("table"))
+
+
+def _column_name(column: exp.Column) -> str:
+    return _ident(column.args.get("this"))
+
+
+def _scoped_instances(ast: exp.Expression, table_name: str | None = None) -> list[exp.Table]:
+    names = {table_name} if table_name else STUDENT_SCOPED_TABLES
+    return [table for table in ast.find_all(exp.Table) if table.name.lower() in names]
+
+
+def _owning_select(table: exp.Table) -> tuple[exp.Select | None, exp.Join | None]:
+    """The SELECT whose FROM/JOIN list holds `table` directly, and the JOIN node if it is joined.
+
+    Any other position (parenthesised join trees, LATERAL, ...) has no owner, so the instance
+    can never be proven scoped and is rejected.
+    """
+    parent = table.parent
+    if isinstance(parent, exp.From) and isinstance(parent.parent, exp.Select):
+        return parent.parent, None
+    if isinstance(parent, exp.Join) and isinstance(parent.parent, exp.Select):
+        return parent.parent, parent
+    return None, None
+
+
+def _sources(select: exp.Select) -> list[exp.Expression]:
+    sources = []
+    from_clause = select.args.get("from_") or select.args.get("from")
+    if from_clause is not None and from_clause.this is not None:
+        sources.append(from_clause.this)
+    sources.extend(join.this for join in select.args.get("joins") or [])
+    return sources
+
+
+def _conjuncts(node: exp.Expression | None) -> Iterator[exp.Expression]:
+    """Top-level AND terms of a predicate, looking through parentheses and AND only."""
+    if node is None:
+        return
+    if isinstance(node, exp.And):
+        yield from _conjuncts(node.left)
+        yield from _conjuncts(node.right)
+    elif isinstance(node, exp.Paren):
+        yield from _conjuncts(node.this)
+    else:
+        yield node
+
+
+_PLACEHOLDER_SQL = {
+    sqlglot.parse_one(f"SELECT 1 WHERE x = {placeholder}", read="postgres").find(exp.EQ).expression.sql(
+        dialect="postgres"
+    )
+    for placeholder in ALLOWED_STUDENT_ID_PLACEHOLDERS
+}
+
+
+def _is_allowed_rhs(node: exp.Expression, requested_student_id: str | None) -> bool:
+    if isinstance(node, exp.Literal):
+        return requested_student_id is not None and node.this == str(requested_student_id)
+    if isinstance(node, (exp.Placeholder, exp.Struct)):
+        return node.sql(dialect="postgres") in _PLACEHOLDER_SQL
+    return False
+
+
+def _is_student_id_of(node: exp.Expression, table: exp.Table, single_source: bool) -> bool:
+    if not isinstance(node, exp.Column) or _column_name(node) != "student_id":
+        return False
+    qualifier = node.args.get("table")
+    if qualifier is None:
+        return single_source
+    if _column_qualifier(node) != _table_ref(table):
+        return False
+    db = node.args.get("db")
+    return db is None or _ident(db) == _ident(table.args.get("db"))
+
+
+def _is_instance_scoped(table: exp.Table, requested_student_id: str | None) -> bool:
+    """`<ref>.student_id = <allowed rhs>` must be a top-level AND term of the owning SELECT's
+    WHERE or of the instance's own JOIN ... ON."""
+    select, join = _owning_select(table)
+    if select is None:
+        return False
+    single_source = len(_sources(select)) == 1
+    where = select.args.get("where")
+    predicates = [where.this if where is not None else None]
+    if join is not None:
+        predicates.append(join.args.get("on"))
+    for predicate in predicates:
+        for term in _conjuncts(predicate):
+            if not isinstance(term, exp.EQ):
+                continue
+            if _is_student_id_of(term.left, table, single_source) and _is_allowed_rhs(term.right, requested_student_id):
+                return True
+            if _is_student_id_of(term.right, table, single_source) and _is_allowed_rhs(term.left, requested_student_id):
+                return True
+    return False
+
+
+def _is_order_by_output_name(column: exp.Column) -> bool:
+    """A bare ORDER BY name resolves to an output column first in PostgreSQL."""
+    ordered = column.parent
+    if not isinstance(ordered, exp.Ordered) or not isinstance(ordered.parent, exp.Order):
+        return False
+    owner = ordered.parent.parent
+    return isinstance(owner, exp.Query) and _column_name(column) in {
+        name.lower() for name in owner.named_selects
+    }
+
+
+def _student_column_violations(table: exp.Table) -> set[str]:
+    """Column references that may read a non-allowed column of this student instance.
+
+    Conservative rule for unqualified columns: inside the SELECT that owns a student instance
+    (including its nested subqueries, which may resolve a name to the student row by
+    correlation) every unqualified column is treated as a possible student column and must be
+    in ALLOWED_STUDENT_COLUMNS; the only exemption is a bare ORDER BY name that matches an
+    output column. Multi-table queries must therefore qualify any other column. A bare
+    reference to the student alias itself is a whole-row read and is reported as `*`.
+    """
+    select, _ = _owning_select(table)
+    if select is None:
+        return set()
+    ref = _table_ref(table)
+    violations = set()
+    for column in select.find_all(exp.Column):
+        qualifier = _column_qualifier(column)
+        if isinstance(column.this, exp.Star):
+            if qualifier == ref:
+                violations.add("*")
+            continue
+        name = _column_name(column)
+        if qualifier:
+            if qualifier == ref and name not in ALLOWED_STUDENT_COLUMNS:
+                violations.add(name)
+            continue
+        if name == ref:
+            violations.add("*")
+        elif name not in ALLOWED_STUDENT_COLUMNS and not _is_order_by_output_name(column):
+            violations.add(name)
+    for projection in select.expressions:
+        if isinstance(projection, exp.Star):
+            violations.add("*")
+    return violations
+
+
+def _star_violations(ast: exp.Expression) -> set[str]:
+    """In a query that reads student, `*` and `t.*` may only expand base tables other than
+    student; expanding a derived table (whose columns are not tracked) is rejected."""
+    violations = set()
+    for select in ast.find_all(exp.Select):
+        base_refs = set()
+        only_base_tables = True
+        for source in _sources(select):
+            if isinstance(source, exp.Table) and source.name and source.name.lower() != "student":
+                base_refs.add(_table_ref(source))
+            else:
+                only_base_tables = False
+        for projection in select.expressions:
+            if isinstance(projection, exp.Star) and not only_base_tables:
+                violations.add("*")
+    for column in ast.find_all(exp.Column):
+        if not isinstance(column.this, exp.Star):
+            continue
+        owner = column.find_ancestor(exp.Select)
+        refs = set()
+        if owner is not None:
+            refs = {
+                _table_ref(source)
+                for source in _sources(owner)
+                if isinstance(source, exp.Table) and source.name and source.name.lower() != "student"
+            }
+        if _column_qualifier(column) not in refs:
+            violations.add("*")
+    return violations
+
+
+def _projects_instance(table: exp.Table) -> bool:
+    select, _ = _owning_select(table)
+    if select is None:
+        return True
+    ref = _table_ref(table)
+    single_source = len(_sources(select)) == 1
+    for projection in select.expressions:
+        if isinstance(projection, exp.Star):
+            return True
+        for column in projection.find_all(exp.Column):
+            qualifier = _column_qualifier(column)
+            if qualifier == ref or (not qualifier and (single_source or _column_name(column) == ref)):
+                return True
+    return False
+
+
+def _unscoped_instances(ast: exp.Expression, requested_student_id: str | None) -> list[exp.Table]:
+    return [table for table in _scoped_instances(ast) if not _is_instance_scoped(table, requested_student_id)]
+
+
+def unscoped_student_tables(sql: str, requested_student_id: str | None) -> set[str] | None:
+    """Names of student/enrollment tables with at least one instance not pinned to the requested
+    student; None when the SQL cannot be parsed."""
+    ast = _parse_sql(sql)
+    if ast is None:
+        return None
+    return {table.name.lower() for table in _unscoped_instances(ast, requested_student_id)}
 
 
 def extract_table_references(sql: str) -> set[str]:
     ast = _parse_sql(sql)
-    if ast:
-        return {table.name.lower() for table in ast.find_all(exp.Table) if table.name}
-    
-    # Fallback to regex if parsing fails
-    clean_sql = re.sub(r"\bis\s+not\s+distinct\s+from\b", "=", sql, flags=re.IGNORECASE)
-    matches = re.findall(r"\b(?:from|join)\s+([a-z_][a-z0-9_]*)\b", clean_sql)
-    return set(matches)
+    if ast is None:
+        return set()
+    return {table.name.lower() for table in ast.find_all(exp.Table) if table.name}
 
 
 def extract_table_aliases(sql: str, table_name: str) -> set[str]:
     aliases = {table_name}
     ast = _parse_sql(sql)
-    if ast:
-        for table in ast.find_all(exp.Table):
-            if table.name.lower() == table_name and table.alias:
-                aliases.add(table.alias.lower())
+    if ast is None:
         return aliases
-
-    # Fallback to regex
-    matches = re.findall(
-        rf"\b(?:from|join)\s+{re.escape(table_name)}(?:\s+as)?\s+([a-z_][a-z0-9_]*)\b",
-        sql,
-    )
-    aliases.update(matches)
+    for table in ast.find_all(exp.Table):
+        if table.name.lower() == table_name and table.alias:
+            aliases.add(table.alias.lower())
     return aliases
 
 
-def _is_single_table_student_query(sql: str) -> bool:
-    # In a query whose only table is student, unqualified columns (and a bare *) belong to student.
-    return extract_table_references(sql) == {"student"}
-
-
-def _projection_aliases(ast: exp.Expression) -> set[str]:
-    return {
-        projection.alias.lower()
-        for select in ast.find_all(exp.Select)
-        for projection in select.expressions
-        if isinstance(projection, exp.Alias) and projection.alias
-    }
-
-
-def _is_student_column(column: exp.Column, student_aliases: set[str], unqualified_is_student: bool) -> bool:
-    qualifier = column.table.lower()
-    return qualifier in student_aliases or (unqualified_is_student and not qualifier)
-
-
-_SELECT_ITEM_PATTERN = re.compile(
-    r"^\s*(?:distinct\s+)?(\*|[a-z_][a-z0-9_]*)\s*(?:(?:as\s+)?[a-z_][a-z0-9_]*\s*)?$"
-)
-
-
-def _unqualified_select_columns(sql: str) -> set[str]:
-    """Regex fallback: plain column names (or *) projected by a single-table student query."""
-    select_match = re.search(r"\bselect\b(.*?)\bfrom\b", sql, flags=re.DOTALL)
-    if not select_match:
-        return set()
-    columns = set()
-    for item in select_match.group(1).split(","):
-        match = _SELECT_ITEM_PATTERN.match(item)
-        if match:
-            columns.add(match.group(1))
-    return columns
-
-
-def find_disallowed_student_columns(sql: str, student_aliases: set[str]) -> set[str]:
-    referenced_columns: set[str] = set()
-    unqualified_is_student = _is_single_table_student_query(sql)
-    ast = _parse_sql(sql)
-    if ast:
-        output_aliases = _projection_aliases(ast) if unqualified_is_student else set()
-        for column in ast.find_all(exp.Column):
-            if not _is_student_column(column, student_aliases, unqualified_is_student):
-                continue
-            if not column.table and column.name.lower() in output_aliases:
-                continue
-            referenced_columns.add(column.name.lower())
-        if unqualified_is_student:
-            for select in ast.find_all(exp.Select):
-                if any(isinstance(projection, exp.Star) for projection in select.expressions):
-                    referenced_columns.add("*")
-        return referenced_columns - ALLOWED_STUDENT_COLUMNS
-
-    # Fallback to regex
-    for alias in student_aliases:
-        pattern = rf"\b{re.escape(alias)}\.([a-z_][a-z0-9_]*)\b"
-        referenced_columns.update(re.findall(pattern, sql))
-    if unqualified_is_student:
-        referenced_columns.update(_unqualified_select_columns(sql))
-    return referenced_columns - ALLOWED_STUDENT_COLUMNS
-
-
-def selects_student_data(sql: str, student_aliases: set[str]) -> bool:
-    unqualified_is_student = _is_single_table_student_query(sql)
-    ast = _parse_sql(sql)
-    if ast:
-        for select in ast.find_all(exp.Select):
-            for projection in select.expressions:
-                if unqualified_is_student and isinstance(projection, exp.Star):
-                    return True
-                if isinstance(projection, exp.Column):
-                    if isinstance(projection.this, exp.Star) and projection.table.lower() in student_aliases:
-                        return True
-                for col in projection.find_all(exp.Column):
-                    if _is_student_column(col, student_aliases, unqualified_is_student):
-                        return True
-        return False
-
-    # Fallback to regex
-    select_match = re.search(r"\bselect\b(.*?)\bfrom\b", sql, flags=re.DOTALL)
-    if not select_match:
-        return False
-    select_clause = select_match.group(1)
-    if unqualified_is_student and select_clause.strip():
-        return True
-    for alias in student_aliases:
-        if re.search(rf"\b{re.escape(alias)}\.\*", select_clause):
-            return True
-        if re.search(rf"\b{re.escape(alias)}\.[a-z_][a-z0-9_]*\b", select_clause):
-            return True
-    return False
-
-
 def has_scoped_student_filter(sql: str, table_aliases: set[str], requested_student_id: str | None) -> bool:
+    """True when the SQL parses, contains a student/enrollment instance named or aliased by one of
+    `table_aliases`, and every such instance is scoped to the requested student."""
     ast = _parse_sql(sql)
-    allowed_rhs_patterns = set(ALLOWED_STUDENT_ID_PLACEHOLDERS)
-    if requested_student_id is not None:
-        allowed_rhs_patterns.add(str(requested_student_id))
-        allowed_rhs_patterns.add(f"'{requested_student_id}'")
-        allowed_rhs_patterns.add(f'"{requested_student_id}"')
-
-    # An unqualified `student_id` can only belong to the table being checked when the query
-    # references no other table; multi-table queries must qualify the column.
-    single_table_query = len(extract_table_references(sql)) == 1
-
-    if ast:
-        for eq in ast.find_all(exp.EQ):
-            left, right = eq.left, eq.right
-
-            def is_student_id_col(node):
-                if not isinstance(node, exp.Column) or node.name.lower() != "student_id":
-                    return False
-                qualifier = node.table.lower()
-                return qualifier in table_aliases or (single_table_query and not qualifier)
-                
-            def matches_rhs(node):
-                if isinstance(node, (exp.Literal, exp.Identifier, exp.Var, exp.Parameter)):
-                    val = str(node.name)
-                    return val in allowed_rhs_patterns or f"'{val}'" in allowed_rhs_patterns or f'"{val}"' in allowed_rhs_patterns
-                unparsed = node.sql()
-                return unparsed in allowed_rhs_patterns or f"'{unparsed}'" in allowed_rhs_patterns or f'"{unparsed}"' in allowed_rhs_patterns
-
-            if is_student_id_col(left) and matches_rhs(right):
-                return True
-            if is_student_id_col(right) and matches_rhs(left):
-                return True
-
-    # Fallback to regex
-    allowed_rhs_regex = [re.escape(placeholder) for placeholder in ALLOWED_STUDENT_ID_PLACEHOLDERS]
-    if requested_student_id is not None:
-        escaped_id = re.escape(str(requested_student_id))
-        allowed_rhs_regex.extend([rf"'{escaped_id}'", rf'"{escaped_id}"', escaped_id])
-
-    rhs_group = "|".join(allowed_rhs_regex)
-    for alias in table_aliases:
-        pattern = rf"\b{re.escape(alias)}\.student_id\s*=\s*(?:{rhs_group})(?![a-z0-9_])"
-        if re.search(pattern, sql):
-            return True
-    if single_table_query:
-        pattern = rf"(?<![a-z0-9_.])student_id\s*=\s*(?:{rhs_group})(?![a-z0-9_])"
-        if re.search(pattern, sql):
-            return True
-
-    return False
+    if ast is None:
+        return False
+    wanted = {alias.lower() for alias in table_aliases}
+    instances = [
+        table for table in _scoped_instances(ast)
+        if table.name.lower() in wanted or _table_ref(table).lower() in wanted
+    ]
+    return bool(instances) and all(_is_instance_scoped(table, requested_student_id) for table in instances)
 
 
 def validate_generated_sql(
@@ -239,7 +327,14 @@ def validate_generated_sql(
         if re.search(rf"\b{re.escape(keyword)}\b", sql_without_trailing_semicolon):
             return {"ok": False, "reason": f"금지 키워드 포함: {keyword}"}
 
-    table_references = extract_table_references(sql_without_trailing_semicolon)
+    original = sql.strip()
+    if original.endswith(";"):
+        original = original[:-1].rstrip()
+    ast = _parse_sql(original)
+    if ast is None:
+        return {"ok": False, "reason": UNPARSEABLE_REASON}
+
+    table_references = {table.name.lower() for table in ast.find_all(exp.Table) if table.name}
     if not table_references:
         return {"ok": False, "reason": "FROM 또는 JOIN 절이 필요합니다."}
 
@@ -250,29 +345,34 @@ def validate_generated_sql(
             "reason": f"허용되지 않은 테이블 참조: {', '.join(sorted(disallowed_tables))}",
         }
 
-    if "student" in table_references:
-        student_aliases = extract_table_aliases(sql_without_trailing_semicolon, "student")
+    for table in _scoped_instances(ast):
+        alias = table.args.get("alias")
+        if alias is not None and alias.args.get("columns"):
+            return {"ok": False, "reason": ALIAS_COLUMN_LIST_REASON.format(table=table.name.lower())}
 
-        disallowed_student_columns = find_disallowed_student_columns(sql_without_trailing_semicolon, student_aliases)
+    student_instances = _scoped_instances(ast, "student")
+    if student_instances:
+        disallowed_student_columns = _star_violations(ast)
+        for table in student_instances:
+            disallowed_student_columns |= _student_column_violations(table)
         if disallowed_student_columns:
             return {
                 "ok": False,
                 "reason": f"student에서 허용되지 않은 컬럼 참조: {', '.join(sorted(disallowed_student_columns))}",
             }
 
+    unscoped = _unscoped_instances(ast, requested_student_id)
+    for table_name in ("student", "enrollment"):
+        instances = [table for table in unscoped if table.name.lower() == table_name]
+        if not instances:
+            continue
         # A student may read their own allowed columns; anything else keeps student filter-only.
-        if selects_student_data(sql_without_trailing_semicolon, student_aliases) and not has_scoped_student_filter(
-            sql_without_trailing_semicolon, student_aliases, requested_student_id
-        ):
+        if table_name == "student" and any(_projects_instance(table) for table in instances):
             return {"ok": False, "reason": "student 테이블은 필터 조건으로만 사용할 수 있습니다."}
-
-    for table_name in STUDENT_SCOPED_TABLES & table_references:
-        table_aliases = extract_table_aliases(sql_without_trailing_semicolon, table_name)
-        if not has_scoped_student_filter(sql_without_trailing_semicolon, table_aliases, requested_student_id):
-            return {
-                "ok": False,
-                "reason": f"{table_name}를 사용할 때는 요청된 학생의 학번으로 범위를 고정해야 합니다.",
-            }
+        return {
+            "ok": False,
+            "reason": f"{table_name}를 사용할 때는 요청된 학생의 학번으로 범위를 고정해야 합니다.",
+        }
 
     if "limit" not in sql_without_trailing_semicolon:
         return {"ok": False, "reason": "기본 LIMIT가 필요합니다."}
