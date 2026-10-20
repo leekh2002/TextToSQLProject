@@ -73,32 +73,83 @@ def extract_table_aliases(sql: str, table_name: str) -> set[str]:
     return aliases
 
 
+def _is_single_table_student_query(sql: str) -> bool:
+    # In a query whose only table is student, unqualified columns (and a bare *) belong to student.
+    return extract_table_references(sql) == {"student"}
+
+
+def _projection_aliases(ast: exp.Expression) -> set[str]:
+    return {
+        projection.alias.lower()
+        for select in ast.find_all(exp.Select)
+        for projection in select.expressions
+        if isinstance(projection, exp.Alias) and projection.alias
+    }
+
+
+def _is_student_column(column: exp.Column, student_aliases: set[str], unqualified_is_student: bool) -> bool:
+    qualifier = column.table.lower()
+    return qualifier in student_aliases or (unqualified_is_student and not qualifier)
+
+
+_SELECT_ITEM_PATTERN = re.compile(
+    r"^\s*(?:distinct\s+)?(\*|[a-z_][a-z0-9_]*)\s*(?:(?:as\s+)?[a-z_][a-z0-9_]*\s*)?$"
+)
+
+
+def _unqualified_select_columns(sql: str) -> set[str]:
+    """Regex fallback: plain column names (or *) projected by a single-table student query."""
+    select_match = re.search(r"\bselect\b(.*?)\bfrom\b", sql, flags=re.DOTALL)
+    if not select_match:
+        return set()
+    columns = set()
+    for item in select_match.group(1).split(","):
+        match = _SELECT_ITEM_PATTERN.match(item)
+        if match:
+            columns.add(match.group(1))
+    return columns
+
+
 def find_disallowed_student_columns(sql: str, student_aliases: set[str]) -> set[str]:
     referenced_columns: set[str] = set()
+    unqualified_is_student = _is_single_table_student_query(sql)
     ast = _parse_sql(sql)
     if ast:
+        output_aliases = _projection_aliases(ast) if unqualified_is_student else set()
         for column in ast.find_all(exp.Column):
-            if column.table.lower() in student_aliases:
-                referenced_columns.add(column.name.lower())
+            if not _is_student_column(column, student_aliases, unqualified_is_student):
+                continue
+            if not column.table and column.name.lower() in output_aliases:
+                continue
+            referenced_columns.add(column.name.lower())
+        if unqualified_is_student:
+            for select in ast.find_all(exp.Select):
+                if any(isinstance(projection, exp.Star) for projection in select.expressions):
+                    referenced_columns.add("*")
         return referenced_columns - ALLOWED_STUDENT_COLUMNS
 
     # Fallback to regex
     for alias in student_aliases:
         pattern = rf"\b{re.escape(alias)}\.([a-z_][a-z0-9_]*)\b"
         referenced_columns.update(re.findall(pattern, sql))
+    if unqualified_is_student:
+        referenced_columns.update(_unqualified_select_columns(sql))
     return referenced_columns - ALLOWED_STUDENT_COLUMNS
 
 
 def selects_student_data(sql: str, student_aliases: set[str]) -> bool:
+    unqualified_is_student = _is_single_table_student_query(sql)
     ast = _parse_sql(sql)
     if ast:
         for select in ast.find_all(exp.Select):
             for projection in select.expressions:
+                if unqualified_is_student and isinstance(projection, exp.Star):
+                    return True
                 if isinstance(projection, exp.Column):
                     if isinstance(projection.this, exp.Star) and projection.table.lower() in student_aliases:
                         return True
                 for col in projection.find_all(exp.Column):
-                    if col.table.lower() in student_aliases:
+                    if _is_student_column(col, student_aliases, unqualified_is_student):
                         return True
         return False
 
@@ -107,6 +158,8 @@ def selects_student_data(sql: str, student_aliases: set[str]) -> bool:
     if not select_match:
         return False
     select_clause = select_match.group(1)
+    if unqualified_is_student and select_clause.strip():
+        return True
     for alias in student_aliases:
         if re.search(rf"\b{re.escape(alias)}\.\*", select_clause):
             return True
