@@ -11,7 +11,7 @@
 python -m backend.eval.run_eval
 ```
 
-DB/Ollama 없이 채점 로직 자체(37개 단위 테스트)만 검증하려면:
+DB/Ollama 없이 채점 로직과 평가셋 형식(단위 테스트)만 검증하려면:
 
 ```bash
 python -m pytest backend/eval/ -v
@@ -21,11 +21,55 @@ python -m pytest backend/eval/ -v
 - `--filter <문자열>`: category 이름에 이 문자열이 포함된 케이스만 실행 (예: `--filter course_filter`)
 - `--min-accuracy <0-100>`: 전체 정확도가 이 값 미만이면 종료 코드 1 반환
 - `--report-dir <경로>`: JSON 리포트 저장 위치 (기본값 `backend/eval/reports/`)
+- `--pipeline <이름>`: 평가할 파이프라인 (기본값 `v1` = 기존 `process()`). 새 파이프라인은
+  `run_eval.PIPELINES`에 `pipeline(query, *, exclude_completed_courses=False, student_id=None, value_hints=None) -> dict`
+  형태로 등록한다. 반환 dict는 `process()`와 같은 키(`sql`, `data`, `error` 등)를 갖는다.
+- `--decoupled`: 케이스의 `gold_values`를 `value_hints`로 주입해 값 교정(NER/DB 조회) 오류를 제외하고
+  SQL 생성 단계만 평가한다. `v1`은 힌트를 쓰지 않으므로 효과가 없다.
+
+평가셋을 DB에 대해 점검하려면(정답 SQL 실행, 빈 정답 표시, 필드 형식, id/질의 중복):
+
+```bash
+python -m backend.eval.validate_golden
+```
+
+문제가 있으면 `ERROR ...` 줄을 출력하고 종료 코드 1을 반환한다(경고는 `WARN`). 케이스를 추가·수정할 때마다 실행한다.
+
+## 평가셋 구성 (238개)
+
+| category | 개수 |
+| --- | --- |
+| `course_filter` | 80 |
+| `prerequisite` | 30 |
+| `enrollment_aggregate` | 35 |
+| `personalized_lookup` | 30 |
+| `exclude_completed_courses` | 30 |
+| `ambiguous_reject` | 30 |
+| `graduation_requirement` | 3 (이번 범위 밖이라 확장하지 않음) |
+
+이 분포는 `test_golden_queries.py::test_category_counts_match_the_expanded_design`이 고정한다.
+`ambiguous_reject`는 스키마에 없는 정보(7), 다른/전체 학생 개인정보(6), 쓰기 요청(5),
+지시 대명사만 있는 질의(4), 서비스와 무관한 질의(3)와 기존 5건(날씨, 수강신청 일정, 전화번호, 1학년 명단, 삭제)으로 구성된다.
+
+## 리포트 항목
+
+`run_eval`이 출력하고 JSON 리포트(`config`, `summary`, `records`)에 저장하는 항목:
+
+- 카테고리별 정확도: 정답 결과가 0행인 케이스(`empty_gold: true`)는 헤드라인 정확도에서 빼고 "빈 정답(별도)"으로 따로 보고한다.
+- 실패 유형(`failure_types`): `ok`, `reject_missed`(거부돼야 하는데 SQL이 나옴), `error`, `structural_mismatch`,
+  `empty_result`, `result_mismatch`, `exception`.
+- 응답 시간 p50/p95(ms).
+- 평균 Soft-F1: 결과 행 단위 F1(공통 컬럼 기준). 통과/실패와 별개로 "얼마나 가까웠는지"를 본다.
+- `config`: 파이프라인 이름, `--decoupled` 여부, `T2S_*` 환경변수, `OLLAMA_MODEL`. 리포트끼리 비교할 때 조건을 확인하는 용도다.
 
 ## 채점 방식
 
 - `grading: "execution"` — `reference_sql`과 파이프라인이 생성한 SQL을 둘 다 실제 DB에 실행해 결과 행을
-  순서 무관 집합으로 비교한다. 문법이 달라도 결과가 같으면 정답으로 처리한다.
+  순서 무관 집합으로 비교한다. 문법이 달라도 결과가 같으면 정답으로 처리한다. 두 가지 보정이 적용된다:
+  1. **스케줄 확장 적용**: 파이프라인은 요일/시간/강의실 필터가 있으면 `expand_schedule_filtered_course_rows`로
+     매칭된 과목의 모든 스케줄 행을 돌려준다. 정답 SQL에도 같은 확장(`expand_reference_sql`)을 적용해 비교한다.
+  2. **식별 컬럼 규칙**: 정답 결과에 `subject_code`·`section`이 있으면 생성 결과에도 있어야 하고 비교 컬럼에 포함된다.
+     `SELECT subject_name`처럼 좁게 프로젝션해 우연히 겹치는 것만으로 통과하는 일을 막는다.
 - `grading: "structural"` — 실행 결과 비교가 부적절한 케이스(졸업요건처럼 데이터가 없거나, 학생이 1명뿐인
   개인화 조회)용. 생성된 SQL이 필요한 테이블/컬럼을 참조하는지, 학생 스코프가 걸렸는지만 검증한다.
 - `expects_error: true` — 모호하거나 안전 정책상 거부돼야 하는 질의. `process()`가 `{"error": ...}`를
@@ -53,47 +97,53 @@ python -m pytest backend/eval/ -v
    `count`가 되는데 `reference_sql`은 `course_count`로 별칭을 지정해서, 값이 우연히 같더라도 컬럼명이
    달라 `compare_execution`의 공통 컬럼 비교에서 걸러진다 — 이는 집계 케이스에서 별칭 관례가 갈리면 항상
    나타나는 채점 특성이다.
-3. **`course_filter`의 요일/시간 필터 케이스 일부(실제 실행 후 발견)**: `backend/process.py`의
-   `expand_schedule_filtered_course_rows`는 WHERE 절에 `day_of_week`/`start_time`/`end_time`/`classroom`
-   필터가 있으면, 해당 조건으로 먼저 (subject_code, section)만 찾은 뒤 **그 과목의 모든 스케줄 행**을
-   다시 JOIN해서 반환하도록 의도적으로 설계돼 있다(예: "목요일 수업" 질의라도 매칭된 과목이 화요일에도
-   수업이 있으면 화요일 행도 함께 돌려준다). 첫 실제 실행에서 `course_filter_01/04/05/10/11/12`가
-   "추가된 행"으로 실패한 것은 대부분 모델이 틀려서가 아니라, 이 골든셋의 `reference_sql`이 이 확장
-   동작을 반영하지 않고 해당 요일/시간의 행만 필터링했기 때문이다. 즉 이 6개 케이스의 `reference_sql`은
-   `expand_schedule_filtered_course_rows`와 동일한 형태(매칭 과목 전체 스케줄을 반환)로 다시 작성해야
-   정확한 측정이 된다. 이 항목은 파이프라인 버그가 아니라 골든셋 `reference_sql`을 다시 작성해야 하는 별도의 후속 작업이다. (`course_filter_06/09`의 실패는
-   이와 무관한 별개의 원인 — `dept_name`/`subject_name`에 LIKE 대신 `=`를 쓰거나, NER 교정이 다른
-   과목명으로 바꿔치기한 경우 — 이며, `course_filter_14`의 실패는 또 다른 별개의 원인 — `target_year` 대신
-   `course_year`를 쓴 경우(`course_filter_08`과 동일한 종류의 혼동으로, 골든셋이 `target_year` 미문서화
-   이슈를 검증하려고 의도적으로 설계한 케이스) — 이므로 이 세 케이스는 실제 정확도 이슈로 봐도 된다.)
-4. **단일 컬럼 프로젝션에서의 `compare_execution` 관대함 (실행 비교 채점기 자체의 한계)**: `compare_execution`은
-   reference와 generated 양쪽에 모두 존재하는 컬럼만 골라 비교하는 컬럼 교집합 방식을 쓴다. 모델이
-   `prompt.py`의 지시(항상 19개 컬럼 전체를 SELECT)를 따르지 않고 `SELECT subject_name`처럼 컬럼 1개만
-   프로젝션하는 경우가 실제로 흔한데, 이때는 "두 결과가 같은가"라는 비교가 사실상 "두 단일 컬럼 값 집합이
-   겹치는가"로 퇴화해 버려서, 원래라면 걸러져야 할 오답이 통과(false pass)할 수 있다. 실제 라이브 실행에서
-   확인된 사례:
-   - `course_filter_08`: 정답이 써야 하는 `target_year = 2` 대신 `course_year = 2`를 쓴, 이 케이스가 원래
-     잡아내려던 바로 그 버그를 저질렀는데도 PASS 처리됨 — 두 쿼리의 `subject_name` 집합이 우연히
-     겹쳤기 때문.
-   - `prerequisite_03`: reference는 `자료구조및실습`까지 포함하도록 `LIKE '%자료구조%'`로 작성됐지만,
-     모델이 `subject_name = '자료구조'`로 정확히 일치시켜도 단일 컬럼 비교로는 차이를 구분하지 못해 PASS.
-   - `prerequisite_05`: 올바른 컬럼 `prereq_subject_names = '없음'` 대신 잘못된 컬럼
-     `prereq_subject_codes LIKE '%없음%'`으로 필터링했는데도 PASS.
-   - `course_filter_07`: reference에 있는 `capacity > 0` 가드 조건을 조용히 빠뜨렸는데도 PASS.
-
-   즉 이 관대함은 `course_filter`, `prerequisite` 같은 카테고리의 정확도를 실제보다 **과대평가**하는
-   방향으로 작동한다 — 항목 1~3과는 반대 방향이다. 이는 채점기 설계상의 트레이드오프(컬럼이 일부만
-   겹쳐도 정답으로 인정해 공정성을 확보하려던 의도가, 좁은 프로젝션 SQL에서는 역효과를 내는 것)이지
-   파이프라인 버그가 아니므로, `compare_execution`의 비교 로직 자체는 이번 작업에서 바꾸지 않는다.
+3. **(해소됨) `course_filter`의 요일/시간 필터 케이스와 스케줄 확장**: 예전에는 `reference_sql`이 확장 동작을 반영하지
+   않아 `course_filter_01/04/05/10/11/12` 등이 "추가된 행"으로 실패했다. 지금은 정답 SQL에도 스케줄 확장을 적용하므로
+   이 원인의 오탐은 없다. (`course_filter_06/09/14`는 이것과 무관한 실제 정확도 이슈다.)
+4. **(해소됨) 단일 컬럼 프로젝션에서의 `compare_execution` 관대함**: 컬럼 교집합 비교 때문에 `SELECT subject_name`
+   같은 좁은 프로젝션이 false pass가 되던 문제는 식별 컬럼 규칙(`subject_code`·`section` 필수)으로 완화됐다.
+   식별 컬럼이 없는 집계/개인화 케이스는 여전히 공통 컬럼 교집합으로 비교한다.
+5. **알려진 파이프라인 한계(다음 계획 대상)**: 스케줄 확장은 요일/시간 필터가 걸린 쿼리를 무조건 과목 행 목록으로
+   바꾼다. 그래서 `COUNT`/`GROUP BY` 같은 집계에 요일·시간 조건이 붙으면(예: "월요일 수업 개수") 집계값 대신 행 목록이
+   반환된다. 이 때문에 현재 평가셋에는 집계 + 요일/시간 조합 케이스가 없다. 파이프라인이 집계를 확장에서 제외하도록
+   바뀌면 그때 이 조합 케이스를 추가한다.
 
 위 항목들은 이번 작업 범위에서 고치지 않는다(스펙 문서의 Out of scope 참고). 다음 반복에서 프롬프트/검증
 로직을 수정할 때 우선순위를 정하는 데 이 평가셋의 카테고리별 정확도를 근거로 사용한다.
 
 ## 케이스 추가하기
 
-`backend/eval/golden_queries.json`에 객체를 추가한다. 필수 키는
-`backend/eval/test_golden_queries.py`의 `REQUIRED_KEYS`를 참고. 추가 후
-`python -m pytest backend/eval/test_golden_queries.py`로 스키마를 검증한다.
+`backend/eval/golden_queries.json`에 객체를 추가한다. 필수 키는 `backend/eval/test_golden_queries.py`의
+`REQUIRED_KEYS`를 참고. 선택 필드:
 
-`execution` 케이스를 추가할 때는 반드시 `reference_sql`을 실제 DB에 대해 직접 실행해 행 수가
-의도한 대로 나오는지 확인한 뒤에 커밋한다(우연히 0행이 나오는 케이스는 채점 변별력이 없다).
+- `gold_values`: `[{"column": "dept_name", "value": "공과대학 컴퓨터융합학부"}, ...]`. `--decoupled`가 값 힌트로 주입한다.
+  `column`/`value`는 모두 문자열이다. 정답 조건 중 **문자열 값 조건만** 적고(숫자 `target_year = 3`, 시간 `start_time`, `<>` 조건 제외),
+  값이 없는 질의는 `[]`. `LIKE` 조건이 DB에서 값 하나로 특정되면 그 실제 DB 값(예: `공과대학 컴퓨터융합학부`)을, 여러 값에
+  걸리면 질의에 나온 키워드를 쓴다. reject 케이스는 항상 `[]`.
+- `empty_gold`: 정답 결과가 0행인 케이스에만 `true`. 0행인데 `empty_gold`가 없으면 `validate_golden`이 ERROR로 잡는다.
+
+작성 규칙:
+
+1. **형식**: 모든 키를 채운다(`structural_checks`는 execution이면 `null`, reject면 `{}`). id는 두 자리 번호
+   (`course_filter_07`)이고 중복 불가, 질의 문자열도 중복 불가. 실행 채점 케이스는 `gold_values`를 반드시 둔다.
+   `reference_sql`은 실제 DB에 직접 실행해 행 수를 확인하고 `notes`에 적는다. 이때 행 수는 **스케줄 확장 이후** 기준이다.
+   학생 케이스는 DB에 이수 내역이 있는 `202102671`만 쓴다.
+2. **gold_values**: 위 설명대로 문자열 조건만. 학과는 정확히 하나로 특정되도록 쓴다.
+3. **정답 SQL 관례**: 학과 키워드가 형제 학과와 겹치면 단과대를 붙여 한정한다(`'%경상대학 경제학과%'`, `'%자연과학대학 화학과%'`).
+   `credit_hours`는 `'3/3/0'` 꼴이라 `LIKE '3/%'`로 거른다. 여석은 `enrolled < capacity AND capacity > 0`.
+   교필(교양 필수)은 `category LIKE '%교양(소양필수)%'`. 과목 수는 `COUNT(DISTINCT subject_code || '-' || section) AS course_count`
+   (`v_course_info`가 스케줄 JOIN으로 행이 중복되므로 `COUNT(*)`를 쓰지 않고, 별칭도 `course_count`로 통일).
+4. **변형 표현**: 케이스의 40% 이상은 구어체·줄임말·어순 변형(예: "컴융", "~뭐있어")으로 쓴다. 같은 정답 SQL(참조)을
+   공유하는 질의는 3개 이하로 제한한다.
+5. **변별력**: 우연히 0행이 나오는 케이스는 채점 변별력이 없으므로 쓰지 않는다. 포함/제외 조건 수를 카테고리 안에서 고르게 분배한다.
+6. **모호함 금지**: 한 질의가 두 해석으로 갈리는 표현을 피한다(예: "정원 초과"와 "마감"을 섞어 쓰지 않는다).
+7. **금지 사항**: DB에 없는 값, "이번 주", "오늘", "다음 학기" 같은 시간 상대 표현, 의도가 모호한 질의를 답이 있는 카테고리에 넣지 않는다.
+   모호함·거부는 `ambiguous_reject`에서만 다루며, 거기서도 질의는 "스키마에 없음/금지된 요청"으로 명확히 거부돼야 하고
+   `v_course_info`로 답할 수 있는 경계 사례여서는 안 된다.
+
+`ambiguous_reject` 케이스는 `grading: "structural"`, `expects_error: true`, `reference_sql: null`, `structural_checks: {}`,
+`gold_values: []`로 쓴다. 유형(스키마에 없는 정보 / 타 학생·전체 학생 개인정보 / 쓰기 요청 / 지시 대명사만 있는 질의 /
+서비스와 무관한 질의)을 고르게 유지한다.
+
+추가 후 `python -m backend.eval.validate_golden`과 `python -m pytest backend/eval -q`를 실행한다.
+`golden_queries.json`은 UTF-8, 한글 그대로, 들여쓰기 2칸, CRLF로 저장한다.

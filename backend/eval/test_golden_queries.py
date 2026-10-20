@@ -67,3 +67,24 @@ def test_optional_fields_have_valid_types():
             assert isinstance(case["gold_values"], list), case["id"]
             for item in case["gold_values"]:
                 assert set(item) == {"column", "value"}, case["id"]
+
+
+def test_category_counts_match_the_expanded_design():
+    counts: dict[str, int] = {}
+    for case in _load_cases():
+        counts[case["category"]] = counts.get(case["category"], 0) + 1
+    assert counts == {
+        "course_filter": 80,
+        "prerequisite": 30,
+        "enrollment_aggregate": 35,
+        "personalized_lookup": 30,
+        "exclude_completed_courses": 30,
+        "ambiguous_reject": 30,
+        "graduation_requirement": 3,
+    }
+
+
+def test_non_reject_cases_carry_gold_values():
+    for case in _load_cases():
+        if not case["expects_error"] and case["category"] != "graduation_requirement":
+            assert "gold_values" in case, case["id"]
