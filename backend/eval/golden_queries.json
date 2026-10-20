@@ -2440,7 +2440,7 @@
   {
     "id": "enrollment_aggregate_13",
     "category": "enrollment_aggregate",
-    "query": "정원 넘은 분반 총 몇개야",
+    "query": "정원보다 신청 인원이 더 많은 분반은 몇 개야",
     "grading": "execution",
     "reference_sql": "SELECT COUNT(DISTINCT subject_code || '-' || section) AS course_count FROM v_course_info WHERE enrolled > capacity AND capacity > 0",
     "order_sensitive": false,
@@ -2523,7 +2523,7 @@
   {
     "id": "enrollment_aggregate_18",
     "category": "enrollment_aggregate",
-    "query": "교직 과목 중 정원을 초과한 분반 수 알려줘",
+    "query": "교직 과목 중 신청 인원이 정원보다 많은 분반 수 알려줘",
     "grading": "execution",
     "reference_sql": "SELECT COUNT(DISTINCT subject_code || '-' || section) AS course_count FROM v_course_info WHERE category LIKE '%교직%' AND enrolled > capacity AND capacity > 0",
     "order_sensitive": false,
