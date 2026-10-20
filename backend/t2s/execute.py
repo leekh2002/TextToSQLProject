@@ -87,12 +87,12 @@ def run_candidate(index, raw, *, student_id, exclude_completed, settings,
             outcome.error = verdict["reason"]
         return outcome
 
-    executable = (expand or _default_expand)(sql) if course_rows else sql
-    if exclude_completed and student_id:
-        executable = (exclude or _default_exclude)(executable, student_id)
-    outcome.executed_sql = executable
-    bound_sql, params = bind_student(executable, student_id)
     try:
+        executable = (expand or _default_expand)(sql) if course_rows else sql
+        if exclude_completed and student_id:
+            executable = (exclude or _default_exclude)(executable, student_id)
+        outcome.executed_sql = executable
+        bound_sql, params = bind_student(executable, student_id)
         outcome.rows = run(bound_sql, params, settings.statement_timeout_ms)
     except Exception as exc:
         outcome.error = str(exc)

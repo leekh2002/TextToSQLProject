@@ -88,3 +88,15 @@ def test_runtime_error_is_recorded():
                             settings=SETTINGS, run=run, validate=ok_validate, expand=lambda s: s, exclude=lambda s, i: s)
 
     assert outcome.rows is None and "timeout" in outcome.error
+
+
+def test_rewrite_failure_is_recorded_as_error():
+    def exclude(sql, sid):
+        raise Exception("v_course_info is required to exclude completed courses")
+
+    outcome = run_candidate(0, "SELECT COUNT(*) FROM e", student_id="202102671", exclude_completed=True,
+                            settings=SETTINGS, run=lambda *a: [], validate=ok_validate,
+                            expand=lambda s: s, exclude=exclude)
+
+    assert outcome.rows is None and not outcome.rejected
+    assert outcome.error == "v_course_info is required to exclude completed courses"
