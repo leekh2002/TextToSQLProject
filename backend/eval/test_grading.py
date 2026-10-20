@@ -142,12 +142,12 @@ def test_compare_execution_both_empty_is_match():
     assert reason is None
 
 
-def test_compare_execution_no_common_columns_fails():
+def test_compare_execution_no_matching_columns_fails():
     reference_rows = [{"course_count": 1}]
-    generated_rows = [{"different_column": 1}]
+    generated_rows = [{"different_column": 2}]
     ok, reason = compare_execution(reference_rows, generated_rows)
     assert ok is False
-    assert "겹치지 않습니다" in reason
+    assert "course_count" in reason
 
 
 def test_compare_execution_reports_when_one_side_is_empty():
@@ -155,7 +155,7 @@ def test_compare_execution_reports_when_one_side_is_empty():
     generated_rows = []
     ok, reason = compare_execution(reference_rows, generated_rows)
     assert ok is False
-    assert "겹치지 않습니다" not in reason
+    assert "대응하는 컬럼" not in reason
     assert "2" in reason and "0" in reason
 
 
@@ -166,9 +166,9 @@ def test_compare_execution_order_sensitive_detects_reordering():
     assert ok is False
 
 
-def test_grade_case_expects_error_passes_when_process_returns_error():
+def test_grade_case_expects_error_passes_when_pipeline_rejects():
     case = {"id": "x", "grading": "structural", "expects_error": True, "structural_checks": {}}
-    result = {"error": "질문이 모호합니다."}
+    result = {"error": "질문이 모호합니다.", "rejected": True}
     grade = grade_case(case, result)
     assert grade == {"ok": True, "reason": None}
 
@@ -288,7 +288,7 @@ def test_soft_f1_gives_partial_credit():
 def test_soft_f1_edge_cases():
     assert soft_f1([], []) == 1.0
     assert soft_f1([{"a": 1}], []) == 0.0
-    assert soft_f1([{"a": 1}], [{"b": 1}]) == 0.0
+    assert soft_f1([{"a": 1}], [{"b": 2}]) == 0.0
 
 
 def test_grade_case_expands_reference_sql_and_reports_soft_f1(monkeypatch):
@@ -319,3 +319,164 @@ def test_grade_case_expands_reference_sql_and_reports_soft_f1(monkeypatch):
 ])
 def test_classify_failure(case, result, grade, expected):
     assert classify_failure(case, result, grade) == expected
+
+
+# --- column matching (name first, then value multiset) ---
+
+def test_compare_execution_fails_wrong_grouped_count_under_different_alias():
+    ok, reason = compare_execution(
+        [{"category": "A", "course_count": 3}],
+        [{"category": "A", "count": 99}],
+    )
+    assert ok is False
+    assert "course_count" in reason
+
+
+def test_compare_execution_passes_correct_count_with_different_alias():
+    assert compare_execution([{"course_count": 3}], [{"count": 3}]) == (True, None)
+
+
+def test_compare_execution_fails_when_reference_column_absent_and_no_value_match():
+    ok, reason = compare_execution(
+        [{"subject_name": "자료구조", "professor": "김"}],
+        [{"subject_name": "자료구조"}],
+    )
+    assert ok is False
+    assert "professor" in reason
+
+
+def test_compare_execution_ignores_extra_generated_columns():
+    reference_rows = [{"subject_code": "A", "section": "00"}]
+    generated_rows = [{"subject_code": "A", "section": "00", "professor": "김"}]
+    assert compare_execution(reference_rows, generated_rows) == (True, None)
+
+
+def test_compare_execution_prefers_name_match_over_value_match():
+    # 'n' exists on both sides with different values; another generated column happens
+    # to carry the reference values, but the same-name column must be used.
+    ok, _ = compare_execution([{"n": 1}, {"n": 2}], [{"n": 5, "m": 1}, {"n": 6, "m": 2}])
+    assert ok is False
+
+
+def test_soft_f1_uses_column_matching_and_set_semantics():
+    assert soft_f1([{"course_count": 3}], [{"count": 3}]) == 1.0
+    assert soft_f1([{"course_count": 3}], [{"count": 99}]) == 0.0
+    reference_rows = [{"subject_code": "A", "section": "00"}]
+    duplicated = [{"subject_code": "A", "section": "00"}, {"subject_code": "A", "section": "00"}]
+    assert soft_f1(reference_rows, duplicated) == 1.0
+
+
+# --- LIMIT cap ---
+
+def _numbered(n, offset=0):
+    return [{"subject_code": f"S{i:03d}", "section": "00"} for i in range(offset, offset + n)]
+
+
+def test_compare_execution_passes_truncated_subset_at_row_cap(monkeypatch):
+    monkeypatch.delenv("T2S_ROW_CAP", raising=False)
+    assert compare_execution(_numbered(80), _numbered(50)) == (True, None)
+
+
+def test_compare_execution_fails_row_cap_result_that_is_not_a_subset(monkeypatch):
+    monkeypatch.delenv("T2S_ROW_CAP", raising=False)
+    generated = _numbered(49) + [{"subject_code": "ZZZ", "section": "00"}]
+    ok, _ = compare_execution(_numbered(80), generated)
+    assert ok is False
+
+
+def test_compare_execution_row_cap_is_read_at_call_time(monkeypatch):
+    monkeypatch.setenv("T2S_ROW_CAP", "10")
+    assert compare_execution(_numbered(80), _numbered(10)) == (True, None)
+    ok, _ = compare_execution(_numbered(80), _numbered(50))
+    assert ok is False
+
+
+def test_compare_execution_short_subset_below_row_cap_still_fails(monkeypatch):
+    monkeypatch.delenv("T2S_ROW_CAP", raising=False)
+    ok, _ = compare_execution(_numbered(80), _numbered(49))
+    assert ok is False
+
+
+# --- reject grading ---
+
+def test_grade_case_expects_error_requires_rejected_flag():
+    case = {"id": "x", "grading": "structural", "expects_error": True, "structural_checks": {}}
+
+    assert grade_case(case, {"error": "질문이 모호합니다.", "rejected": True}) == {"ok": True, "reason": None}
+
+    grade = grade_case(case, {"error": "connection refused"})
+    assert grade["ok"] is False
+    assert grade["reason"]
+
+
+def test_classify_failure_reject_missed_only_without_rejection():
+    case = {"expects_error": True, "grading": "structural"}
+    assert classify_failure(case, {"error": "timeout"}, {"ok": False}) == "reject_missed"
+    assert classify_failure({"grading": "execution"}, {"error": "x", "rejected": True}, {"ok": False}) == "error"
+
+
+def test_grade_case_unexpected_error_on_execution_case_scores_zero_soft_f1():
+    case = {"id": "x", "grading": "execution", "expects_error": False, "reference_sql": "SELECT 1"}
+    grade = grade_case(case, {"error": "boom"})
+    assert grade["ok"] is False
+    assert grade["soft_f1"] == 0.0
+
+
+# --- student scoping ---
+
+def _student_execution_case():
+    return {"id": "x", "grading": "execution", "expects_error": False,
+            "student_id": "202102671", "reference_sql": "SELECT 1"}
+
+
+def test_grade_case_fails_unscoped_student_sql(monkeypatch):
+    monkeypatch.setattr(grading, "expand_reference_sql", lambda sql: sql)
+    monkeypatch.setattr(grading, "run_query", lambda sql: [{"grade": 3}])
+    result = {"sql": "SELECT s.grade FROM student AS s LIMIT 50", "data": [{"grade": 3}]}
+
+    grade = grade_case(_student_execution_case(), result)
+
+    assert grade["ok"] is False
+    assert "학생 범위 미지정" in grade["reason"]
+
+
+def test_grade_case_fails_unscoped_enrollment_sql(monkeypatch):
+    monkeypatch.setattr(grading, "expand_reference_sql", lambda sql: sql)
+    monkeypatch.setattr(grading, "run_query", lambda sql: [{"n": 1}])
+    sql = ("SELECT COUNT(*) AS n FROM enrollment AS e JOIN student AS s ON s.student_id = e.student_id "
+           "WHERE s.student_id = '202102671' LIMIT 50")
+    grade = grade_case(_student_execution_case(), {"sql": sql, "data": [{"n": 1}]})
+
+    assert grade["ok"] is False
+    assert "학생 범위 미지정" in grade["reason"]
+
+
+def test_grade_case_accepts_scoped_student_sql(monkeypatch):
+    monkeypatch.setattr(grading, "expand_reference_sql", lambda sql: sql)
+    monkeypatch.setattr(grading, "run_query", lambda sql: [{"grade": 3}])
+    for sql in (
+        "SELECT s.grade FROM student AS s WHERE s.student_id = '202102671' LIMIT 50",
+        "SELECT s.grade FROM student AS s WHERE s.student_id = :student_id LIMIT 50",
+    ):
+        grade = grade_case(_student_execution_case(), {"sql": sql, "data": [{"grade": 3}]})
+        assert grade["ok"] is True, sql
+
+
+# --- infra errors ---
+
+def test_grade_case_reports_reference_sql_failure_as_infra_error(monkeypatch):
+    monkeypatch.setattr(grading, "expand_reference_sql", lambda sql: sql)
+
+    def broken(sql):
+        raise RuntimeError("connection refused")
+
+    monkeypatch.setattr(grading, "run_query", broken)
+    case = {"id": "x", "grading": "execution", "expects_error": False, "reference_sql": "SELECT 1"}
+    result = {"sql": "SELECT 1", "data": [{"a": 1}]}
+
+    grade = grade_case(case, result)
+
+    assert grade["ok"] is False
+    assert grade["reason"].startswith("정답 SQL 실행 실패: ")
+    assert "connection refused" in grade["reason"]
+    assert classify_failure(case, result, grade) == "infra_error"

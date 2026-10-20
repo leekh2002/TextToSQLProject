@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+import os
 import re
 from collections import Counter
 
 from ..validate import (
+    STUDENT_SCOPED_TABLES,
     extract_table_aliases,
     extract_table_references,
     has_scoped_student_filter,
@@ -36,6 +38,52 @@ def _missing_identity_columns(reference_rows: list[dict], generated_rows: list[d
     ]
 
 
+def row_cap() -> int:
+    """Row limit the pipeline applies to generated SQL (read at call time)."""
+    return int(os.getenv("T2S_ROW_CAP", "50"))
+
+
+def _column_values(rows: list[dict], column: str) -> Counter:
+    return Counter(row.get(column) for row in rows)
+
+
+def match_columns(
+    reference_rows: list[dict],
+    generated_rows: list[dict],
+) -> tuple[list[tuple[str, str]], list[str]]:
+    """Pair each reference column with a generated column.
+
+    A generated column with the same name wins; otherwise an unmatched generated column whose
+    value multiset equals the reference column's is used (so `COUNT(*) AS count` can stand in for
+    `AS course_count`). Returns (pairs, unmatched reference columns). Extra generated columns are ignored.
+    """
+    reference_columns = list(reference_rows[0].keys())
+    generated_columns = list(generated_rows[0].keys())
+    matched: dict[str, str] = {}
+    used: set[str] = set()
+
+    for column in reference_columns:
+        if column in generated_columns:
+            matched[column] = column
+            used.add(column)
+
+    for column in reference_columns:
+        if column in matched:
+            continue
+        reference_values = _column_values(reference_rows, column)
+        for candidate in generated_columns:
+            if candidate in used:
+                continue
+            if _column_values(generated_rows, candidate) == reference_values:
+                matched[column] = candidate
+                used.add(candidate)
+                break
+
+    pairs = [(column, matched[column]) for column in reference_columns if column in matched]
+    unmatched = [column for column in reference_columns if column not in matched]
+    return pairs, unmatched
+
+
 def compare_execution(
     reference_rows: list[dict],
     generated_rows: list[dict],
@@ -53,16 +101,15 @@ def compare_execution(
     if missing_identity:
         return False, f"생성 결과에 식별 컬럼이 없습니다: {', '.join(missing_identity)}"
 
-    columns = common_columns(reference_rows, generated_rows)
-    if not columns:
-        reference_cols = sorted(reference_rows[0].keys()) if reference_rows else []
-        generated_cols = sorted(generated_rows[0].keys()) if generated_rows else []
+    pairs, unmatched = match_columns(reference_rows, generated_rows)
+    if unmatched:
         return False, (
-            f"컬럼이 겹치지 않습니다: reference={reference_cols}, generated={generated_cols}"
+            f"생성 결과에서 대응하는 컬럼을 찾지 못한 정답 컬럼: {unmatched} "
+            f"(generated={sorted(generated_rows[0].keys())})"
         )
 
-    reference_projection = project_rows(reference_rows, columns)
-    generated_projection = project_rows(generated_rows, columns)
+    reference_projection = project_rows(reference_rows, [ref for ref, _ in pairs])
+    generated_projection = project_rows(generated_rows, [gen for _, gen in pairs])
 
     if order_sensitive:
         ok = reference_projection == generated_projection
@@ -71,6 +118,17 @@ def compare_execution(
 
     if ok:
         return True, None
+
+    # Truncated-but-correct: the pipeline caps generated SQL at row_cap() rows, so a result of
+    # exactly that many rows, all of which belong to the reference (as a prefix when order
+    # matters), is a pass.
+    cap = row_cap()
+    if len(generated_rows) == cap:
+        if order_sensitive:
+            if generated_projection == reference_projection[:cap]:
+                return True, None
+        elif set(generated_projection) <= set(reference_projection):
+            return True, None
 
     reference_set = set(reference_projection)
     generated_set = set(generated_projection)
@@ -149,21 +207,24 @@ def _to_grade_dict(outcome: tuple[bool, str | None]) -> dict:
 
 
 def soft_f1(reference_rows: list[dict], generated_rows: list[dict]) -> float:
-    """Row-level F1 over the common columns (a simplified BIRD Soft-F1)."""
+    """Row-level F1 over matched columns with set semantics (a simplified BIRD Soft-F1).
+
+    Uses the same column matching and row deduplication as compare_execution.
+    """
     if not reference_rows and not generated_rows:
         return 1.0
     if not reference_rows or not generated_rows:
         return 0.0
-    columns = common_columns(reference_rows, generated_rows)
-    if not columns:
+    pairs, _ = match_columns(reference_rows, generated_rows)
+    if not pairs:
         return 0.0
-    reference = Counter(project_rows(reference_rows, columns))
-    generated = Counter(project_rows(generated_rows, columns))
-    true_positive = sum((reference & generated).values())
+    reference = set(project_rows(reference_rows, [ref for ref, _ in pairs]))
+    generated = set(project_rows(generated_rows, [gen for _, gen in pairs]))
+    true_positive = len(reference & generated)
     if true_positive == 0:
         return 0.0
-    precision = true_positive / sum(generated.values())
-    recall = true_positive / sum(reference.values())
+    precision = true_positive / len(generated)
+    recall = true_positive / len(reference)
     return round(2 * precision * recall / (precision + recall), 4)
 
 
@@ -174,10 +235,16 @@ def expand_reference_sql(sql: str) -> str:
     return expand_schedule_filtered_course_rows(sql)
 
 
+REFERENCE_FAILURE_PREFIX = "정답 SQL 실행 실패: "
+UNSCOPED_STUDENT_REASON = "학생 범위 미지정"
+
+
 def classify_failure(case: dict, result: dict, grade: dict) -> str:
     if grade.get("ok"):
         return "ok"
-    if case.get("expects_error"):
+    if (grade.get("reason") or "").startswith(REFERENCE_FAILURE_PREFIX):
+        return "infra_error"
+    if case.get("expects_error") and not (isinstance(result, dict) and result.get("rejected") is True):
         return "reject_missed"
     if isinstance(result, dict) and result.get("error"):
         return "error"
@@ -188,16 +255,42 @@ def classify_failure(case: dict, result: dict, grade: dict) -> str:
     return "result_mismatch"
 
 
+def check_student_scope(sql: str, student_id: str | None) -> tuple[bool, str | None]:
+    """Every student/enrollment table the SQL references must be pinned to the case's student."""
+    referenced = extract_table_references(sql)
+    unscoped = [
+        table for table in sorted(STUDENT_SCOPED_TABLES & referenced)
+        if not has_scoped_student_filter(sql, extract_table_aliases(sql, table), student_id)
+    ]
+    if unscoped:
+        return False, f"{UNSCOPED_STUDENT_REASON}: {', '.join(unscoped)}"
+    return True, None
+
+
+def _execution_failure(case: dict, reason: str) -> dict:
+    grade = {"ok": False, "reason": reason}
+    if case.get("grading") == "execution":
+        grade["soft_f1"] = 0.0
+    return grade
+
+
 def grade_case(case: dict, result: dict) -> dict:
     if case.get("expects_error"):
-        if isinstance(result, dict) and result.get("error"):
+        if isinstance(result, dict) and result.get("rejected") is True:
             return {"ok": True, "reason": None}
+        if isinstance(result, dict) and result.get("error"):
+            return {"ok": False, "reason": f"거부가 예상되었지만 거부가 아닌 오류가 발생했습니다: {result['error']}"}
         return {"ok": False, "reason": "오류가 예상되었지만 SQL이 정상 생성되었습니다."}
 
     if isinstance(result, dict) and result.get("error"):
-        return {"ok": False, "reason": f"예상치 못한 오류: {result['error']}"}
+        return _execution_failure(case, f"예상치 못한 오류: {result['error']}")
 
-    sql = result.get("sql", "")
+    sql = result.get("sql") or ""
+
+    if case.get("student_id"):
+        ok, reason = check_student_scope(sql, case["student_id"])
+        if not ok:
+            return _execution_failure(case, reason)
 
     if case["grading"] == "structural":
         return _to_grade_dict(
@@ -205,7 +298,10 @@ def grade_case(case: dict, result: dict) -> dict:
         )
 
     if case["grading"] == "execution":
-        reference_rows = run_query(expand_reference_sql(case["reference_sql"]))
+        try:
+            reference_rows = run_query(expand_reference_sql(case["reference_sql"]))
+        except Exception as exc:
+            return {"ok": False, "reason": f"{REFERENCE_FAILURE_PREFIX}{exc}"}
         generated_rows = result.get("data", [])
         ok, reason = compare_execution(reference_rows, generated_rows, case.get("order_sensitive", False))
         return {"ok": ok, "reason": reason, "soft_f1": soft_f1(reference_rows, generated_rows)}
