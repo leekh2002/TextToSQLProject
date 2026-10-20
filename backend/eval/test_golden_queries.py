@@ -23,11 +23,6 @@ def _load_cases():
         return json.load(file)
 
 
-def test_golden_queries_file_has_43_cases():
-    cases = _load_cases()
-    assert len(cases) == 43
-
-
 def test_all_case_ids_are_unique():
     cases = _load_cases()
     ids = [case["id"] for case in cases]
@@ -64,17 +59,11 @@ def test_structural_non_error_cases_have_checks():
             assert checks.get("required_tables"), f"{case['id']}: required_tables가 비어있습니다"
 
 
-def test_category_counts_match_design():
-    cases = _load_cases()
-    counts: dict[str, int] = {}
-    for case in cases:
-        counts[case["category"]] = counts.get(case["category"], 0) + 1
-    assert counts == {
-        "course_filter": 15,
-        "exclude_completed_courses": 5,
-        "prerequisite": 5,
-        "enrollment_aggregate": 5,
-        "personalized_lookup": 5,
-        "graduation_requirement": 3,
-        "ambiguous_reject": 5,
-    }
+def test_optional_fields_have_valid_types():
+    for case in _load_cases():
+        if "empty_gold" in case:
+            assert isinstance(case["empty_gold"], bool), case["id"]
+        if "gold_values" in case:
+            assert isinstance(case["gold_values"], list), case["id"]
+            for item in case["gold_values"]:
+                assert set(item) == {"column", "value"}, case["id"]

@@ -231,6 +231,7 @@
     "student_id": "202102671",
     "exclude_completed_courses": true,
     "structural_checks": null,
+    "empty_gold": true,
     "notes": "제외 전 16행 -> 제외 후 0행(학생이 목요일 CS 과목을 전부 수강함). 결과가 0행인 것 자체가 정답이며, 다른 exclude 케이스들이 0이 아닌 결과를 가지므로 채점기의 '항상 0행이면 통과' 편향 위험은 낮음."
   },
   {
