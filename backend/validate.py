@@ -36,6 +36,38 @@ ALLOWED_STUDENT_ID_PLACEHOLDERS = {
 }
 STUDENT_SCOPED_TABLES = {"student", "enrollment"}
 
+# process() returns this when the model answers UNKNOWN.
+AMBIGUOUS_QUERY_ERROR = "질문이 모호합니다."
+
+# Safety rejections raised by validate_generated_sql. The reasons below are inline literals in this
+# module, so the patterns are anchored on their fixed text and built from the constants defined
+# above; test_rejection_patterns_track_validate_reasons probes this module so a reworded reason
+# fails the tests. "FROM 또는 JOIN 절이 필요합니다." and "기본 LIMIT가 필요합니다." are malformed-SQL
+# errors, not refusals, and are deliberately absent.
+SAFETY_REJECTION_PATTERNS = (
+    re.compile(r"^SELECT 문만 허용됩니다\.$"),
+    re.compile(r"^여러 문장은 허용되지 않습니다\.$"),
+    re.compile(rf"^금지 키워드 포함: (?:{'|'.join(map(re.escape, BLOCKED_KEYWORDS))})$"),
+    re.compile(r"^허용되지 않은 테이블 참조: "),
+    re.compile(r"^student에서 허용되지 않은 컬럼 참조: "),
+    re.compile(r"^student 테이블은 필터 조건으로만 사용할 수 있습니다\.$"),
+    re.compile(
+        rf"^(?:{'|'.join(map(re.escape, sorted(STUDENT_SCOPED_TABLES)))})"
+        r"를 사용할 때는 요청된 학생의 학번으로 범위를 고정해야 합니다\.$"
+    ),
+    re.compile(
+        rf"^(?:{'|'.join(map(re.escape, sorted(STUDENT_SCOPED_TABLES)))})"
+        r"에 열 별칭 목록을 지정할 수 없습니다\.$"
+    ),
+)
+
+
+def is_safety_rejection(message) -> bool:
+    if not isinstance(message, str):
+        return False
+    message = message.strip()
+    return message == AMBIGUOUS_QUERY_ERROR or any(p.search(message) for p in SAFETY_REJECTION_PATTERNS)
+
 UNPARSEABLE_REASON = "SQL을 해석할 수 없습니다."
 ALIAS_COLUMN_LIST_REASON = "{table}에 열 별칭 목록을 지정할 수 없습니다."
 
