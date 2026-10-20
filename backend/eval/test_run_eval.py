@@ -1,6 +1,8 @@
 import json
 from pathlib import Path
 
+import pytest
+
 from backend.eval import run_eval
 
 
@@ -16,18 +18,16 @@ def test_run_case_calls_process_and_grades(monkeypatch):
 
     def fake_process(query, exclude_completed_courses=False, student_id=None):
         captured["args"] = (query, exclude_completed_courses, student_id)
-        return {"sql": "SELECT 1 LIMIT 50", "data": []}
-
-    def fake_grade_case(case, result):
-        return {"ok": True, "reason": None}
+        return {"sql": "SELECT 1 LIMIT 50", "data": [{"a": 1}]}
 
     monkeypatch.setattr(run_eval, "process", fake_process)
-    monkeypatch.setattr(run_eval, "grade_case", fake_grade_case)
+    monkeypatch.setattr(run_eval, "grade_case", lambda case, result: {"ok": True, "reason": None, "soft_f1": 1.0})
 
     case = {
         "id": "x",
         "category": "course_filter",
         "query": "테스트 질의",
+        "grading": "execution",
         "student_id": "202102671",
         "exclude_completed_courses": True,
         "reference_sql": None,
@@ -35,6 +35,8 @@ def test_run_case_calls_process_and_grades(monkeypatch):
     record = run_eval.run_case(case)
 
     assert captured["args"] == ("테스트 질의", True, "202102671")
+    latency = record.pop("latency_ms")
+    assert isinstance(latency, int) and latency >= 0
     assert record == {
         "id": "x",
         "category": "course_filter",
@@ -44,6 +46,9 @@ def test_run_case_calls_process_and_grades(monkeypatch):
         "sql": "SELECT 1 LIMIT 50",
         "reference_sql": None,
         "error": None,
+        "failure_type": "ok",
+        "soft_f1": 1.0,
+        "empty_gold": False,
     }
 
 
@@ -165,3 +170,85 @@ def test_main_filters_by_category(monkeypatch, tmp_path):
 
     run_eval.main(["--filter", "keep", "--report-dir", str(tmp_path / "reports")])
     assert seen_ids == ["a"]
+
+
+def test_run_case_passes_gold_values_only_in_decoupled_mode(monkeypatch):
+    seen = []
+
+    def pipeline(query, *, exclude_completed_courses=False, student_id=None, value_hints=None):
+        seen.append(value_hints)
+        return {"sql": "SELECT 1", "data": []}
+
+    monkeypatch.setattr(run_eval, "grade_case", lambda case, result: {"ok": False, "reason": "x"})
+    gold = [{"column": "dept_name", "value": "공과대학 컴퓨터융합학부"}]
+    case = {"id": "x", "category": "c", "query": "q", "grading": "execution", "gold_values": gold}
+
+    run_eval.run_case(case, pipeline=pipeline)
+    run_eval.run_case(case, pipeline=pipeline, decoupled=True)
+
+    assert seen == [None, gold]
+
+
+def test_run_case_records_pipeline_exception_as_failure():
+    def broken(query, **kwargs):
+        raise RuntimeError("ollama down")
+
+    record = run_eval.run_case({"id": "x", "category": "c", "query": "q", "grading": "execution"}, pipeline=broken)
+
+    assert record["ok"] is False
+    assert record["failure_type"] == "exception"
+    assert "ollama down" in record["reason"]
+
+
+def test_percentile_nearest_rank():
+    values = [100, 200, 300, 400, 500, 600, 700, 800, 900, 1000]
+
+    assert run_eval.percentile(values, 50) == 500
+    assert run_eval.percentile(values, 95) == 1000
+    assert run_eval.percentile([], 50) is None
+
+
+def _record(category, ok, failure_type="ok", latency=100, f1=None, empty=False):
+    return {"category": category, "ok": ok, "failure_type": failure_type,
+            "latency_ms": latency, "soft_f1": f1, "empty_gold": empty}
+
+
+def test_summarize_separates_empty_gold_and_reports_extras():
+    records = [
+        _record("a", True, latency=100, f1=1.0),
+        _record("a", False, "result_mismatch", latency=300, f1=0.5),
+        _record("b", True, latency=200),
+        _record("b", True, latency=900, empty=True),
+    ]
+
+    summary = run_eval.summarize(records)
+
+    assert summary["overall"] == {"passed": 2, "total": 3, "accuracy": 66.7}
+    assert summary["by_category"]["b"] == {"passed": 1, "total": 1, "accuracy": 100.0}
+    assert summary["empty_gold"] == {"passed": 1, "total": 1}
+    assert summary["failure_types"] == {"ok": 3, "result_mismatch": 1}
+    assert summary["latency_ms"] == {"p50": 200, "p95": 900}
+    assert summary["mean_soft_f1"] == 0.75
+
+
+def test_collect_config_snapshots_t2s_environment(monkeypatch):
+    monkeypatch.setenv("T2S_CANDIDATES", "5")
+    monkeypatch.setenv("OLLAMA_MODEL", "m")
+
+    config = run_eval.collect_config("v1", True)
+
+    assert config["pipeline"] == "v1"
+    assert config["decoupled"] is True
+    assert config["env"]["T2S_CANDIDATES"] == "5"
+    assert config["env"]["OLLAMA_MODEL"] == "m"
+
+
+def test_write_report_file_includes_config(tmp_path):
+    path = run_eval.write_report_file({"overall": {}}, [], tmp_path, config={"pipeline": "v1"})
+
+    assert json.loads(path.read_text(encoding="utf-8"))["config"] == {"pipeline": "v1"}
+
+
+def test_main_rejects_unknown_pipeline(capsys):
+    with pytest.raises(SystemExit):
+        run_eval.main(["--pipeline", "nope"])
