@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+from collections import Counter
 
 from ..validate import (
     extract_table_aliases,
@@ -23,6 +24,18 @@ def project_rows(rows: list[dict], columns: list[str]) -> list[tuple]:
     return [tuple(row.get(column) for column in columns) for row in rows]
 
 
+IDENTITY_COLUMNS = ("subject_code", "section")
+
+
+def _missing_identity_columns(reference_rows: list[dict], generated_rows: list[dict]) -> list[str]:
+    reference_keys = set(reference_rows[0].keys())
+    generated_keys = set(generated_rows[0].keys())
+    return [
+        column for column in IDENTITY_COLUMNS
+        if column in reference_keys and column not in generated_keys
+    ]
+
+
 def compare_execution(
     reference_rows: list[dict],
     generated_rows: list[dict],
@@ -35,6 +48,10 @@ def compare_execution(
         return False, (
             f"reference={len(reference_rows)}행 vs generated={len(generated_rows)}행 (한쪽이 0행)"
         )
+
+    missing_identity = _missing_identity_columns(reference_rows, generated_rows)
+    if missing_identity:
+        return False, f"생성 결과에 식별 컬럼이 없습니다: {', '.join(missing_identity)}"
 
     columns = common_columns(reference_rows, generated_rows)
     if not columns:
@@ -131,6 +148,46 @@ def _to_grade_dict(outcome: tuple[bool, str | None]) -> dict:
     return {"ok": ok, "reason": reason}
 
 
+def soft_f1(reference_rows: list[dict], generated_rows: list[dict]) -> float:
+    """Row-level F1 over the common columns (a simplified BIRD Soft-F1)."""
+    if not reference_rows and not generated_rows:
+        return 1.0
+    if not reference_rows or not generated_rows:
+        return 0.0
+    columns = common_columns(reference_rows, generated_rows)
+    if not columns:
+        return 0.0
+    reference = Counter(project_rows(reference_rows, columns))
+    generated = Counter(project_rows(generated_rows, columns))
+    true_positive = sum((reference & generated).values())
+    if true_positive == 0:
+        return 0.0
+    precision = true_positive / sum(generated.values())
+    recall = true_positive / sum(reference.values())
+    return round(2 * precision * recall / (precision + recall), 4)
+
+
+def expand_reference_sql(sql: str) -> str:
+    # Imported lazily: process.py pulls in the NER model and the vector cache.
+    from ..process import expand_schedule_filtered_course_rows
+
+    return expand_schedule_filtered_course_rows(sql)
+
+
+def classify_failure(case: dict, result: dict, grade: dict) -> str:
+    if grade.get("ok"):
+        return "ok"
+    if case.get("expects_error"):
+        return "reject_missed"
+    if isinstance(result, dict) and result.get("error"):
+        return "error"
+    if case.get("grading") == "structural":
+        return "structural_mismatch"
+    if not (result or {}).get("data"):
+        return "empty_result"
+    return "result_mismatch"
+
+
 def grade_case(case: dict, result: dict) -> dict:
     if case.get("expects_error"):
         if isinstance(result, dict) and result.get("error"):
@@ -148,10 +205,9 @@ def grade_case(case: dict, result: dict) -> dict:
         )
 
     if case["grading"] == "execution":
-        reference_rows = run_query(case["reference_sql"])
+        reference_rows = run_query(expand_reference_sql(case["reference_sql"]))
         generated_rows = result.get("data", [])
-        return _to_grade_dict(
-            compare_execution(reference_rows, generated_rows, case.get("order_sensitive", False))
-        )
+        ok, reason = compare_execution(reference_rows, generated_rows, case.get("order_sensitive", False))
+        return {"ok": ok, "reason": reason, "soft_f1": soft_f1(reference_rows, generated_rows)}
 
     raise ValueError(f"알 수 없는 grading 값: {case['grading']}")

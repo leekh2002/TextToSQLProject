@@ -1,13 +1,17 @@
+import pytest
+
 from backend.eval import grading
 from backend.eval.grading import (
     check_required_columns,
     check_required_tables,
     check_structural,
     check_student_scoped,
+    classify_failure,
     common_columns,
     compare_execution,
     grade_case,
     project_rows,
+    soft_f1,
 )
 
 
@@ -139,8 +143,8 @@ def test_compare_execution_both_empty_is_match():
 
 
 def test_compare_execution_no_common_columns_fails():
-    reference_rows = [{"subject_code": "A"}]
-    generated_rows = [{"different_column": "A"}]
+    reference_rows = [{"course_count": 1}]
+    generated_rows = [{"different_column": 1}]
     ok, reason = compare_execution(reference_rows, generated_rows)
     assert ok is False
     assert "겹치지 않습니다" in reason
@@ -198,6 +202,8 @@ def test_grade_case_structural_delegates_to_check_structural():
 
 
 def test_grade_case_execution_uses_run_query_for_reference_sql(monkeypatch):
+    monkeypatch.setattr(grading, "expand_reference_sql", lambda sql: sql)
+
     def fake_run_query(sql, params=None):
         assert sql == "SELECT subject_code FROM v_course_info WHERE dept_name LIKE '%컴퓨터융합학부%'"
         return [{"subject_code": "1214-3033"}]
@@ -213,7 +219,7 @@ def test_grade_case_execution_uses_run_query_for_reference_sql(monkeypatch):
     }
     result = {"sql": "SELECT subject_code FROM v_course_info WHERE dept_name = '컴퓨터융합학부'", "data": [{"subject_code": "1214-3033"}]}
     grade = grade_case(case, result)
-    assert grade == {"ok": True, "reason": None}
+    assert grade == {"ok": True, "reason": None, "soft_f1": 1.0}
 
 
 def test_grade_case_handles_null_structural_checks_without_crashing():
@@ -237,3 +243,79 @@ def test_grade_case_unknown_grading_mode_raises():
         assert False, "ValueError를 기대했지만 예외가 발생하지 않았습니다."
     except ValueError:
         pass
+
+
+def test_compare_execution_requires_identity_columns_present_in_reference():
+    reference_rows = [{"subject_code": "A", "section": "00", "subject_name": "자료구조"}]
+    generated_rows = [{"subject_name": "자료구조"}]
+
+    ok, reason = compare_execution(reference_rows, generated_rows)
+
+    assert ok is False
+    assert "subject_code" in reason and "section" in reason
+
+
+def test_compare_execution_compares_on_identity_columns_when_present():
+    reference_rows = [
+        {"subject_code": "A", "section": "00", "subject_name": "자료구조"},
+        {"subject_code": "B", "section": "00", "subject_name": "자료구조"},
+    ]
+    generated_rows = [{"subject_code": "A", "section": "00", "subject_name": "자료구조"}]
+
+    ok, _ = compare_execution(reference_rows, generated_rows)
+
+    assert ok is False
+
+
+def test_compare_execution_without_identity_columns_keeps_intersection_behaviour():
+    assert compare_execution([{"course_count": 3}], [{"course_count": 3, "x": 1}]) == (True, None)
+
+
+def test_soft_f1_is_one_for_equal_sets_and_zero_for_disjoint():
+    rows = [{"subject_code": "A", "section": "00"}, {"subject_code": "B", "section": "00"}]
+
+    assert soft_f1(rows, list(reversed(rows))) == 1.0
+    assert soft_f1(rows, [{"subject_code": "C", "section": "00"}]) == 0.0
+
+
+def test_soft_f1_gives_partial_credit():
+    reference_rows = [{"subject_code": c, "section": "00"} for c in ("A", "B", "C", "D")]
+    generated_rows = [{"subject_code": c, "section": "00"} for c in ("A", "B")]
+
+    assert soft_f1(reference_rows, generated_rows) == 0.6667
+
+
+def test_soft_f1_edge_cases():
+    assert soft_f1([], []) == 1.0
+    assert soft_f1([{"a": 1}], []) == 0.0
+    assert soft_f1([{"a": 1}], [{"b": 1}]) == 0.0
+
+
+def test_grade_case_expands_reference_sql_and_reports_soft_f1(monkeypatch):
+    calls = []
+    monkeypatch.setattr(grading, "expand_reference_sql", lambda sql: sql + " /*expanded*/")
+
+    def fake_run_query(sql):
+        calls.append(sql)
+        return [{"subject_code": "A", "section": "00"}]
+
+    monkeypatch.setattr(grading, "run_query", fake_run_query)
+    case = {"id": "x", "grading": "execution", "reference_sql": "SELECT subject_code, section FROM v_course_info"}
+    result = {"sql": "SELECT 1", "data": [{"subject_code": "A", "section": "00"}]}
+
+    grade = grade_case(case, result)
+
+    assert calls == ["SELECT subject_code, section FROM v_course_info /*expanded*/"]
+    assert grade == {"ok": True, "reason": None, "soft_f1": 1.0}
+
+
+@pytest.mark.parametrize("case, result, grade, expected", [
+    ({"grading": "execution"}, {"data": [1]}, {"ok": True}, "ok"),
+    ({"expects_error": True, "grading": "structural"}, {"sql": "SELECT 1"}, {"ok": False}, "reject_missed"),
+    ({"grading": "execution"}, {"error": "UNKNOWN"}, {"ok": False}, "error"),
+    ({"grading": "structural"}, {"sql": "SELECT 1"}, {"ok": False}, "structural_mismatch"),
+    ({"grading": "execution"}, {"sql": "SELECT 1", "data": []}, {"ok": False}, "empty_result"),
+    ({"grading": "execution"}, {"sql": "SELECT 1", "data": [{"a": 1}]}, {"ok": False}, "result_mismatch"),
+])
+def test_classify_failure(case, result, grade, expected):
+    assert classify_failure(case, result, grade) == expected
