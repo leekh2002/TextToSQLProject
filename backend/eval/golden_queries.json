@@ -4062,7 +4062,7 @@
   {
     "id": "graduation_requirement_02",
     "category": "graduation_requirement",
-    "query": "경영학부 졸업 필수과목 알려줘",
+    "query": "컴퓨터융합학부 졸업하려면 들어야 하는 필수과목 알려줘",
     "grading": "structural",
     "reference_sql": null,
     "order_sensitive": false,
