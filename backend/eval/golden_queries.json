@@ -1623,7 +1623,7 @@
     "exclude_completed_courses": true,
     "structural_checks": null,
     "empty_gold": true,
-    "notes": "제외 전 16행 -> 제외 후 0행(학생이 목요일 CS 과목을 전부 수강함). 결과가 0행인 것 자체가 정답이며, 다른 exclude 케이스들이 0이 아닌 결과를 가지므로 채점기의 '항상 0행이면 통과' 편향 위험은 낮음."
+    "notes": "제외 전 28행 -> 제외 후 0행(학생이 목요일 CS 과목을 전부 수강함). 결과가 0행인 것 자체가 정답이며, 다른 exclude 케이스들이 0이 아닌 결과를 가지므로 채점기의 '항상 0행이면 통과' 편향 위험은 낮음."
   },
   {
     "id": "exclude_completed_courses_04",
@@ -1738,42 +1738,23 @@
   {
     "id": "exclude_completed_courses_10",
     "category": "exclude_completed_courses",
-    "query": "컴퓨터융합학부 수요일 수업 중에 내가 안 들은 과목 알려줘",
+    "query": "인공지능학과 전공(심화) 과목 중에 월요일 수업 안 들은 것 알려줘",
     "grading": "execution",
-    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%컴퓨터융합학부%' AND day_of_week = '수' AND NOT EXISTS (SELECT 1 FROM enrollment AS e WHERE e.student_id = '202102671' AND e.subject_code = v_course_info.subject_code)",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%공과대학 인공지능학과%' AND category LIKE '%전공(심화)%' AND day_of_week = '월' AND NOT EXISTS (SELECT 1 FROM enrollment AS e WHERE e.student_id = '202102671' AND e.subject_code = v_course_info.subject_code)",
     "order_sensitive": false,
     "expects_error": false,
     "student_id": "202102671",
     "exclude_completed_courses": true,
     "structural_checks": null,
-    "notes": "제외 전 34행 -> 제외 후 8행.",
+    "notes": "제외 전 6행 -> 제외 후 4행.",
     "gold_values": [
       {
         "column": "dept_name",
-        "value": "공과대학 컴퓨터융합학부"
+        "value": "공과대학 인공지능학과"
       },
       {
-        "column": "day_of_week",
-        "value": "수"
-      }
-    ]
-  },
-  {
-    "id": "exclude_completed_courses_11",
-    "category": "exclude_completed_courses",
-    "query": "컴퓨터융합학부 월요일 수업 중에 아직 안 들은 것 보여줘",
-    "grading": "execution",
-    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%컴퓨터융합학부%' AND day_of_week = '월' AND NOT EXISTS (SELECT 1 FROM enrollment AS e WHERE e.student_id = '202102671' AND e.subject_code = v_course_info.subject_code)",
-    "order_sensitive": false,
-    "expects_error": false,
-    "student_id": "202102671",
-    "exclude_completed_courses": true,
-    "structural_checks": null,
-    "notes": "제외 전 29행 -> 제외 후 8행.",
-    "gold_values": [
-      {
-        "column": "dept_name",
-        "value": "공과대학 컴퓨터융합학부"
+        "column": "category",
+        "value": "전공(심화)"
       },
       {
         "column": "day_of_week",
@@ -1782,34 +1763,57 @@
     ]
   },
   {
-    "id": "exclude_completed_courses_12",
+    "id": "exclude_completed_courses_11",
     "category": "exclude_completed_courses",
-    "query": "컴퓨터융합학부 화요일 과목 중에 이미 들은 건 제외해줘",
+    "query": "인공지능학과 3학년 전공(심화) 중에 내가 안 들은 과목 보여줘",
     "grading": "execution",
-    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%컴퓨터융합학부%' AND day_of_week = '화' AND NOT EXISTS (SELECT 1 FROM enrollment AS e WHERE e.student_id = '202102671' AND e.subject_code = v_course_info.subject_code)",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%공과대학 인공지능학과%' AND target_year = 3 AND category LIKE '%전공(심화)%' AND NOT EXISTS (SELECT 1 FROM enrollment AS e WHERE e.student_id = '202102671' AND e.subject_code = v_course_info.subject_code)",
     "order_sensitive": false,
     "expects_error": false,
     "student_id": "202102671",
     "exclude_completed_courses": true,
     "structural_checks": null,
-    "notes": "제외 전 31행 -> 제외 후 10행.",
+    "notes": "제외 전 5행 -> 제외 후 2행.",
     "gold_values": [
       {
         "column": "dept_name",
-        "value": "공과대학 컴퓨터융합학부"
+        "value": "공과대학 인공지능학과"
+      },
+      {
+        "column": "category",
+        "value": "전공(심화)"
+      }
+    ]
+  },
+  {
+    "id": "exclude_completed_courses_12",
+    "category": "exclude_completed_courses",
+    "query": "전자공학과 월요일 수업 중에 아직 안 들은 거 알려줘",
+    "grading": "execution",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%공과대학 전자공학과%' AND day_of_week = '월' AND NOT EXISTS (SELECT 1 FROM enrollment AS e WHERE e.student_id = '202102671' AND e.subject_code = v_course_info.subject_code)",
+    "order_sensitive": false,
+    "expects_error": false,
+    "student_id": "202102671",
+    "exclude_completed_courses": true,
+    "structural_checks": null,
+    "notes": "제외 전 22행 -> 제외 후 14행.",
+    "gold_values": [
+      {
+        "column": "dept_name",
+        "value": "공과대학 전자공학과"
       },
       {
         "column": "day_of_week",
-        "value": "화"
+        "value": "월"
       }
     ]
   },
   {
     "id": "exclude_completed_courses_13",
     "category": "exclude_completed_courses",
-    "query": "컴퓨터융합학부 금요일 수업 중에 내가 수강한 건 빼고 알려줘",
+    "query": "컴퓨터융합학부 금요일 수업 중에 3학점짜리 안 들은 것만 알려줘",
     "grading": "execution",
-    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%컴퓨터융합학부%' AND day_of_week = '금' AND NOT EXISTS (SELECT 1 FROM enrollment AS e WHERE e.student_id = '202102671' AND e.subject_code = v_course_info.subject_code)",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%컴퓨터융합학부%' AND day_of_week = '금' AND credit_hours LIKE '3/%' AND NOT EXISTS (SELECT 1 FROM enrollment AS e WHERE e.student_id = '202102671' AND e.subject_code = v_course_info.subject_code)",
     "order_sensitive": false,
     "expects_error": false,
     "student_id": "202102671",
@@ -1830,19 +1834,23 @@
   {
     "id": "exclude_completed_courses_14",
     "category": "exclude_completed_courses",
-    "query": "컴퓨터융합학부 여석 있는 과목 중에 안 들은 것만 알려줘",
+    "query": "컴퓨터융합학부 여석 있는 금요일 수업 중에 안 들은 것 알려줘",
     "grading": "execution",
-    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%컴퓨터융합학부%' AND enrolled < capacity AND capacity > 0 AND NOT EXISTS (SELECT 1 FROM enrollment AS e WHERE e.student_id = '202102671' AND e.subject_code = v_course_info.subject_code)",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%컴퓨터융합학부%' AND enrolled < capacity AND capacity > 0 AND day_of_week = '금' AND NOT EXISTS (SELECT 1 FROM enrollment AS e WHERE e.student_id = '202102671' AND e.subject_code = v_course_info.subject_code)",
     "order_sensitive": false,
     "expects_error": false,
     "student_id": "202102671",
     "exclude_completed_courses": true,
     "structural_checks": null,
-    "notes": "제외 전 58행 -> 제외 후 9행.",
+    "notes": "제외 전 12행 -> 제외 후 2행.",
     "gold_values": [
       {
         "column": "dept_name",
         "value": "공과대학 컴퓨터융합학부"
+      },
+      {
+        "column": "day_of_week",
+        "value": "금"
       }
     ]
   },
@@ -1986,19 +1994,23 @@
   {
     "id": "exclude_completed_courses_22",
     "category": "exclude_completed_courses",
-    "query": "영어 과목 중에 안 들은 것만 보여줘",
+    "query": "정보통신융합학부 전공(기초) 과목 중에 안 들은 것만 보여줘",
     "grading": "execution",
-    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE subject_name LIKE '%영어%' AND NOT EXISTS (SELECT 1 FROM enrollment AS e WHERE e.student_id = '202102671' AND e.subject_code = v_course_info.subject_code)",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%공과대학 정보통신융합학부%' AND category LIKE '%전공(기초)%' AND NOT EXISTS (SELECT 1 FROM enrollment AS e WHERE e.student_id = '202102671' AND e.subject_code = v_course_info.subject_code)",
     "order_sensitive": false,
     "expects_error": false,
     "student_id": "202102671",
     "exclude_completed_courses": true,
     "structural_checks": null,
-    "notes": "제외 전 139행 -> 제외 후 137행.",
+    "notes": "제외 전 22행 -> 제외 후 15행.",
     "gold_values": [
       {
-        "column": "subject_name",
-        "value": "IT영어1"
+        "column": "dept_name",
+        "value": "공과대학 정보통신융합학부"
+      },
+      {
+        "column": "category",
+        "value": "전공(기초)"
       }
     ]
   },
@@ -2024,38 +2036,42 @@
   {
     "id": "exclude_completed_courses_24",
     "category": "exclude_completed_courses",
-    "query": "교양(소양필수) 과목 중에 아직 안 들은 것만 알려줘",
+    "query": "전자공학과 전공(기초) 과목 중에 아직 안 들은 것 알려줘",
     "grading": "execution",
-    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE category LIKE '%교양(소양필수)%' AND NOT EXISTS (SELECT 1 FROM enrollment AS e WHERE e.student_id = '202102671' AND e.subject_code = v_course_info.subject_code)",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%공과대학 전자공학과%' AND category LIKE '%전공(기초)%' AND NOT EXISTS (SELECT 1 FROM enrollment AS e WHERE e.student_id = '202102671' AND e.subject_code = v_course_info.subject_code)",
     "order_sensitive": false,
     "expects_error": false,
     "student_id": "202102671",
     "exclude_completed_courses": true,
     "structural_checks": null,
-    "notes": "제외 전 115행 -> 제외 후 112행.",
+    "notes": "제외 전 28행 -> 제외 후 17행.",
     "gold_values": [
       {
+        "column": "dept_name",
+        "value": "공과대학 전자공학과"
+      },
+      {
         "column": "category",
-        "value": "교양(소양필수)"
+        "value": "전공(기초)"
       }
     ]
   },
   {
     "id": "exclude_completed_courses_25",
     "category": "exclude_completed_courses",
-    "query": "컴퓨터융합학부 전공(기초) 과목 중에 내가 수강 안 한 것 보여줘",
+    "query": "인공지능학과 전공(기초) 과목 중에 내가 수강 안 한 것 보여줘",
     "grading": "execution",
-    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%컴퓨터융합학부%' AND category LIKE '%전공(기초)%' AND NOT EXISTS (SELECT 1 FROM enrollment AS e WHERE e.student_id = '202102671' AND e.subject_code = v_course_info.subject_code)",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%공과대학 인공지능학과%' AND category LIKE '%전공(기초)%' AND NOT EXISTS (SELECT 1 FROM enrollment AS e WHERE e.student_id = '202102671' AND e.subject_code = v_course_info.subject_code)",
     "order_sensitive": false,
     "expects_error": false,
     "student_id": "202102671",
     "exclude_completed_courses": true,
     "structural_checks": null,
-    "notes": "제외 전 14행 -> 제외 후 8행.",
+    "notes": "제외 전 8행 -> 제외 후 4행.",
     "gold_values": [
       {
         "column": "dept_name",
-        "value": "공과대학 컴퓨터융합학부"
+        "value": "공과대학 인공지능학과"
       },
       {
         "column": "category",
@@ -2066,38 +2082,38 @@
   {
     "id": "exclude_completed_courses_26",
     "category": "exclude_completed_courses",
-    "query": "컴퓨터융합학부 3학점짜리 과목 중에 안 들은 것만 알려줘",
+    "query": "인공지능학과 2학년 대상 과목 중에 자리 남은 거 안 들은 것만 알려줘",
     "grading": "execution",
-    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%컴퓨터융합학부%' AND credit_hours LIKE '3/%' AND NOT EXISTS (SELECT 1 FROM enrollment AS e WHERE e.student_id = '202102671' AND e.subject_code = v_course_info.subject_code)",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%공과대학 인공지능학과%' AND target_year = 2 AND enrolled < capacity AND capacity > 0 AND NOT EXISTS (SELECT 1 FROM enrollment AS e WHERE e.student_id = '202102671' AND e.subject_code = v_course_info.subject_code)",
     "order_sensitive": false,
     "expects_error": false,
     "student_id": "202102671",
     "exclude_completed_courses": true,
     "structural_checks": null,
-    "notes": "제외 전 74행 -> 제외 후 14행.",
+    "notes": "제외 전 8행 -> 제외 후 4행.",
     "gold_values": [
       {
         "column": "dept_name",
-        "value": "공과대학 컴퓨터융합학부"
+        "value": "공과대학 인공지능학과"
       }
     ]
   },
   {
     "id": "exclude_completed_courses_27",
     "category": "exclude_completed_courses",
-    "query": "컴퓨터융합학부 절대평가 과목 중에서 내가 안 들은 과목 알려줘",
+    "query": "인공지능학과 절대평가 과목 중에서 내가 안 들은 과목 알려줘",
     "grading": "execution",
-    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%컴퓨터융합학부%' AND eval_type = '절대평가' AND NOT EXISTS (SELECT 1 FROM enrollment AS e WHERE e.student_id = '202102671' AND e.subject_code = v_course_info.subject_code)",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%공과대학 인공지능학과%' AND eval_type = '절대평가' AND NOT EXISTS (SELECT 1 FROM enrollment AS e WHERE e.student_id = '202102671' AND e.subject_code = v_course_info.subject_code)",
     "order_sensitive": false,
     "expects_error": false,
     "student_id": "202102671",
     "exclude_completed_courses": true,
     "structural_checks": null,
-    "notes": "제외 전 43행 -> 제외 후 5행.",
+    "notes": "제외 전 17행 -> 제외 후 6행.",
     "gold_values": [
       {
         "column": "dept_name",
-        "value": "공과대학 컴퓨터융합학부"
+        "value": "공과대학 인공지능학과"
       },
       {
         "column": "eval_type",
@@ -2108,19 +2124,19 @@
   {
     "id": "exclude_completed_courses_28",
     "category": "exclude_completed_courses",
-    "query": "컴퓨터융합학부 상대평가 과목 중에 아직 안 들은 것 보여줘",
+    "query": "인공지능학과 상대평가 과목 중에 아직 안 들은 것 보여줘",
     "grading": "execution",
-    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%컴퓨터융합학부%' AND eval_type = '상대평가' AND NOT EXISTS (SELECT 1 FROM enrollment AS e WHERE e.student_id = '202102671' AND e.subject_code = v_course_info.subject_code)",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%공과대학 인공지능학과%' AND eval_type = '상대평가' AND NOT EXISTS (SELECT 1 FROM enrollment AS e WHERE e.student_id = '202102671' AND e.subject_code = v_course_info.subject_code)",
     "order_sensitive": false,
     "expects_error": false,
     "student_id": "202102671",
     "exclude_completed_courses": true,
     "structural_checks": null,
-    "notes": "제외 전 39행 -> 제외 후 10행.",
+    "notes": "제외 전 13행 -> 제외 후 11행.",
     "gold_values": [
       {
         "column": "dept_name",
-        "value": "공과대학 컴퓨터융합학부"
+        "value": "공과대학 인공지능학과"
       },
       {
         "column": "eval_type",
@@ -2154,19 +2170,19 @@
   {
     "id": "exclude_completed_courses_30",
     "category": "exclude_completed_courses",
-    "query": "컴퓨터융합학부 2학년 대상 과목 중에 수강 안 한 것 알려줘",
+    "query": "인공지능학과 2학년 대상 과목 중에 수강 안 한 것 알려줘",
     "grading": "execution",
-    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%컴퓨터융합학부%' AND target_year = 2 AND NOT EXISTS (SELECT 1 FROM enrollment AS e WHERE e.student_id = '202102671' AND e.subject_code = v_course_info.subject_code)",
+    "reference_sql": "SELECT course_year, subject_code, section, subject_name, category, credit_hours, target_year, professor, capacity, enrolled, grading_method, eval_type, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE dept_name LIKE '%공과대학 인공지능학과%' AND target_year = 2 AND NOT EXISTS (SELECT 1 FROM enrollment AS e WHERE e.student_id = '202102671' AND e.subject_code = v_course_info.subject_code)",
     "order_sensitive": false,
     "expects_error": false,
     "student_id": "202102671",
     "exclude_completed_courses": true,
     "structural_checks": null,
-    "notes": "제외 전 30행 -> 제외 후 8행.",
+    "notes": "제외 전 12행 -> 제외 후 8행.",
     "gold_values": [
       {
         "column": "dept_name",
-        "value": "공과대학 컴퓨터융합학부"
+        "value": "공과대학 인공지능학과"
       }
     ]
   },
