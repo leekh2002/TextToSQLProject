@@ -44,7 +44,7 @@ def load_settings() -> Settings:
         raise RuntimeError(MISSING_MODEL_ERROR)
     return Settings(
         model=model,
-        candidates=int(os.getenv("T2S_CANDIDATES", "5")),
+        candidates=int(os.getenv("T2S_CANDIDATES", "1")),
         temperature=float(os.getenv("T2S_TEMPERATURE", "0.4")),
         examples_k=int(os.getenv("T2S_EXAMPLES_K", "4")),
         use_examples=_flag("T2S_USE_EXAMPLES", "1"),

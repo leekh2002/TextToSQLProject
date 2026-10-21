@@ -218,3 +218,32 @@ def test_anonymous_users_get_the_same_examples_as_logged_in_users():
 
 def test_logged_in_users_keep_personal_examples():
     assert _example_questions("20240001") == ["질문: 개인1", "질문: 개인2"]
+
+
+def test_single_candidate_answers_without_retry():
+    calls = []
+
+    def chat(messages, *, model, temperature, seed=None, **_):
+        calls.append(messages)
+        return "SELECT a FROM v_course_info"
+
+    result = run_v2("q", deps=deps(chat, lambda sql, p, t: [{"a": 1}], settings=settings(candidates=1)))
+
+    assert len(calls) == 1 and len(result["candidates"]) == 1
+    assert result["data"] == [{"a": 1}] and result["error"] is None
+
+
+def test_single_candidate_retries_when_empty():
+    replies = iter(["SELECT a FROM v_course_info", "SELECT b FROM v_course_info"])
+    runs = []
+
+    def chat(messages, *, model, temperature, seed=None, **_):
+        return next(replies)
+
+    def run(sql, p, t):
+        runs.append(sql)
+        return [] if len(runs) == 1 else [{"b": 1}]
+
+    result = run_v2("q", deps=deps(chat, run, settings=settings(candidates=1)))
+
+    assert len(result["candidates"]) == 2 and result["data"] == [{"b": 1}]
