@@ -326,8 +326,8 @@
   },
   {
     "id": "ex_066",
-    "question": "선행 과목이 여러 개 걸려 있는 과목은 뭐가 있어?",
-    "sql": "SELECT subject_code, section, subject_name, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE prereq_subject_names LIKE '%,%'"
+    "question": "경영학부 과목 중에 선수 없이 들을 수 있는 거",
+    "sql": "SELECT * FROM v_course_info WHERE dept_name LIKE '%경상대학 경영학부%' AND prereq_subject_names = '없음'"
   },
   {
     "id": "ex_067",
@@ -341,8 +341,8 @@
   },
   {
     "id": "ex_069",
-    "question": "데이터베이스를 들어야만 신청할 수 있는 상위 과목은?",
-    "sql": "SELECT subject_code, section, subject_name, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE prereq_subject_names LIKE '%데이터베이스%'"
+    "question": "데이터베이스 선수 걸린 과목 중에 3학점짜리만 알려줘",
+    "sql": "SELECT subject_code, section, subject_name, prereq_subject_codes, prereq_subject_names FROM v_course_info WHERE prereq_subject_names LIKE '%데이터베이스%' AND credit_hours LIKE '3/%'"
   },
   {
     "id": "ex_070",
@@ -381,8 +381,8 @@
   },
   {
     "id": "ex_077",
-    "question": "사회학과 분반 총 몇 개야",
-    "sql": "SELECT COUNT(DISTINCT subject_code || '-' || section) AS course_count FROM v_course_info WHERE dept_name LIKE '%사회학과%'"
+    "question": "사회학과 전공핵심 분반 총 몇 개야",
+    "sql": "SELECT COUNT(DISTINCT subject_code || '-' || section) AS course_count FROM v_course_info WHERE dept_name LIKE '%사회학과%' AND category = '전공(핵심)'"
   },
   {
     "id": "ex_078",
@@ -416,13 +416,13 @@
   },
   {
     "id": "ex_084",
-    "question": "인문대학 학과별 분반 수 보여줘",
-    "sql": "SELECT dept_name, COUNT(DISTINCT subject_code || '-' || section) AS course_count FROM v_course_info WHERE dept_name LIKE '%인문대학%' GROUP BY dept_name"
+    "question": "인문대학 학과별로 3학점 분반이 몇 개씩이야",
+    "sql": "SELECT dept_name, COUNT(DISTINCT subject_code || '-' || section) AS course_count FROM v_course_info WHERE dept_name LIKE '%인문대학%' AND credit_hours LIKE '3/%' GROUP BY dept_name"
   },
   {
     "id": "ex_085",
-    "question": "사범대학 학과별로 분반 몇 개야",
-    "sql": "SELECT dept_name, COUNT(DISTINCT subject_code || '-' || section) AS course_count FROM v_course_info WHERE dept_name LIKE '%사범대학%' GROUP BY dept_name"
+    "question": "사범대학 학과마다 전공핵심 분반 몇 개야",
+    "sql": "SELECT dept_name, COUNT(DISTINCT subject_code || '-' || section) AS course_count FROM v_course_info WHERE dept_name LIKE '%사범대학%' AND category = '전공(핵심)' GROUP BY dept_name"
   },
   {
     "id": "ex_086",
@@ -456,8 +456,8 @@
   },
   {
     "id": "ex_092",
-    "question": "자연과학대학 학과별로 마감된 분반 수 알려줘",
-    "sql": "SELECT dept_name, COUNT(DISTINCT subject_code || '-' || section) AS course_count FROM v_course_info WHERE dept_name LIKE '%자연과학대학%' AND enrolled >= capacity AND capacity > 0 GROUP BY dept_name"
+    "question": "자연과학대학 학과별로 전공심화 중 마감된 분반 수 알려줘",
+    "sql": "SELECT dept_name, COUNT(DISTINCT subject_code || '-' || section) AS course_count FROM v_course_info WHERE dept_name LIKE '%자연과학대학%' AND category = '전공(심화)' AND enrolled >= capacity AND capacity > 0 GROUP BY dept_name"
   },
   {
     "id": "ex_093",
@@ -481,8 +481,8 @@
   },
   {
     "id": "ex_097",
-    "question": "농업생명과학대학에서 수강인원 가장 많은 분반이 뭐야",
-    "sql": "SELECT subject_code, section, subject_name, enrolled, capacity FROM v_course_info WHERE dept_name LIKE '%농업생명과학대학%' ORDER BY enrolled DESC LIMIT 1"
+    "question": "농업생명과학대학 전핵 중에 수강인원 가장 많은 분반이 뭐야",
+    "sql": "SELECT subject_code, section, subject_name, enrolled, capacity FROM v_course_info WHERE dept_name LIKE '%농업생명과학대학%' AND category = '전공(핵심)' ORDER BY enrolled DESC LIMIT 1"
   },
   {
     "id": "ex_098",
@@ -501,13 +501,8 @@
   },
   {
     "id": "ex_101",
-    "question": "전기공학과는 전핵 전심 전기 같은 구분마다 분반이 몇 개씩 돼?",
-    "sql": "SELECT category, COUNT(DISTINCT subject_code || '-' || section) AS course_count FROM v_course_info WHERE dept_name LIKE '%전기공학과%' GROUP BY category"
-  },
-  {
-    "id": "ex_102",
-    "question": "내가 현재 소속된 단과대 학과 이름 좀 확인해줘",
-    "sql": "SELECT d.dept_name FROM student AS s JOIN department AS d ON d.dept_code = s.dept_code WHERE s.student_id = %(student_id)s"
+    "question": "전기공학과 3학년 대상 과목은 전핵 전심 같은 구분마다 분반이 몇 개야",
+    "sql": "SELECT category, COUNT(DISTINCT subject_code || '-' || section) AS course_count FROM v_course_info WHERE dept_name LIKE '%전기공학과%' AND target_year = 3 GROUP BY category"
   },
   {
     "id": "ex_103",
@@ -756,63 +751,53 @@
   },
   {
     "id": "ex_152",
-    "question": "22년도 1학기 수강 내역 뭐 있었지",
-    "sql": "SELECT e.subject_code, sub.subject_name, e.enroll_year, e.semester FROM enrollment AS e JOIN subject AS sub ON sub.subject_code = e.subject_code WHERE e.student_id = %(student_id)s AND e.enroll_year = 2022 AND e.semester = '1'"
+    "question": "1학기에 들은 과목 중에 A0 받은 거 뭐 있어",
+    "sql": "SELECT e.subject_code, sub.subject_name, e.semester, e.letter_grade FROM enrollment AS e JOIN subject AS sub ON sub.subject_code = e.subject_code WHERE e.student_id = %(student_id)s AND e.semester = '1' AND e.letter_grade = 'A0'"
   },
   {
     "id": "ex_153",
-    "question": "21년에 A+ 맞은 거 뭐뭐 있지",
-    "sql": "SELECT e.subject_code, sub.subject_name, e.enroll_year, e.letter_grade FROM enrollment AS e JOIN subject AS sub ON sub.subject_code = e.subject_code WHERE e.student_id = %(student_id)s AND e.enroll_year = 2021 AND e.letter_grade = 'A+'"
+    "question": "전심 중에 3학점짜리로 B+ 받은 거 알려줘",
+    "sql": "SELECT e.subject_code, sub.subject_name, sub.category, sub.credit_hours, e.letter_grade FROM enrollment AS e JOIN subject AS sub ON sub.subject_code = e.subject_code WHERE e.student_id = %(student_id)s AND sub.category = '전공(심화)' AND sub.credit_hours LIKE '3/%' AND e.letter_grade = 'B+'"
   },
   {
     "id": "ex_154",
-    "question": "2023년 후기 학기에 들은 전공심화 보여줘",
-    "sql": "SELECT e.subject_code, sub.subject_name, e.enroll_year, e.semester, sub.category FROM enrollment AS e JOIN subject AS sub ON sub.subject_code = e.subject_code WHERE e.student_id = %(student_id)s AND e.enroll_year = 2023 AND e.semester = '2' AND sub.category = '전공(심화)'"
+    "question": "1학기에 수강한 전공심화 과목만 보여줘",
+    "sql": "SELECT e.subject_code, sub.subject_name, e.semester, sub.category FROM enrollment AS e JOIN subject AS sub ON sub.subject_code = e.subject_code WHERE e.student_id = %(student_id)s AND e.semester = '1' AND sub.category = '전공(심화)'"
   },
   {
     "id": "ex_155",
-    "question": "내가 이수한 교필 수업 알려줘",
-    "sql": "SELECT e.subject_code, sub.subject_name, sub.category FROM enrollment AS e JOIN subject AS sub ON sub.subject_code = e.subject_code WHERE e.student_id = %(student_id)s AND sub.category = '교양(소양필수)'"
+    "question": "A0 받은 과목 중에 4학년 대상인 거 있어?",
+    "sql": "SELECT e.subject_code, sub.subject_name, e.letter_grade, sub.target_year FROM enrollment AS e JOIN subject AS sub ON sub.subject_code = e.subject_code WHERE e.student_id = %(student_id)s AND e.letter_grade = 'A0' AND sub.target_year = 4"
   },
   {
     "id": "ex_156",
-    "question": "전심으로 들은 수업 중에 B0 받은 거 알려줘",
-    "sql": "SELECT e.subject_code, sub.subject_name, sub.category, e.letter_grade FROM enrollment AS e JOIN subject AS sub ON sub.subject_code = e.subject_code WHERE e.student_id = %(student_id)s AND sub.category = '전공(심화)' AND e.letter_grade = 'B0'"
+    "question": "2학기에 들은 과목만 따로 보고 싶어",
+    "sql": "SELECT e.subject_code, sub.subject_name, e.enroll_year, e.semester FROM enrollment AS e JOIN subject AS sub ON sub.subject_code = e.subject_code WHERE e.student_id = %(student_id)s AND e.semester = '2'"
   },
   {
     "id": "ex_157",
-    "question": "2학점짜리 수업 들은 적 있어?",
-    "sql": "SELECT e.subject_code, sub.subject_name, sub.credit_hours FROM enrollment AS e JOIN subject AS sub ON sub.subject_code = e.subject_code WHERE e.student_id = %(student_id)s AND sub.credit_hours LIKE '2/%'"
+    "question": "2학점짜리 중에 A0 받은 수업 있어?",
+    "sql": "SELECT e.subject_code, sub.subject_name, sub.credit_hours, e.letter_grade FROM enrollment AS e JOIN subject AS sub ON sub.subject_code = e.subject_code WHERE e.student_id = %(student_id)s AND sub.credit_hours LIKE '2/%' AND e.letter_grade = 'A0'"
   },
   {
     "id": "ex_158",
-    "question": "나 수강 이력 중 4학년 대상 수업 뭐 있어",
-    "sql": "SELECT e.subject_code, sub.subject_name, sub.target_year FROM enrollment AS e JOIN subject AS sub ON sub.subject_code = e.subject_code WHERE e.student_id = %(student_id)s AND sub.target_year = 4"
+    "question": "21년 1학기에 들은 교양 뭐 있었지",
+    "sql": "SELECT e.subject_code, sub.subject_name, e.enroll_year, e.semester, sub.category FROM enrollment AS e JOIN subject AS sub ON sub.subject_code = e.subject_code WHERE e.student_id = %(student_id)s AND e.enroll_year = 2021 AND e.semester = '1' AND sub.category LIKE '교양%'"
   },
   {
     "id": "ex_159",
-    "question": "3학년 대상 전핵 중에 내가 이수한 거 있어?",
-    "sql": "SELECT e.subject_code, sub.subject_name, sub.target_year, sub.category FROM enrollment AS e JOIN subject AS sub ON sub.subject_code = e.subject_code WHERE e.student_id = %(student_id)s AND sub.target_year = 3 AND sub.category = '전공(핵심)'"
+    "question": "2022년 2학기에 수강한 3학년 대상 수업 알려줘",
+    "sql": "SELECT e.subject_code, sub.subject_name, e.enroll_year, e.semester, sub.target_year FROM enrollment AS e JOIN subject AS sub ON sub.subject_code = e.subject_code WHERE e.student_id = %(student_id)s AND e.enroll_year = 2022 AND e.semester = '2' AND sub.target_year = 3"
   },
   {
     "id": "ex_160",
-    "question": "2024년에 수강한 3학점 수업 목록 좀",
-    "sql": "SELECT e.subject_code, sub.subject_name, e.enroll_year, sub.credit_hours FROM enrollment AS e JOIN subject AS sub ON sub.subject_code = e.subject_code WHERE e.student_id = %(student_id)s AND e.enroll_year = 2024 AND sub.credit_hours LIKE '3/%'"
+    "question": "2023년에 들었던 과목 중 데이터 이름 붙은 거 알려줘",
+    "sql": "SELECT e.subject_code, sub.subject_name, e.enroll_year FROM enrollment AS e JOIN subject AS sub ON sub.subject_code = e.subject_code WHERE e.student_id = %(student_id)s AND e.enroll_year = 2023 AND sub.subject_name LIKE '%데이터%'"
   },
   {
     "id": "ex_161",
-    "question": "2024년 2학기 수강 과목이랑 성적 알려줘",
-    "sql": "SELECT e.subject_code, sub.subject_name, e.enroll_year, e.semester, e.letter_grade FROM enrollment AS e JOIN subject AS sub ON sub.subject_code = e.subject_code WHERE e.student_id = %(student_id)s AND e.enroll_year = 2024 AND e.semester = '2'"
-  },
-  {
-    "id": "ex_162",
-    "question": "재학 학년이 어떻게 되는지 조회 부탁드려요",
-    "sql": "SELECT s.grade FROM student AS s WHERE s.student_id = %(student_id)s"
-  },
-  {
-    "id": "ex_163",
-    "question": "소속 전공명 확인 부탁드립니다",
-    "sql": "SELECT d.dept_name FROM student AS s JOIN department AS d ON d.dept_code = s.dept_code WHERE s.student_id = %(student_id)s"
+    "question": "전핵 중에 A0 이상 받은 과목은 몇 개야",
+    "sql": "SELECT COUNT(DISTINCT e.subject_code) AS course_count FROM enrollment AS e JOIN subject AS sub ON sub.subject_code = e.subject_code WHERE e.student_id = %(student_id)s AND sub.category = '전공(핵심)' AND e.letter_grade IN ('A+', 'A0')"
   },
   {
     "id": "ex_164",
@@ -826,22 +811,22 @@
   },
   {
     "id": "ex_166",
-    "question": "우리 과 4학년 대상 전공심화 수업 목록 보여줘",
-    "sql": "SELECT * FROM v_course_info WHERE dept_name = (SELECT d.dept_name FROM student AS s JOIN department AS d ON d.dept_code = s.dept_code WHERE s.student_id = %(student_id)s) AND target_year = 4 AND category = '전공(심화)'"
+    "question": "내 과 2학년용 전공기초 수업 알려줘",
+    "sql": "SELECT * FROM v_course_info WHERE dept_name = (SELECT d.dept_name FROM student AS s JOIN department AS d ON d.dept_code = s.dept_code WHERE s.student_id = %(student_id)s) AND target_year = 2 AND category = '전공(기초)'"
   },
   {
     "id": "ex_167",
-    "question": "우리 과 목요일 개설 강의 리스트",
-    "sql": "SELECT * FROM v_course_info WHERE dept_name = (SELECT d.dept_name FROM student AS s JOIN department AS d ON d.dept_code = s.dept_code WHERE s.student_id = %(student_id)s) AND day_of_week = '목'"
+    "question": "우리 과 금요일 오전 강좌 있어?",
+    "sql": "SELECT * FROM v_course_info WHERE dept_name = (SELECT d.dept_name FROM student AS s JOIN department AS d ON d.dept_code = s.dept_code WHERE s.student_id = %(student_id)s) AND day_of_week = '금' AND start_time < '12:00:00'"
   },
   {
     "id": "ex_168",
-    "question": "우리 학과 전기 중 신청 가능한 자리가 남은 것만 알려줘",
-    "sql": "SELECT * FROM v_course_info WHERE dept_name = (SELECT d.dept_name FROM student AS s JOIN department AS d ON d.dept_code = s.dept_code WHERE s.student_id = %(student_id)s) AND category = '전공(기초)' AND enrolled < capacity AND capacity > 0"
+    "question": "우리 학과 개설 과목 중에 상대평가인 것만 보여줘",
+    "sql": "SELECT * FROM v_course_info WHERE dept_name = (SELECT d.dept_name FROM student AS s JOIN department AS d ON d.dept_code = s.dept_code WHERE s.student_id = %(student_id)s) AND eval_type = '상대평가'"
   },
   {
     "id": "ex_169",
-    "question": "내 학과 개설 과목 중에 2학점짜리만 보여줘",
+    "question": "우리 과에서 열리는 2학점짜리 수업만 알려줘",
     "sql": "SELECT * FROM v_course_info WHERE dept_name = (SELECT d.dept_name FROM student AS s JOIN department AS d ON d.dept_code = s.dept_code WHERE s.student_id = %(student_id)s) AND credit_hours LIKE '2/%'"
   },
   {
@@ -851,23 +836,23 @@
   },
   {
     "id": "ex_171",
-    "question": "정원을 초과해서 신청받은 강좌가 있나",
-    "sql": "SELECT DISTINCT subject_code, section, subject_name, enrolled, capacity FROM v_course_info WHERE enrolled > capacity"
+    "question": "균형교양 중에 신청자가 정원을 넘긴 분반 목록",
+    "sql": "SELECT DISTINCT subject_code, section, subject_name, enrolled, capacity FROM v_course_info WHERE category = '교양(균형)' AND enrolled > capacity AND capacity > 0"
   },
   {
     "id": "ex_172",
-    "question": "여석이 제일 많이 남은 분반 5개만 알려줘",
-    "sql": "SELECT DISTINCT subject_code, section, subject_name, capacity - enrolled AS remaining_seats FROM v_course_info ORDER BY remaining_seats DESC LIMIT 5"
+    "question": "사회대에서 자리 제일 많이 남은 분반 3개 알려줘",
+    "sql": "SELECT DISTINCT subject_code, section, subject_name, capacity - enrolled AS remaining_seats FROM v_course_info WHERE dept_name LIKE '%사회과학대학%' AND capacity > 0 ORDER BY remaining_seats DESC LIMIT 3"
   },
   {
     "id": "ex_173",
-    "question": "전공심화 중에 신청자가 가장 적은 과목은 뭐야",
-    "sql": "SELECT DISTINCT subject_code, section, subject_name, enrolled FROM v_course_info WHERE category = '전공(심화)' AND enrolled > 0 ORDER BY enrolled ASC LIMIT 1"
+    "question": "균형교양 중에 정원이 제일 큰 분반이 뭐야",
+    "sql": "SELECT DISTINCT subject_code, section, subject_name, capacity FROM v_course_info WHERE category = '교양(균형)' ORDER BY capacity DESC LIMIT 1"
   },
   {
     "id": "ex_174",
-    "question": "자연대에서 개설한 분반이 총 몇 개야",
-    "sql": "SELECT COUNT(DISTINCT subject_code || '-' || section) AS course_count FROM v_course_info WHERE dept_name LIKE '%자연과학대학%'"
+    "question": "자연대 3학점짜리 분반이 총 몇 개야",
+    "sql": "SELECT COUNT(DISTINCT subject_code || '-' || section) AS course_count FROM v_course_info WHERE dept_name LIKE '%자연과학대학%' AND credit_hours LIKE '3/%'"
   },
   {
     "id": "ex_175",
@@ -876,7 +861,7 @@
   },
   {
     "id": "ex_176",
-    "question": "강의 분반 수가 많은 학과 TOP 3 알려줘",
-    "sql": "SELECT dept_name, COUNT(DISTINCT subject_code || '-' || section) AS course_count FROM v_course_info GROUP BY dept_name ORDER BY course_count DESC LIMIT 3"
+    "question": "전공심화 분반을 제일 많이 연 학과 3곳 알려줘",
+    "sql": "SELECT dept_name, COUNT(DISTINCT subject_code || '-' || section) AS course_count FROM v_course_info WHERE category = '전공(심화)' GROUP BY dept_name ORDER BY course_count DESC LIMIT 3"
   }
 ]
