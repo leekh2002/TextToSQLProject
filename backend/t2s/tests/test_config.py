@@ -12,7 +12,7 @@ def test_defaults(monkeypatch):
 
     s = load_settings()
 
-    assert (s.model, s.candidates, s.temperature, s.examples_k) == ("base-m", 5, 0.7, 4)
+    assert (s.model, s.candidates, s.temperature, s.examples_k) == ("base-m", 5, 0.4, 4)
     assert s.use_examples is True and s.review_log is True
     assert s.value_sources == ("ner", "ngram")
     assert (s.row_cap, s.statement_timeout_ms) == (50, 3000)

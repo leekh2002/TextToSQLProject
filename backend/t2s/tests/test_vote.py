@@ -34,3 +34,9 @@ def test_all_empty_and_no_success():
 def test_rejection_majority():
     assert decide([out(0, rejected=True), out(1, rejected=True), out(2, rejected=True), out(3, A)], 5) == Decision("rejected", None)
     assert decide([out(0, rejected=True), out(1, rejected=True), out(2, A)], 5) == Decision("answer", 2)
+
+
+def test_rejection_requires_greedy_candidate_rejected():
+    rejected = [out(1, rejected=True), out(2, rejected=True), out(3, rejected=True)]
+    assert decide([out(0, A)] + rejected + [out(4, error="x")], 5) == Decision("answer", 0)
+    assert decide([out(0, rejected=True)] + rejected[1:] + [out(3, rejected=True), out(4, A)], 5) == Decision("rejected", None)

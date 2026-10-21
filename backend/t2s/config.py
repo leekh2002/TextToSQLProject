@@ -45,7 +45,7 @@ def load_settings() -> Settings:
     return Settings(
         model=model,
         candidates=int(os.getenv("T2S_CANDIDATES", "5")),
-        temperature=float(os.getenv("T2S_TEMPERATURE", "0.7")),
+        temperature=float(os.getenv("T2S_TEMPERATURE", "0.4")),
         examples_k=int(os.getenv("T2S_EXAMPLES_K", "4")),
         use_examples=_flag("T2S_USE_EXAMPLES", "1"),
         value_sources=tuple(s.strip() for s in sources.split(",") if s.strip()),

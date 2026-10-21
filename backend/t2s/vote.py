@@ -17,7 +17,8 @@ class Decision:
 
 
 def decide(outcomes, total: int) -> Decision:
-    if sum(1 for o in outcomes if o.rejected) * 2 > total:
+    greedy_rejected = any(o.index == 0 and o.rejected for o in outcomes)
+    if greedy_rejected and sum(1 for o in outcomes if o.rejected) * 2 > total:
         return Decision("rejected", None)
     succeeded = [o for o in outcomes if o.rows is not None]
     if not succeeded:
