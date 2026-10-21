@@ -25,6 +25,8 @@ services:
       OLLAMA_BASE_URL: 
       OLLAMA_MODEL: text2sql-local
       OLLAMA_KEEP_ALIVE: 10m
+      T2S_PIPELINE: v2
+      T2S_MODEL: qwen2.5-coder:14b-instruct
       DATABASE_URL:
       REDIS_URL: redis://redis:6379/0
       KURE_EMBEDDING_MODEL: nlpai-lab/KURE-v1
