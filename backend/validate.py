@@ -57,6 +57,7 @@ ALLOWED_FUNCTION_NODES = (
 # U&"..." identifiers are decoded by PostgreSQL but kept verbatim by sqlglot, and `(TABLE x)` is a
 # subquery to PostgreSQL but a column to sqlglot.
 UNICODE_ESCAPE_RE = re.compile(r"u&\s*[\"']", re.IGNORECASE)
+LOCK_REASON = "허용되지 않은 구문: FOR UPDATE/SHARE"
 TABLE_COMMAND_RE = re.compile(
     r"(?:^|\(|\b(?:union|intersect|except)\s+(?:all\s+|distinct\s+)?)\s*table\s", re.IGNORECASE
 )
@@ -75,7 +76,7 @@ SAFETY_REJECTION_PATTERNS = (
     re.compile(rf"^금지 키워드 포함: (?:{'|'.join(map(re.escape, BLOCKED_KEYWORDS))})$"),
     re.compile(r"^허용되지 않은 테이블 참조: "),
     re.compile(r"^허용되지 않은 함수 호출: "),
-    re.compile(r"^허용되지 않은 구문: (?:U&|TABLE)$"),
+    re.compile(r"^허용되지 않은 구문: (?:U&|TABLE|\$|FOR UPDATE/SHARE)$"),
     re.compile(r"^student에서 허용되지 않은 컬럼 참조: "),
     re.compile(r"^student 테이블은 필터 조건으로만 사용할 수 있습니다\.$"),
     re.compile(
@@ -418,6 +419,8 @@ def validate_generated_sql(
     original = sql.strip()
     if original.endswith(";"):
         original = original[:-1].rstrip()
+    if "$" in original:
+        return {"ok": False, "reason": "허용되지 않은 구문: $"}
     if UNICODE_ESCAPE_RE.search(original):
         return {"ok": False, "reason": "허용되지 않은 구문: U&"}
     if TABLE_COMMAND_RE.search(original):
@@ -425,6 +428,12 @@ def validate_generated_sql(
     ast = _parse_sql(original)
     if ast is None:
         return {"ok": False, "reason": UNPARSEABLE_REASON}
+
+    if ast.find(exp.Lock) is not None:
+        return {"ok": False, "reason": LOCK_REASON}
+    blocked_function = _blocked_function(ast)
+    if blocked_function:
+        return {"ok": False, "reason": f"허용되지 않은 함수 호출: {blocked_function}"}
 
     table_references = {table.name.lower() for table in ast.find_all(exp.Table) if table.name}
     if not table_references:
@@ -465,10 +474,6 @@ def validate_generated_sql(
             "ok": False,
             "reason": f"{table_name}를 사용할 때는 요청된 학생의 학번으로 범위를 고정해야 합니다.",
         }
-
-    blocked_function = _blocked_function(ast)
-    if blocked_function:
-        return {"ok": False, "reason": f"허용되지 않은 함수 호출: {blocked_function}"}
 
     if "limit" not in sql_without_trailing_semicolon:
         return {"ok": False, "reason": "기본 LIMIT가 필요합니다."}

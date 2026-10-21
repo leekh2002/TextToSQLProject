@@ -122,8 +122,6 @@ def test_alias_column_list_is_rejected_as_safety_rejection(table):
 @pytest.mark.parametrize(
     "sql",
     [
-        "SELECT row_to_json(s) FROM student s WHERE s.student_id = '202102671' LIMIT 50",
-        "SELECT to_jsonb(s.*) FROM student s WHERE s.student_id = '202102671' LIMIT 50",
         "SELECT t.* FROM (SELECT s.grade FROM student s WHERE s.student_id = '202102671') t LIMIT 50",
         "SELECT * FROM (SELECT s.grade FROM student s WHERE s.student_id = '202102671') t LIMIT 50",
     ],
@@ -131,6 +129,19 @@ def test_alias_column_list_is_rejected_as_safety_rejection(table):
 def test_whole_row_reference_to_student_is_rejected_as_star(sql):
     result = validate_generated_sql(sql, requested_student_id=STUDENT_ID)
     assert result == {"ok": False, "reason": "student에서 허용되지 않은 컬럼 참조: *"}
+
+
+@pytest.mark.parametrize(
+    "sql,name",
+    [
+        ("SELECT row_to_json(s) FROM student s WHERE s.student_id = '202102671' LIMIT 50", "row_to_json"),
+        ("SELECT to_jsonb(s.*) FROM student s WHERE s.student_id = '202102671' LIMIT 50", "to_jsonb"),
+    ],
+)
+def test_whole_row_functions_on_student_are_rejected_as_unlisted_functions(sql, name):
+    result = validate_generated_sql(sql, requested_student_id=STUDENT_ID)
+    assert result == {"ok": False, "reason": f"허용되지 않은 함수 호출: {name}"}
+    assert is_rejection_error(result["reason"])
 
 
 LEGITIMATE = [
@@ -287,4 +298,46 @@ def test_escaped_identifiers_and_table_command_are_rejected(sql, name):
     result = validate_generated_sql(sql, STUDENT_ID)
 
     assert result == {"ok": False, "reason": f"허용되지 않은 구문: {name}"}
+    assert is_rejection_error(result["reason"])
+
+
+@pytest.mark.parametrize("sql,name", [
+    ("SELECT schema_to_xml_and_xmlschema('public', true, false, '') FROM subject LIMIT 50", "schema_to_xml_and_xmlschema"),
+    ("SELECT database_to_xml_and_xmlschema(true, false, '') FROM subject LIMIT 50", "database_to_xml_and_xmlschema"),
+    ("SELECT table_to_xmlschema('student', true, false, '') FROM subject LIMIT 50", "table_to_xmlschema"),
+    ("SELECT ts_stat('select 1') FROM subject LIMIT 50", "ts_stat"),
+    ("SELECT ts_rewrite('a'::tsquery, 'select 1') FROM subject LIMIT 50", "ts_rewrite"),
+    ("SELECT subject_code FROM subject, pg_ls_dir('.') f LIMIT 50", "pg_ls_dir"),
+    ("SELECT subject_code FROM subject, generate_series(1, 5) LIMIT 50", "exploding_generate_series"),
+    ('SELECT "pg_sleep"(1) FROM subject LIMIT 50', "pg_sleep"),
+    ("SELECT PG_SLEEP(1) FROM subject LIMIT 50", "pg_sleep"),
+])
+def test_unlisted_functions_are_rejected_in_every_spelling(sql, name):
+    result = validate_generated_sql(sql, STUDENT_ID)
+
+    assert result == {"ok": False, "reason": f"허용되지 않은 함수 호출: {name}"}
+    assert is_rejection_error(result["reason"])
+
+
+@pytest.mark.parametrize("sql", [
+    "SELECT $$x$$ FROM subject LIMIT 50",
+    "SELECT $a$x$a$ FROM subject LIMIT 50",
+    "SELECT $q$ $q$ || pg_sleep(1) FROM subject LIMIT 50",
+])
+def test_dollar_quoting_is_rejected(sql):
+    result = validate_generated_sql(sql, STUDENT_ID)
+
+    assert result == {"ok": False, "reason": "허용되지 않은 구문: $"}
+    assert is_rejection_error(result["reason"])
+
+
+@pytest.mark.parametrize("sql", [
+    "SELECT subject_code FROM subject LIMIT 50 FOR SHARE",
+    "SELECT subject_code FROM subject LIMIT 50 FOR KEY SHARE",
+    "SELECT subject_code FROM subject LIMIT 50 FOR NO KEY UPDATE",
+])
+def test_row_locking_clauses_are_rejected(sql):
+    result = validate_generated_sql(sql, STUDENT_ID)
+
+    assert not result["ok"]
     assert is_rejection_error(result["reason"])
