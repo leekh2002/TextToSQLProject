@@ -238,3 +238,40 @@ def test_grader_rejects_outer_join_preserved_side(sql):
 )
 def test_inner_or_nullable_side_join_scope_passes(sql):
     assert validate_generated_sql(sql, requested_student_id=STUDENT_ID) == OK
+
+
+DANGEROUS_FUNCTION_SQL = [
+    ("SELECT subject_code FROM subject WHERE pg_sleep(5) IS NOT NULL LIMIT 50", "pg_sleep"),
+    ("SELECT pg_read_file('/etc/passwd') FROM subject LIMIT 50", "pg_read_file"),
+    ("SELECT subject_code FROM subject WHERE subject_code IN (SELECT set_config('a', 'b', false)) LIMIT 50", "set_config"),
+    ("SELECT table_to_xml('student', true, false, '') FROM subject LIMIT 50", "table_to_xml"),
+    ("SELECT dblink('host=x', 'select 1') FROM subject LIMIT 50", "dblink"),
+    ("SELECT current_setting('x') FROM subject LIMIT 50", "current_setting"),
+    ("SELECT pg_catalog.pg_sleep(5) FROM subject LIMIT 50", "pg_sleep"),
+    ("SELECT lo_import('/etc/passwd') FROM subject LIMIT 50", "lo_import"),
+    ("SELECT version() FROM subject LIMIT 50", "version"),
+    ("SELECT query_to_xml('select * from student', true, false, '') FROM subject LIMIT 50", "query_to_xml"),
+    ("SELECT txid_current() FROM subject LIMIT 50", "txid_current"),
+]
+
+
+@pytest.mark.parametrize("sql,name", DANGEROUS_FUNCTION_SQL)
+def test_system_function_calls_are_rejected(sql, name):
+    result = validate_generated_sql(sql, STUDENT_ID)
+
+    assert result == {"ok": False, "reason": f"허용되지 않은 함수 호출: {name}"}
+    assert is_rejection_error(result["reason"])
+
+
+ORDINARY_FUNCTION_SQL = [
+    "SELECT COUNT(*), AVG(credit_hours), MAX(credit_hours), MIN(credit_hours), SUM(credit_hours) FROM v_course_info LIMIT 50",
+    "SELECT COALESCE(professor, '-'), LOWER(subject_name), UPPER(subject_name), LENGTH(subject_name) FROM v_course_info LIMIT 50",
+    "SELECT SUBSTRING(subject_code, 1, 3), SPLIT_PART(subject_code, '-', 1), ROUND(AVG(credit_hours), 1) FROM v_course_info GROUP BY subject_code LIMIT 50",
+    "SELECT CAST(credit_hours AS TEXT), EXTRACT(HOUR FROM start_time) FROM v_course_info LIMIT 50",
+    "SELECT dept_name, STRING_AGG(subject_name, ',') FROM v_course_info GROUP BY dept_name LIMIT 50",
+]
+
+
+@pytest.mark.parametrize("sql", ORDINARY_FUNCTION_SQL)
+def test_ordinary_functions_are_still_accepted(sql):
+    assert validate_generated_sql(sql, STUDENT_ID) == OK

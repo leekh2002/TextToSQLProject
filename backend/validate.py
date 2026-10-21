@@ -35,6 +35,27 @@ ALLOWED_STUDENT_ID_PLACEHOLDERS = {
     "{{student_id}}",
 }
 STUDENT_SCOPED_TABLES = {"student", "enrollment"}
+# PostgreSQL system functions that read files, run queries from strings (bypassing the table
+# allow-list), change settings, sleep or leak server details. Matched on the lower-cased function name.
+BLOCKED_FUNCTION_PREFIXES = ("pg_", "lo_", "dblink")
+BLOCKED_FUNCTIONS = {
+    "set_config",
+    "current_setting",
+    "query_to_xml",
+    "query_to_xml_and_xmlschema",
+    "query_to_xmlschema",
+    "table_to_xml",
+    "table_to_xml_and_xmlschema",
+    "table_to_xmlschema",
+    "cursor_to_xml",
+    "schema_to_xml",
+    "database_to_xml",
+    "xpath",
+    "version",
+    "inet_server_addr",
+    "inet_client_addr",
+    "txid_current",
+}
 
 # process() returns this when the model answers UNKNOWN.
 AMBIGUOUS_QUERY_ERROR = "질문이 모호합니다."
@@ -49,6 +70,7 @@ SAFETY_REJECTION_PATTERNS = (
     re.compile(r"^여러 문장은 허용되지 않습니다\.$"),
     re.compile(rf"^금지 키워드 포함: (?:{'|'.join(map(re.escape, BLOCKED_KEYWORDS))})$"),
     re.compile(r"^허용되지 않은 테이블 참조: "),
+    re.compile(r"^허용되지 않은 함수 호출: "),
     re.compile(r"^student에서 허용되지 않은 컬럼 참조: "),
     re.compile(r"^student 테이블은 필터 조건으로만 사용할 수 있습니다\.$"),
     re.compile(
@@ -84,6 +106,23 @@ def _parse_sql(sql: str) -> exp.Expression | None:
     if len(statements) != 1 or not isinstance(statements[0], exp.Query):
         return None
     return statements[0]
+
+
+def _function_name(func: exp.Func) -> str:
+    if isinstance(func, exp.Anonymous):
+        return func.name.lower()
+    if isinstance(func, exp.CurrentVersion):  # sqlglot parses version() into this node
+        return "version"
+    return func.sql_name().lower()
+
+
+def _blocked_function(ast: exp.Expression) -> str | None:
+    """Name of the first blocked system function called anywhere in the query, if any."""
+    for func in ast.find_all(exp.Func):
+        name = _function_name(func)
+        if name.startswith(BLOCKED_FUNCTION_PREFIXES) or name in BLOCKED_FUNCTIONS:
+            return name
+    return None
 
 
 def _ident(node) -> str:
@@ -382,6 +421,10 @@ def validate_generated_sql(
     ast = _parse_sql(original)
     if ast is None:
         return {"ok": False, "reason": UNPARSEABLE_REASON}
+
+    blocked_function = _blocked_function(ast)
+    if blocked_function:
+        return {"ok": False, "reason": f"허용되지 않은 함수 호출: {blocked_function}"}
 
     table_references = {table.name.lower() for table in ast.find_all(exp.Table) if table.name}
     if not table_references:

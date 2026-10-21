@@ -381,6 +381,7 @@ def test_rejection_patterns_track_validate_reasons():
         ("select s.grade from student as s limit 50", None),
         ("select * from enrollment as e limit 50", "202102671"),
         ("select x.a from enrollment as x(a, b) where x.a = '202102671' limit 50", "202102671"),
+        ("select pg_sleep(5) from subject limit 50", None),
     ]
     seen_reasons = set()
     for sql, student_id in probes:
