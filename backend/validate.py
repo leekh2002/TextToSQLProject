@@ -35,27 +35,31 @@ ALLOWED_STUDENT_ID_PLACEHOLDERS = {
     "{{student_id}}",
 }
 STUDENT_SCOPED_TABLES = {"student", "enrollment"}
-# PostgreSQL system functions that read files, run queries from strings (bypassing the table
-# allow-list), change settings, sleep or leak server details. Matched on the lower-cased function name.
-BLOCKED_FUNCTION_PREFIXES = ("pg_", "lo_", "dblink")
-BLOCKED_FUNCTIONS = {
-    "set_config",
-    "current_setting",
-    "query_to_xml",
-    "query_to_xml_and_xmlschema",
-    "query_to_xmlschema",
-    "table_to_xml",
-    "table_to_xml_and_xmlschema",
-    "table_to_xmlschema",
-    "cursor_to_xml",
-    "schema_to_xml",
-    "database_to_xml",
-    "xpath",
-    "version",
-    "inet_server_addr",
-    "inet_client_addr",
-    "txid_current",
-}
+# Function calls are allow-listed: anything else (pg_*, lo_*, dblink, *_to_xml, ts_stat, ...) can read
+# files, run SQL from strings (bypassing the table allow-list), change settings or leak server
+# details. Calls the parser leaves untyped (exp.Anonymous) are matched by lower-cased name; typed
+# nodes are matched by class. The typed set also holds nodes that are syntax rather than calls
+# (AND/OR, CASE, EXISTS, IF, casts), which sqlglot models as exp.Func subclasses.
+ALLOWED_ANONYMOUS_FUNCTIONS = {"btrim", "regexp_match"}
+ALLOWED_FUNCTION_NODES = (
+    exp.And, exp.Or, exp.Case, exp.If, exp.Exists, exp.Cast, exp.TryCast,
+    exp.Count, exp.Sum, exp.Avg, exp.Min, exp.Max, exp.ArrayAgg, exp.GroupConcat,
+    exp.LogicalAnd, exp.LogicalOr,
+    exp.Coalesce, exp.Nullif, exp.Greatest, exp.Least,
+    exp.Lower, exp.Upper, exp.Length, exp.Substring, exp.SplitPart, exp.Trim, exp.Replace,
+    exp.Concat, exp.ConcatWs, exp.StrPosition, exp.Left, exp.Right,
+    exp.RegexpReplace, exp.ArrayToString,
+    exp.Round, exp.Floor, exp.Ceil, exp.Abs,
+    exp.Extract, exp.TimestampTrunc, exp.TimeToStr, exp.CurrentDate,
+    exp.RowNumber, exp.Rank, exp.DenseRank, exp.Lag, exp.Lead,
+)
+# Syntax that sqlglot does not model the way PostgreSQL reads it, checked on the raw text.
+# U&"..." identifiers are decoded by PostgreSQL but kept verbatim by sqlglot, and `(TABLE x)` is a
+# subquery to PostgreSQL but a column to sqlglot.
+UNICODE_ESCAPE_RE = re.compile(r"u&\s*[\"']", re.IGNORECASE)
+TABLE_COMMAND_RE = re.compile(
+    r"(?:^|\(|\b(?:union|intersect|except)\s+(?:all\s+|distinct\s+)?)\s*table\s", re.IGNORECASE
+)
 
 # process() returns this when the model answers UNKNOWN.
 AMBIGUOUS_QUERY_ERROR = "질문이 모호합니다."
@@ -71,6 +75,7 @@ SAFETY_REJECTION_PATTERNS = (
     re.compile(rf"^금지 키워드 포함: (?:{'|'.join(map(re.escape, BLOCKED_KEYWORDS))})$"),
     re.compile(r"^허용되지 않은 테이블 참조: "),
     re.compile(r"^허용되지 않은 함수 호출: "),
+    re.compile(r"^허용되지 않은 구문: (?:U&|TABLE)$"),
     re.compile(r"^student에서 허용되지 않은 컬럼 참조: "),
     re.compile(r"^student 테이블은 필터 조건으로만 사용할 수 있습니다\.$"),
     re.compile(
@@ -108,20 +113,15 @@ def _parse_sql(sql: str) -> exp.Expression | None:
     return statements[0]
 
 
-def _function_name(func: exp.Func) -> str:
-    if isinstance(func, exp.Anonymous):
-        return func.name.lower()
-    if isinstance(func, exp.CurrentVersion):  # sqlglot parses version() into this node
-        return "version"
-    return func.sql_name().lower()
-
-
 def _blocked_function(ast: exp.Expression) -> str | None:
-    """Name of the first blocked system function called anywhere in the query, if any."""
+    """Name of the first function call that is not on the allow-list, if any."""
     for func in ast.find_all(exp.Func):
-        name = _function_name(func)
-        if name.startswith(BLOCKED_FUNCTION_PREFIXES) or name in BLOCKED_FUNCTIONS:
-            return name
+        if isinstance(func, exp.Anonymous):
+            name = func.name.lower()
+            if name not in ALLOWED_ANONYMOUS_FUNCTIONS:
+                return name
+        elif not isinstance(func, ALLOWED_FUNCTION_NODES):
+            return func.sql_name().lower()
     return None
 
 
@@ -418,13 +418,13 @@ def validate_generated_sql(
     original = sql.strip()
     if original.endswith(";"):
         original = original[:-1].rstrip()
+    if UNICODE_ESCAPE_RE.search(original):
+        return {"ok": False, "reason": "허용되지 않은 구문: U&"}
+    if TABLE_COMMAND_RE.search(original):
+        return {"ok": False, "reason": "허용되지 않은 구문: TABLE"}
     ast = _parse_sql(original)
     if ast is None:
         return {"ok": False, "reason": UNPARSEABLE_REASON}
-
-    blocked_function = _blocked_function(ast)
-    if blocked_function:
-        return {"ok": False, "reason": f"허용되지 않은 함수 호출: {blocked_function}"}
 
     table_references = {table.name.lower() for table in ast.find_all(exp.Table) if table.name}
     if not table_references:
@@ -465,6 +465,10 @@ def validate_generated_sql(
             "ok": False,
             "reason": f"{table_name}를 사용할 때는 요청된 학생의 학번으로 범위를 고정해야 합니다.",
         }
+
+    blocked_function = _blocked_function(ast)
+    if blocked_function:
+        return {"ok": False, "reason": f"허용되지 않은 함수 호출: {blocked_function}"}
 
     if "limit" not in sql_without_trailing_semicolon:
         return {"ok": False, "reason": "기본 LIMIT가 필요합니다."}

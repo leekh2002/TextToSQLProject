@@ -249,7 +249,7 @@ DANGEROUS_FUNCTION_SQL = [
     ("SELECT current_setting('x') FROM subject LIMIT 50", "current_setting"),
     ("SELECT pg_catalog.pg_sleep(5) FROM subject LIMIT 50", "pg_sleep"),
     ("SELECT lo_import('/etc/passwd') FROM subject LIMIT 50", "lo_import"),
-    ("SELECT version() FROM subject LIMIT 50", "version"),
+    ("SELECT version() FROM subject LIMIT 50", "current_version"),
     ("SELECT query_to_xml('select * from student', true, false, '') FROM subject LIMIT 50", "query_to_xml"),
     ("SELECT txid_current() FROM subject LIMIT 50", "txid_current"),
 ]
@@ -275,3 +275,16 @@ ORDINARY_FUNCTION_SQL = [
 @pytest.mark.parametrize("sql", ORDINARY_FUNCTION_SQL)
 def test_ordinary_functions_are_still_accepted(sql):
     assert validate_generated_sql(sql, STUDENT_ID) == OK
+
+
+@pytest.mark.parametrize("sql,name", [
+    ('SELECT U&"\0070g_sleep"(1) FROM subject LIMIT 50', "U&"),
+    ("SELECT u&'abc' FROM subject LIMIT 50", "U&"),
+    ("SELECT subject_code FROM subject WHERE subject_code = (TABLE student) LIMIT 50", "TABLE"),
+    ("SELECT subject_code FROM subject UNION ALL TABLE student LIMIT 50", "TABLE"),
+])
+def test_escaped_identifiers_and_table_command_are_rejected(sql, name):
+    result = validate_generated_sql(sql, STUDENT_ID)
+
+    assert result == {"ok": False, "reason": f"허용되지 않은 구문: {name}"}
+    assert is_rejection_error(result["reason"])
