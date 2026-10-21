@@ -212,8 +212,8 @@ def _example_questions(student_id):
     return [m["content"] for m in seen[0] if m["role"] == "user"][:-1]
 
 
-def test_anonymous_users_get_only_non_personal_examples():
-    assert _example_questions(None) == ["질문: 공개1", "질문: 공개2"]
+def test_anonymous_users_get_the_same_examples_as_logged_in_users():
+    assert _example_questions(None) == ["질문: 개인1", "질문: 개인2"]
 
 
 def test_logged_in_users_keep_personal_examples():

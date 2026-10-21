@@ -35,7 +35,7 @@ def _user_content(question: str, hints) -> str:
     if not hints:
         return f"질문: {question}"
     lines = "\n".join(f"- {h.column} = '{h.value}'" for h in hints)
-    return f"[값 후보 — 질문에 언급된 조건에만 정확한 값으로 쓰고, 질문에 없는 조건은 추가하지 마라]\n{lines}\n\n질문: {question}"
+    return f"[값 후보 — 참고용, 틀릴 수 있음]\n{lines}\n\n질문: {question}"
 
 
 def build_messages(question, *, schema, hints, examples, logged_in, exclude_completed) -> list[dict]:
