@@ -55,3 +55,13 @@ def test_contamination_flags_similar_questions_and_identical_sql():
 
     assert any("e3" in p and "g2" in p for p in problems)
     assert contamination([EXAMPLES[0]], golden[:1], embed, threshold=0.995) == []
+
+
+def test_is_personal_example():
+    from backend.t2s.examples import Example, is_personal_example
+
+    assert is_personal_example(Example("a", "q", "SELECT * FROM v_course_info WHERE x = %(student_id)s"))
+    assert is_personal_example(Example("a", "q", "select * from Enrollment e"))
+    assert is_personal_example(Example("a", "q", "SELECT * FROM student"))
+    assert not is_personal_example(Example("a", "q", "SELECT * FROM v_course_info WHERE subject_name LIKE '%students%'"))
+    assert not is_personal_example(Example("a", "q", "SELECT * FROM v_course_info"))

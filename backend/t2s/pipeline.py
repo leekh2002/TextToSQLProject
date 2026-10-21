@@ -10,7 +10,7 @@ from functools import lru_cache
 from typing import Callable
 
 from .config import MISSING_MODEL_ERROR, Settings
-from .examples import REVIEW_LOG_PATH
+from .examples import REVIEW_LOG_PATH, is_personal_example
 from .execute import CandidateOutcome, run_candidate
 from .generate import generate_with_errors
 from .prompt import build_messages
@@ -110,7 +110,12 @@ def run_v2(query, *, exclude_completed_courses=False, student_id=None, value_hin
 
     examples = []
     if settings.use_examples:
-        examples = [example for example, _ in deps.store.search(query, settings.examples_k)]
+        k = settings.examples_k
+        if student_id is None:
+            found = [example for example, _ in deps.store.search(query, 3 * k)]
+            examples = [e for e in found if not is_personal_example(e)][:k]
+        else:
+            examples = [example for example, _ in deps.store.search(query, k)]
 
     def messages_for(order):
         return build_messages(query, schema=deps.schema, hints=values, examples=order,

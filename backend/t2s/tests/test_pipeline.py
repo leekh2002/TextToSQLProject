@@ -28,7 +28,7 @@ def deps(chat, run, **kw):
 
 
 def test_majority_answer_and_response_shape():
-    answers = iter(["SELECT COUNT(*) FROM v_course_info", "SELECT 2 FROM v_course_info", "SELECT COUNT(*) FROM v_course_info"])
+    answers = iter(["SELECT COUNT(*) FROM v_course_info", "SELECT a FROM v_course_info", "SELECT COUNT(*) FROM v_course_info"])
     seen = []
 
     def chat(messages, *, model, temperature, seed=None, **_):
@@ -186,3 +186,35 @@ def test_stop_and_max_tokens_reach_every_call_including_retry():
 
     assert len(seen) == 4
     assert all(call == (("###",), 77) for call in seen)
+
+
+def _personal_store():
+    vectors = {"질문": 1.0, "개인1": 0.9, "개인2": 0.8, "공개1": 0.7, "공개2": 0.6}
+    examples = [
+        Example("p1", "개인1", "SELECT * FROM enrollment"),
+        Example("p2", "개인2", "SELECT * FROM v_course_info WHERE s = %(student_id)s"),
+        Example("o1", "공개1", "SELECT 1 FROM v_course_info"),
+        Example("o2", "공개2", "SELECT a FROM v_course_info"),
+    ]
+    return ExampleStore(examples, lambda t: np.array([vectors.get(t, 0.0), 1.0], dtype=np.float32))
+
+
+def _example_questions(student_id):
+    seen = []
+
+    def chat(messages, *, model, temperature, seed=None, **_):
+        seen.append(messages)
+        return "SELECT 1 FROM v_course_info"
+
+    d = deps(chat, lambda sql, params, timeout_ms: [{"n": 1}], settings=settings(examples_k=2, candidates=1))
+    d.store = _personal_store()
+    run_v2("질문", student_id=student_id, deps=d)
+    return [m["content"] for m in seen[0] if m["role"] == "user"][:-1]
+
+
+def test_anonymous_users_get_only_non_personal_examples():
+    assert _example_questions(None) == ["질문: 공개1", "질문: 공개2"]
+
+
+def test_logged_in_users_keep_personal_examples():
+    assert _example_questions("20240001") == ["질문: 개인1", "질문: 개인2"]

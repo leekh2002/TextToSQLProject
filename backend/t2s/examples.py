@@ -34,6 +34,13 @@ def save_examples(examples: list[Example], path: Path = EXAMPLES_PATH) -> None:
     )
 
 
+PERSONAL_SQL = re.compile(r"%\(student_id\)s|\b(?:student|enrollment)\b", re.IGNORECASE)
+
+
+def is_personal_example(example: Example) -> bool:
+    return bool(PERSONAL_SQL.search(example.sql))
+
+
 def sql_skeleton(sql: str) -> str:
     text = re.sub(r"'(?:[^']|'')*'", "'?'", sql)
     text = re.sub(r"\b\d+(?:\.\d+)?\b", "0", text)
