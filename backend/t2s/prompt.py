@@ -16,26 +16,33 @@ DOMAIN_RULES = (
     "여석은 capacity - enrolled, '여석 있음'은 enrolled < capacity AND capacity > 0, '마감'은 enrolled >= capacity AND capacity > 0.",
     "선수과목은 prereq_subject_names(없으면 '없음')를 쓴다.",
 )
-STUDENT_RULE = (
+STUDENT_RULES = (
     "로그인한 학생 본인 정보는 student AS s, enrollment AS e처럼 별칭을 쓰고 WHERE에 "
-    "s.student_id = %(student_id)s 또는 e.student_id = %(student_id)s를 AND로 둔다. 다른 학생 정보는 UNKNOWN."
+    "s.student_id = %(student_id)s 또는 e.student_id = %(student_id)s를 AND로 둔다. 다른 학생 정보는 UNKNOWN.",
+    "본인의 학년·학과·입학연도 질문은 답할 수 있는 질문이다. 학년은 s.grade, 학과명은 department AS d를 d.dept_code = s.dept_code로 조인해 d.dept_name을 쓴다.",
+    "'내 학과'·'우리 학과'는 dept_name = (SELECT d.dept_name FROM student AS s JOIN department AS d ON d.dept_code = s.dept_code WHERE s.student_id = %(student_id)s)로 쓴다. '내 학과'를 문자열로 검색하지 않는다.",
+    "수강 이력은 enrollment AS e JOIN subject AS sub ON sub.subject_code = e.subject_code로 조회하고, SELECT에 e.subject_code, sub.subject_name과 조건에 쓴 컬럼(e.enroll_year, e.semester, e.letter_grade, sub.category, sub.credit_hours 등)을 함께 넣는다.",
 )
 ANON_RULE = "로그인하지 않은 사용자다. student·enrollment가 필요한 개인 질문은 UNKNOWN."
 EXCLUDE_RULE = "이미 들은 과목 제외는 시스템이 처리하므로 SQL에 넣지 말고 나머지 조건만 쓴다."
+EXCLUDE_USER_HINT = "(이미 들은 과목 제외는 시스템이 따로 처리한다. 그 부분은 무시하고 나머지 조건에 맞는 강의 목록 SQL을 작성한다.)"
 
 
 def _system_content(schema: str, logged_in: bool, exclude_completed: bool) -> str:
-    rules = list(DOMAIN_RULES) + [STUDENT_RULE if logged_in else ANON_RULE]
+    rules = list(DOMAIN_RULES) + (list(STUDENT_RULES) if logged_in else [ANON_RULE])
     if exclude_completed:
         rules.append(EXCLUDE_RULE)
     return f"{SYSTEM_INSTRUCTION}\n\n[스키마]\n{schema}\n\n[규칙]\n" + "\n".join(f"- {r}" for r in rules)
 
 
-def _user_content(question: str, hints) -> str:
+def _user_content(question: str, hints, exclude_completed: bool) -> str:
+    text = f"질문: {question}"
+    if exclude_completed:
+        text += f"\n{EXCLUDE_USER_HINT}"
     if not hints:
-        return f"질문: {question}"
+        return text
     lines = "\n".join(f"- {h.column} = '{h.value}'" for h in hints)
-    return f"[값 후보 — 참고용, 틀릴 수 있음]\n{lines}\n\n질문: {question}"
+    return f"[값 후보 — 참고용, 틀릴 수 있음]\n{lines}\n\n{text}"
 
 
 def build_messages(question, *, schema, hints, examples, logged_in, exclude_completed) -> list[dict]:
@@ -43,5 +50,5 @@ def build_messages(question, *, schema, hints, examples, logged_in, exclude_comp
     for example in examples:
         messages.append({"role": "user", "content": f"질문: {example.question}"})
         messages.append({"role": "assistant", "content": example.sql})
-    messages.append({"role": "user", "content": _user_content(question, hints)})
+    messages.append({"role": "user", "content": _user_content(question, hints, exclude_completed)})
     return messages
