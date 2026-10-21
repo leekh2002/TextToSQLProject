@@ -14,6 +14,8 @@ import numpy as np
 EXAMPLES_PATH = Path(__file__).with_name("data") / "examples.json"
 REVIEW_LOG_PATH = Path(__file__).with_name("logs") / "review_queue.jsonl"
 CONTAMINATION_THRESHOLD = 0.9
+TEMPLATE_SIMILARITY_THRESHOLD = 0.8
+GOLDEN_STUDENT_ID = "202102671"
 
 
 @dataclass(frozen=True)
@@ -76,18 +78,32 @@ def embed_question(text: str) -> np.ndarray:
     return np.frombuffer(embed_text(text), dtype=np.float32)
 
 
+def _normalize_sql(sql: str) -> str:
+    text = sql.replace("%(student_id)s", f"'{GOLDEN_STUDENT_ID}'")
+    return re.sub(r"\s+", " ", text).strip().lower()
+
+
 def contamination(examples, golden_cases, embed, threshold: float = CONTAMINATION_THRESHOLD) -> list[str]:
     problems = []
-    golden_sql = {(c.get("reference_sql") or "").strip(): c["id"] for c in golden_cases if c.get("reference_sql")}
+    golden_sql = {
+        _normalize_sql(c["reference_sql"]): c["id"] for c in golden_cases if c.get("reference_sql")
+    }
+    golden_skeleton = {
+        c["id"]: sql_skeleton(_normalize_sql(c["reference_sql"])) for c in golden_cases if c.get("reference_sql")
+    }
     golden_vectors = [(c["id"], embed(c["query"])) for c in golden_cases]
     for example in examples:
-        if example.sql.strip() in golden_sql:
-            problems.append(f"{example.id}: 평가셋 {golden_sql[example.sql.strip()]}와 정답 SQL 동일")
+        normalized = _normalize_sql(example.sql)
+        if normalized in golden_sql:
+            problems.append(f"{example.id}: 평가셋 {golden_sql[normalized]}와 정답 SQL 동일")
+        skeleton = sql_skeleton(normalized)
         vector = embed(example.question)
         for case_id, golden_vector in golden_vectors:
             similarity = float(vector @ golden_vector)
             if similarity >= threshold:
                 problems.append(f"{example.id}: 평가셋 {case_id}와 질의 유사도 {similarity:.3f}")
+            elif similarity >= TEMPLATE_SIMILARITY_THRESHOLD and golden_skeleton.get(case_id) == skeleton:
+                problems.append(f"{example.id}: 평가셋 {case_id}와 SQL 골격 동일, 질의 유사도 {similarity:.3f}")
     return problems
 
 

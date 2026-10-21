@@ -57,6 +57,26 @@ def test_contamination_flags_similar_questions_and_identical_sql():
     assert contamination([EXAMPLES[0]], golden[:1], embed, threshold=0.995) == []
 
 
+def test_contamination_normalizes_student_placeholder_sql():
+    golden = [{"id": "g1", "query": "선수과목 알려줘", "reference_sql": "SELECT a  FROM enrollment WHERE student_id = '202102671'"}]
+    example = Example("e9", "컴융 금요일 과목", "select a from enrollment where student_id = %(student_id)s")
+
+    problems = contamination([example], golden, embed)
+
+    assert any("e9" in p and "정답 SQL 동일" in p for p in problems)
+
+
+def test_contamination_flags_same_skeleton_with_similar_question():
+    golden = [{"id": "g1", "query": "컴융 금요일 과목", "reference_sql": "SELECT * FROM v_course_info WHERE day_of_week = '금'"}]
+    # similarity 0.99 is under the 0.995 threshold below, so only the template rule can flag it
+    flagged = contamination([EXAMPLES[0]], golden, embed, threshold=0.995)
+    assert any("e1" in p and "SQL 골격 동일" in p for p in flagged)
+    # same skeleton but dissimilar question is fine; similar question with different skeleton is fine
+    assert contamination([EXAMPLES[2]], golden, embed, threshold=0.995) == []
+    other = [{"id": "g1", "query": "컴융 금요일 과목", "reference_sql": "SELECT COUNT(*) FROM v_course_info"}]
+    assert contamination([EXAMPLES[0]], other, embed, threshold=0.995) == []
+
+
 def test_is_personal_example():
     from backend.t2s.examples import Example, is_personal_example
 
