@@ -31,3 +31,10 @@ def test_no_hint_block_when_no_hints():
     last = build_messages("q", schema="s", hints=[], examples=[], logged_in=False, exclude_completed=False)[-1]
 
     assert last["content"] == "질문: q"
+
+
+def test_hint_header_warns_against_extra_conditions():
+    from backend.t2s.values import ValueCandidate as VC
+    last = build_messages("q", schema="s", hints=[VC("dept_name", "v", 90, "ngram")], examples=[], logged_in=False,
+                          exclude_completed=False)[-1]["content"]
+    assert last.startswith("[값 후보 — 질문에 언급된 조건에만 정확한 값으로 쓰고, 질문에 없는 조건은 추가하지 마라]")

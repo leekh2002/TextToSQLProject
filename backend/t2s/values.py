@@ -15,6 +15,7 @@ LABEL_TO_COLUMN = {
     "GRADE_METHOD": "grading_method",
     "PROFESSOR": "professor",
 }
+NER_MENTION_COLUMNS = ("subject_name", "professor")
 MIN_TOKEN_LENGTH = 3
 MIN_FULL_LENGTH = 2
 
@@ -83,7 +84,9 @@ def merge(candidates: list[ValueCandidate], per_column: int = 3) -> list[ValueCa
 def find_value_candidates(question, entities, references, sources) -> list[ValueCandidate]:
     found: list[ValueCandidate] = []
     if "ner" in sources:
-        found += from_ner(entities or [], references)
+        question_key = value_key(question)
+        found += [c for c in from_ner(entities or [], references)
+                  if c.column not in NER_MENTION_COLUMNS or value_key(c.value) in question_key]
     if "ngram" in sources:
         found += from_ngrams(question, references)
     return merge(found)

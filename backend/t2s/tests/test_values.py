@@ -71,3 +71,18 @@ def test_short_value_inside_longer_matching_value_is_dropped():
     assert [c.value for c in from_ngrams("비대면 수업", refs)] == ["비대면"]
     assert [c.value for c in from_ngrams("대면 수업", refs)] == ["대면"]
     assert from_ngrams("가 수업", {"x": ["가"]}) == []
+
+
+def test_ner_subject_and_professor_dropped_when_not_in_question():
+    refs = {"subject_name": ["건강심리학"], "professor": ["김교수"], "dept_name": ["공과대학 컴퓨터융합학부"]}
+    entities = [
+        {"label": "COURSE_NAME", "corrected_text": "건강심리학", "similarity": 80},
+        {"label": "PROFESSOR", "corrected_text": "김교수", "similarity": 80},
+        {"label": "DEPARTMENT", "corrected_text": "공과대학 컴퓨터융합학부", "similarity": 80},
+    ]
+
+    found = find_value_candidates("컴융 심리학과 과목좀 알려줘", entities, refs, ("ner",))
+    assert [(c.column, c.value) for c in found] == [("dept_name", "공과대학 컴퓨터융합학부")]
+
+    kept = find_value_candidates("컴융 건강심리학 김교수", entities, refs, ("ner",))
+    assert {c.column for c in kept} == {"subject_name", "professor", "dept_name"}
