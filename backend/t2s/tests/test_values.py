@@ -10,6 +10,17 @@ REFS = {
 }
 
 
+def test_token_match_only_for_dept_name():
+    refs = {
+        "subject_name": ["컴퓨터 이해와 활용"],
+        "dept_name": ["공과대학 컴퓨터융합학부"],
+    }
+
+    found = {(c.column, c.value, c.score) for c in from_ngrams("컴퓨터융합학부에서 수강인원이 가장 많은 분반", refs)}
+
+    assert found == {("dept_name", "공과대학 컴퓨터융합학부", 90)}
+
+
 def test_value_key_keeps_hangul_and_alnum():
     assert value_key("전공(핵심) A1 ") == "전공핵심a1"
 

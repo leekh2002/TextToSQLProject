@@ -59,6 +59,15 @@ def test_no_hint_block_when_no_hints():
     assert last["content"] == "질문: q"
 
 
+def test_aggregate_and_abbreviation_rules_present():
+    from backend.t2s.prompt import DOMAIN_RULES
+    rules = "\n".join(DOMAIN_RULES)
+
+    assert "'정원보다 많이 신청한', '정원 초과'는 enrolled > capacity이다. '정원이 다 찬', '마감'만 enrolled >= capacity AND capacity > 0이다." in rules
+    assert "최다·최소·순위 질문은 정렬 기준 값도 SELECT에 넣는다(예: capacity - enrolled AS remaining_seats, COUNT(...) AS course_count)." in rules
+    assert "단과대학 약칭은 정식 이름으로 바꿔 찾는다: 공대→공과대학, 자연대→자연과학대학, 경상대→경상대학, 사회대→사회과학대학, 인문대→인문대학." in rules
+
+
 def test_hint_header_marks_candidates_as_reference():
     from backend.t2s.values import ValueCandidate as VC
     last = build_messages("q", schema="s", hints=[VC("dept_name", "v", 90, "ngram")], examples=[], logged_in=False,

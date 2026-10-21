@@ -15,6 +15,9 @@ DOMAIN_RULES = (
     "과목·분반 수는 COUNT(DISTINCT subject_code || '-' || section) AS course_count로 센다.",
     "여석은 capacity - enrolled, '여석 있음'은 enrolled < capacity AND capacity > 0, '마감'은 enrolled >= capacity AND capacity > 0.",
     "선수과목은 prereq_subject_names(없으면 '없음')를 쓴다.",
+    "'정원보다 많이 신청한', '정원 초과'는 enrolled > capacity이다. '정원이 다 찬', '마감'만 enrolled >= capacity AND capacity > 0이다.",
+    "최다·최소·순위 질문은 정렬 기준 값도 SELECT에 넣는다(예: capacity - enrolled AS remaining_seats, COUNT(...) AS course_count).",
+    "단과대학 약칭은 정식 이름으로 바꿔 찾는다: 공대→공과대학, 자연대→자연과학대학, 경상대→경상대학, 사회대→사회과학대학, 인문대→인문대학.",
 )
 STUDENT_RULES = (
     "로그인한 학생 본인 정보는 student AS s, enrollment AS e처럼 별칭을 쓰고 WHERE에 "

@@ -56,6 +56,8 @@ def from_ngrams(question: str, references: dict[str, list[str]]) -> list[ValueCa
                 if not any(full != other and full in other for other in full_matches.values()):
                     found.append(ValueCandidate(column, value, 100.0, "ngram"))
                 continue
+            if column != "dept_name":
+                continue
             tokens = [value_key(t) for t in str(value).split()]
             if any(len(t) >= MIN_TOKEN_LENGTH and t in question_key for t in tokens):
                 found.append(ValueCandidate(column, value, 90.0, "ngram"))
