@@ -29,6 +29,8 @@ npm run dev:full
   - `OLLAMA_MODEL` (예: `text2sql-local`)
   - `DATABASE_URL` (예: `postgresql://postgres:1234@localhost:5432/univ`)
   - `REDIS_URL` (선택)
+  - `T2S_PIPELINE` (`v1` 기본, `v2` 권장 — 새 파이프라인 `backend/t2s/`)
+  - `T2S_MODEL` (v2의 SQL 생성 모델, 권장 `qwen2.5-coder:14b-instruct`; 없으면 `OLLAMA_MODEL` 사용. 비교 결과는 `docs/superpowers/plans/2026-10-21-t2s-model-selection.md`)
 
 > `DATABASE_URL`이 없으면 `/api/v1/query`는 에러 DB 부재 에러 반환, SQL 쿼리만 반환함
 
