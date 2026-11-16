@@ -2,6 +2,12 @@
 
 **Vite(React) 프론트엔드**와 `backend/`의 **FastAPI(text-to-sql) 백엔드**
 
+## 아키텍처 문서
+
+
+
+- [아키텍처 문서 보기](https://claude.ai/artifact/Lh2eC1ghfq6cQtEQAjcr7a)
+
 ## 실행 방법 (개발)
 
 - Anaconda 등의 가상환경 이용하여 실행 권장

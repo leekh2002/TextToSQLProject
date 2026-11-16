@@ -1,0 +1,1085 @@
+<title>수강신청 Text-to-SQL 아키텍처</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* Layout: sticky left index + one long reading column; layers colour-coded (client / server / model / data) */
+:root{
+  color-scheme: light;
+  --bg:#F5F7F9; --surface:#FFFFFF; --ink:#152231; --body:#4A5666; --muted:#768190;
+  --line:#DFE4EA; --soft:#ECF0F4; --code-bg:#F0F3F6;
+  --accent:#0F7A86; --accent-bg:#DDF0F1;
+  --client:#2E6BD8; --client-bg:#E3ECFB;
+  --server:#0F7A86; --server-bg:#DDF0F1;
+  --model:#B4691B; --model-bg:#F8EAD9;
+  --data:#3F7D3A; --data-bg:#E2EFDF;
+  --warn:#B4691B; --warn-bg:#F8EAD9;
+  --bad:#C2453B; --bad-bg:#F8E1DE;
+  --font:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme: dark;
+    --bg:#11171E; --surface:#18212B; --ink:#E9EEF3; --body:#BAC4CF; --muted:#8B96A3;
+    --line:#2A3542; --soft:#202B37; --code-bg:#141C25;
+    --accent:#4FC1CC; --accent-bg:#173238;
+    --client:#7FA8F0; --client-bg:#1C2A42;
+    --server:#4FC1CC; --server-bg:#173238;
+    --model:#E3A35C; --model-bg:#3A2A18;
+    --data:#8BC584; --data-bg:#1E3220;
+    --warn:#E3A35C; --warn-bg:#3A2A18;
+    --bad:#EE8277; --bad-bg:#3D2120;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme: dark;
+  --bg:#11171E; --surface:#18212B; --ink:#E9EEF3; --body:#BAC4CF; --muted:#8B96A3;
+  --line:#2A3542; --soft:#202B37; --code-bg:#141C25;
+  --accent:#4FC1CC; --accent-bg:#173238;
+  --client:#7FA8F0; --client-bg:#1C2A42;
+  --server:#4FC1CC; --server-bg:#173238;
+  --model:#E3A35C; --model-bg:#3A2A18;
+  --data:#8BC584; --data-bg:#1E3220;
+  --warn:#E3A35C; --warn-bg:#3A2A18;
+  --bad:#EE8277; --bad-bg:#3D2120;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:calc(env(safe-area-inset-top,0px) + 20px)}
+@media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}*{transition:none!important;animation:none!important}}
+body{margin:0;background:var(--bg);color:var(--body);font-family:var(--font);font-size:16px;line-height:1.7;-webkit-font-smoothing:antialiased;word-break:keep-all;overflow-wrap:break-word}
+a{color:var(--accent)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+code{font-family:var(--mono);font-size:.84em;background:var(--soft);color:var(--ink);padding:.1em .38em;border-radius:5px;word-break:break-all}
+strong,b{color:var(--ink);font-weight:600}
+h1,h2,h3,h4{text-wrap:balance}
+
+.shell{display:grid;grid-template-columns:240px minmax(0,1fr);max-width:1240px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.toc{position:sticky;top:env(safe-area-inset-top,0px);height:100vh;height:100dvh;overflow-y:auto;padding-block:40px;padding-right:20px;border-right:1px solid var(--line)}
+.toc .brand{display:flex;align-items:center;gap:10px;margin-bottom:26px;color:var(--ink);font-weight:700;font-size:16px;line-height:1.35}
+.toc .brand i{flex:none;width:30px;height:30px;border-radius:9px;background:var(--ink);color:var(--bg);font-style:normal;font-family:var(--mono);font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center}
+.toc h4{margin:20px 0 6px;font-size:12px;font-weight:600;color:var(--muted);letter-spacing:.04em}
+.toc ol{list-style:none;margin:0;padding:0}
+.toc li a{display:block;padding:5px 10px;border-radius:8px;color:var(--body);text-decoration:none;font-size:14.5px;line-height:1.45}
+.toc li a:hover{background:var(--soft);color:var(--ink)}
+.toc li a.on{background:var(--accent-bg);color:var(--accent);font-weight:600}
+main{padding-block:52px 120px;padding-left:52px;min-width:0}
+.wrap{max-width:880px}
+
+.hero{padding-bottom:40px;border-bottom:1px solid var(--line)}
+.kicker{display:inline-flex;gap:8px;align-items:center;background:var(--accent-bg);color:var(--accent);font-weight:600;font-size:13px;padding:4px 12px;border-radius:999px}
+.hero h1{margin:16px 0 12px;font-size:clamp(30px,4.6vw,44px);line-height:1.2;color:var(--ink);letter-spacing:-.02em}
+.lede{font-size:18px;line-height:1.65;max-width:40em;margin:0}
+.facts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));margin:28px 0 0;border:1px solid var(--line);border-radius:14px;background:var(--surface);overflow:hidden}
+.facts div{padding:14px 16px;border-right:1px solid var(--line);min-width:0}
+.facts div:last-child{border-right:0}
+.facts dt{font-size:12.5px;color:var(--muted)}
+.facts dd{margin:3px 0 0;color:var(--ink);font-weight:600;font-size:15px;line-height:1.4}
+.facts dd.num{font-size:24px;font-variant-numeric:tabular-nums;color:var(--accent)}
+.facts dd small{display:block;font-size:12px;font-weight:500;color:var(--muted)}
+
+section.sec{padding-top:60px}
+.sec-head{display:flex;align-items:baseline;gap:12px;margin-bottom:6px}
+.sec-head .no{font-family:var(--mono);font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.sec h2{margin:0;font-size:27px;line-height:1.3;color:var(--ink);letter-spacing:-.01em}
+.sec .intro{font-size:16.5px;margin:6px 0 22px;max-width:44em}
+.sec h3{margin:34px 0 10px;font-size:19px;color:var(--ink)}
+.sec p{margin:0 0 14px;max-width:44em}
+ul.notes{margin:10px 0 18px;padding-left:20px;max-width:44em}
+ul.notes li{margin:5px 0}
+ul.notes li::marker{color:var(--accent)}
+
+.figure{border:1px solid var(--line);border-radius:16px;background:var(--surface);overflow-x:auto;margin:16px 0 8px}
+.figure svg{display:block;min-width:760px;width:100%;height:auto}
+.cap{font-size:13.5px;color:var(--muted);margin:6px 0 20px}
+svg text{font-family:var(--font)}
+.s-box{stroke-width:1.5}
+.s-client{fill:var(--client-bg);stroke:var(--client)}
+.s-server{fill:var(--server-bg);stroke:var(--server)}
+.s-model{fill:var(--model-bg);stroke:var(--model)}
+.s-data{fill:var(--data-bg);stroke:var(--data)}
+.s-zone{fill:none;stroke:var(--line);stroke-dasharray:5 5;stroke-width:1.5}
+.s-t{fill:var(--ink);font-size:14px;font-weight:600}
+.s-s{fill:var(--body);font-size:11.5px}
+.s-m{fill:var(--muted);font-size:11px;font-family:var(--mono)}
+.s-z{fill:var(--muted);font-size:11.5px;font-weight:600;letter-spacing:.04em}
+.s-line{stroke:var(--muted);stroke-width:1.5;fill:none}
+.s-dash{stroke:var(--muted);stroke-width:1.5;fill:none;stroke-dasharray:4 4}
+.s-arrow{fill:var(--muted)}
+.s-lbl{fill:var(--body);font-size:11px;font-family:var(--mono)}
+.s-lblbg{fill:var(--surface)}
+
+.legend{display:flex;flex-wrap:wrap;gap:16px;font-size:13px;color:var(--muted);margin:0 0 20px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:12px;height:12px;border-radius:3px;border:1.5px solid}
+
+.tw{overflow-x:auto;margin:12px 0 22px;border:1px solid var(--line);border-radius:14px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:14.5px;line-height:1.55}
+th,td{text-align:left;vertical-align:top;padding:10px 14px;border-bottom:1px solid var(--line)}
+th{font-weight:600;color:var(--ink);background:var(--soft);font-size:13px;white-space:nowrap}
+tr:last-child td{border-bottom:0}
+td.k{white-space:nowrap}
+td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
+.tw.min table{min-width:640px}
+
+.layer{display:inline-block;font-size:12px;font-weight:600;padding:1px 9px;border-radius:999px;white-space:nowrap}
+.l-client{background:var(--client-bg);color:var(--client)}
+.l-server{background:var(--server-bg);color:var(--server)}
+.l-model{background:var(--model-bg);color:var(--model)}
+.l-data{background:var(--data-bg);color:var(--data)}
+.l-bad{background:var(--bad-bg);color:var(--bad)}
+.l-mute{background:var(--soft);color:var(--muted)}
+
+/* pipeline stepper */
+.pipe{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:6px;margin:18px 0 0;position:relative}
+.pipe::before{content:"";position:absolute;left:6%;right:6%;top:23px;height:2px;background:var(--line)}
+.pipe button{appearance:none;font:inherit;background:none;border:0;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;padding:0 2px;color:var(--ink);position:relative}
+.pipe .nd{width:46px;height:46px;border-radius:50%;background:var(--surface);border:2px solid var(--line);display:flex;align-items:center;justify-content:center;font-weight:700;font-family:var(--mono);font-size:14px;color:var(--accent);transition:border-color .2s,background .2s,color .2s}
+.pipe button:hover .nd{border-color:var(--accent)}
+.pipe button[aria-selected="true"] .nd{background:var(--accent);border-color:var(--accent);color:var(--surface)}
+.pipe b{font-size:13.5px;line-height:1.35}
+.pipe small{font-size:11.5px;color:var(--muted);line-height:1.35;font-family:var(--mono);word-break:break-all}
+.panel{margin:20px 0 10px;border:1.5px solid var(--accent);border-radius:16px;background:var(--surface);padding:20px 22px 8px}
+.panel h4{margin:0 0 4px;font-size:19px;color:var(--ink)}
+.panel .where{font-family:var(--mono);font-size:12.5px;color:var(--muted);margin-bottom:10px;display:block}
+.panel p{margin:0 0 12px}
+.panel ul{margin:0 0 14px;padding-left:20px}
+.panel li{margin:4px 0}
+.panel li::marker{color:var(--accent)}
+.panel .ctl{display:flex;justify-content:space-between;gap:8px;border-top:1px solid var(--line);padding:10px 0 4px;margin-top:6px}
+.panel .ctl button{appearance:none;font:inherit;font-size:13.5px;font-weight:600;color:var(--accent);background:none;border:0;cursor:pointer;padding:4px 0}
+.panel .ctl button[disabled]{color:var(--muted);cursor:default;opacity:.5}
+
+pre.code{background:var(--code-bg);border:1px solid var(--line);border-radius:12px;padding:14px 16px;overflow-x:auto;font-family:var(--mono);font-size:12.5px;line-height:1.65;color:var(--ink);margin:10px 0 18px}
+pre.code .c{color:var(--muted)}
+
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:14px 0 22px}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:14px 0 22px}
+.box{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 18px;min-width:0}
+.box h5{margin:0 0 4px;font-size:15.5px;color:var(--ink);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.box p{margin:0;font-size:14.5px}
+.box .path{display:block;font-family:var(--mono);font-size:12px;color:var(--muted);margin-bottom:6px;word-break:break-all}
+
+.guard{list-style:none;margin:14px 0 22px;padding:0;display:grid;gap:8px;max-width:46em}
+.guard li{display:grid;grid-template-columns:28px 1fr;gap:10px;align-items:start;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:11px 14px;font-size:14.5px}
+.guard li span.n{width:24px;height:24px;border-radius:7px;background:var(--bad-bg);color:var(--bad);font-family:var(--mono);font-size:12px;font-weight:600;display:flex;align-items:center;justify-content:center;margin-top:1px}
+
+.endpoints{display:grid;gap:6px;margin:12px 0 22px}
+.ep{display:grid;grid-template-columns:62px minmax(0,260px) 1fr;gap:12px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-size:14px}
+.ep code{background:none;padding:0;font-size:13px}
+.m{font-family:var(--mono);font-size:11.5px;font-weight:600;padding:2px 0;border-radius:6px;text-align:center}
+.m-get{background:var(--client-bg);color:var(--client)}
+.m-post{background:var(--data-bg);color:var(--data)}
+
+/* bars */
+.bars{display:grid;gap:10px;margin:16px 0 8px;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px 20px}
+.bar{display:grid;grid-template-columns:minmax(0,230px) 1fr 58px;gap:12px;align-items:center;font-size:13.5px}
+.bar .nm{color:var(--ink);font-weight:500;line-height:1.3}
+.bar .nm small{display:block;color:var(--muted);font-size:11.5px;font-weight:400}
+.bar .tr{height:16px;background:var(--soft);border-radius:5px;position:relative;overflow:hidden}
+.bar .tr i{position:absolute;inset:0 auto 0 0;background:var(--muted);border-radius:5px;opacity:.55}
+.bar.sel .tr i{background:var(--accent);opacity:1}
+.bar.out .tr i{background:var(--bad);opacity:.45}
+.bar .v{font-variant-numeric:tabular-nums;font-weight:600;color:var(--ink);text-align:right}
+.bar.sel .v{color:var(--accent)}
+.axis{display:grid;grid-template-columns:minmax(0,230px) 1fr 58px;gap:12px;font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
+.axis div{position:relative;height:14px}
+.axis span{position:absolute;transform:translateX(-50%)}
+
+.timeline{list-style:none;margin:14px 0 22px;padding:0;border-left:2px solid var(--line);max-width:46em}
+.timeline li{position:relative;padding:3px 0 14px 22px;font-size:15px}
+.timeline li::before{content:"";position:absolute;left:-7px;top:10px;width:12px;height:12px;border-radius:50%;background:var(--surface);border:2px solid var(--muted)}
+.timeline li.big::before{background:var(--accent);border-color:var(--accent)}
+.timeline .pct{display:inline-block;min-width:62px;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums}
+.timeline li.big .pct{color:var(--accent)}
+
+.callout{display:flex;gap:12px;background:var(--warn-bg);color:var(--ink);border-radius:12px;padding:12px 16px;margin:14px 0 22px;font-size:14.5px;max-width:46em}
+.callout b{flex:none;color:var(--warn)}
+
+footer{margin-top:70px;padding-top:22px;border-top:1px solid var(--line);font-size:13px;color:var(--muted)}
+
+@media (max-width: 980px){
+  .shell{display:block}
+  body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:11;background:var(--bg)}
+  .toc{position:sticky;top:env(safe-area-inset-top,0px);z-index:10;height:auto;padding-block:10px;padding-right:0;border-right:0;border-bottom:1px solid var(--line);background:var(--bg);display:flex;align-items:center;gap:12px;overflow-x:auto;white-space:nowrap}
+  .toc .brand{margin:0;font-size:14px}
+  .toc .brand span{display:none}
+  .toc h4{display:none}
+  .toc ol{display:flex;gap:2px}
+  .toc li a{font-size:13.5px;padding:5px 10px}
+  main{padding-left:0;padding-block:30px 90px}
+  .pipe{grid-template-columns:repeat(4,minmax(0,1fr));row-gap:16px}
+  .pipe::before{display:none}
+}
+@media (max-width: 620px){
+  .facts{grid-template-columns:1fr 1fr}
+  .facts div:nth-child(2){border-right:0}
+  .facts div:nth-child(-n+2){border-bottom:1px solid var(--line)}
+  .grid2,.grid3{grid-template-columns:1fr}
+  .ep{grid-template-columns:52px 1fr}
+  .ep .d{grid-column:2;font-size:13px;color:var(--muted)}
+  .bar,.axis{grid-template-columns:110px 1fr 48px;gap:8px}
+  .sec h2{font-size:23px}
+  .panel{padding:16px 14px 6px}
+}
+
+/* ===== query trace player ===== */
+:root{--t6:#7A4FC4;--t6-bg:#EEE6FA}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--t6:#B49AF0;--t6-bg:#2A2140}}
+:root[data-theme="dark"]{--t6:#B49AF0;--t6-bg:#2A2140}
+.t1{--hc:var(--client);--hb:var(--client-bg)} .t2{--hc:var(--model);--hb:var(--model-bg)}
+.t3{--hc:var(--data);--hb:var(--data-bg)} .t4{--hc:var(--bad);--hb:var(--bad-bg)}
+.t5{--hc:var(--server);--hb:var(--server-bg)} .t6{--hc:var(--t6);--hb:var(--t6-bg)}
+.t1c{color:var(--client)} .t2c{color:var(--model)} .t3c{color:var(--data)} .t4c{color:var(--bad)} .t5c{color:var(--server)} .t6c{color:var(--t6)}
+pre .t1c,pre .t2c,pre .t3c,pre .t4c,pre .t5c,pre .t6c{font-weight:600}
+code.t1c,code.t2c{background:var(--soft)}
+.muted{color:var(--muted)}
+
+.player{border:1.5px solid var(--line);border-radius:20px;background:var(--surface);margin:18px 0 8px;overflow:hidden}
+.pl-bar{display:flex;align-items:center;gap:8px;padding:12px 16px;border-bottom:1px solid var(--line)}
+.pl-title{font-weight:600;color:var(--ink);font-size:15px;font-variant-numeric:tabular-nums}
+.pl-sp{flex:1}
+.pl-btn{appearance:none;font:inherit;font-size:13px;font-weight:600;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;min-width:36px;height:34px;padding:0 12px;cursor:pointer}
+.pl-btn:hover{border-color:var(--accent);color:var(--accent)}
+.pl-play{min-width:84px;background:var(--accent);border-color:var(--accent);color:var(--surface)}
+.pl-play:hover{color:var(--surface);filter:brightness(1.08)}
+.pl-segs{display:flex;gap:4px;padding:0 16px;margin-top:10px}
+.pl-segs i{flex:1;height:3px;border-radius:3px;background:var(--line);overflow:hidden;position:relative}
+.pl-segs i b{position:absolute;inset:0 auto 0 0;width:0;background:var(--accent);border-radius:3px}
+.pl-body{display:grid;grid-template-columns:168px minmax(0,1fr);min-height:440px}
+.pl-rail{list-style:none;margin:0;padding:14px 10px;border-right:1px solid var(--line);display:flex;flex-direction:column;gap:2px}
+.pl-rail button{appearance:none;font:inherit;width:100%;text-align:left;background:none;border:0;cursor:pointer;display:flex;gap:9px;align-items:center;padding:6px 8px;border-radius:9px;color:var(--body);font-size:14px}
+.pl-rail button span{flex:none;width:22px;height:22px;border-radius:50%;border:1.5px solid var(--line);font-family:var(--mono);font-size:11px;display:flex;align-items:center;justify-content:center;color:var(--muted)}
+.pl-rail button:hover{background:var(--soft)}
+.pl-rail button.done span{background:var(--accent-bg);border-color:var(--accent-bg);color:var(--accent)}
+.pl-rail button[aria-current="step"]{background:var(--accent-bg);color:var(--accent);font-weight:600}
+.pl-rail button[aria-current="step"] span{background:var(--accent);border-color:var(--accent);color:var(--surface)}
+.pl-stage{padding:20px 22px 22px;min-width:0}
+.scene{min-width:0}
+.sc-lead{margin:0 0 16px;font-size:15.5px;color:var(--ink);max-width:none}
+.sc-note{margin:14px 0 0;font-size:13.5px;color:var(--muted);max-width:44em}
+
+/* entrance animation; resting state is fully visible */
+.scene.play .a{animation:trIn .5s cubic-bezier(.2,.7,.2,1) both;animation-delay:var(--d,0s)}
+@keyframes trIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.player.paused .scene *{animation-play-state:paused!important}
+
+/* 1 chat */
+.chat{display:flex;justify-content:flex-end;padding:18px;background:var(--bg);border:1px solid var(--line);border-radius:14px}
+.bub{max-width:100%;background:var(--client);color:var(--surface);padding:10px 16px;border-radius:16px 16px 4px 16px;font-size:16px;font-weight:500;min-height:46px}
+.caret{display:inline-block;width:2px;height:1.1em;background:currentColor;vertical-align:-3px;margin-left:2px;opacity:0}
+.scene.typing .caret{opacity:1;animation:blink .8s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+.req{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:14px;font-size:13px}
+.req .m{padding:2px 8px}
+.req code{font-size:12.5px}
+.req-body{word-break:break-all}
+
+/* 2 tokens */
+.qline{display:flex;flex-wrap:wrap;gap:8px 6px;align-items:flex-end;padding:16px;background:var(--bg);border:1px solid var(--line);border-radius:14px;font-size:17px;color:var(--ink)}
+.qline.small{font-size:15px;padding:12px 14px;margin-bottom:12px}
+.tok{display:inline-flex;flex-direction:column;align-items:center;padding:3px 6px;border-radius:7px;line-height:1.3}
+.tok.hl{background:var(--hb);color:var(--hc);font-weight:600;box-shadow:inset 0 0 0 1.5px var(--hc)}
+.tok em{font-style:normal;font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.03em;margin-top:2px}
+.fixes{display:grid;gap:8px;margin-top:14px}
+.fix{display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:10px 14px;border:1px solid var(--line);border-radius:12px;font-size:15px}
+.fix .arr{color:var(--accent);font-weight:700}
+.fix small{color:var(--muted);font-size:12.5px;margin-left:auto}
+
+/* 3 sources */
+.srcs{display:grid;gap:8px;margin-bottom:12px}
+.src{display:grid;grid-template-columns:62px 1fr auto;gap:12px;align-items:center;padding:10px 14px;border:1px solid var(--line);border-radius:12px;font-size:14px}
+.src .layer{text-align:center}
+.src b{font-variant-numeric:tabular-nums}
+.src b.ok{color:var(--accent)}
+pre.hint{font-size:13.5px}
+
+/* 4 examples */
+.exs{display:grid;gap:8px}
+.ex{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:12px;align-items:center;padding:10px 14px;border:1px solid var(--line);border-radius:12px}
+.ex .rk{width:26px;height:26px;border-radius:8px;background:var(--accent-bg);color:var(--accent);font-family:var(--mono);font-weight:600;font-size:12px;display:flex;align-items:center;justify-content:center}
+.ex b{display:block;font-size:14.5px;line-height:1.4}
+.ex code{display:block;background:none;padding:0;font-size:11.5px;color:var(--muted);margin-top:2px}
+.ex .why{font-size:12px;font-weight:600;color:var(--accent);white-space:nowrap}
+
+/* 5 messages */
+.msgs{display:grid;gap:8px}
+.msg{display:grid;grid-template-columns:118px minmax(0,1fr);gap:12px;align-items:start;padding:10px 14px;border-radius:12px;border:1px solid var(--line);font-size:14px}
+.msg .role{font-family:var(--mono);font-size:11.5px;font-weight:600;color:var(--muted);padding-top:2px}
+.msg.sys{background:var(--soft)}
+.msg.usr{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-bg)}
+.msg pre{margin:0;font-family:var(--mono);font-size:12.5px;line-height:1.6;color:var(--ink);white-space:pre-wrap;word-break:break-all}
+
+/* 6 sql */
+pre.gen .ln{display:inline}
+pre.gen{font-size:13.5px}
+
+/* 7 checks */
+.checks{list-style:none;margin:0 0 4px;padding:0;display:grid;gap:6px}
+.checks li{display:grid;grid-template-columns:22px 1fr;gap:10px;align-items:start;font-size:14px}
+.checks li i{width:18px;height:18px;border-radius:50%;background:var(--data);margin-top:3px;position:relative}
+.checks li i::after{content:"";position:absolute;left:6px;top:3px;width:4px;height:8px;border:solid var(--surface);border-width:0 2px 2px 0;transform:rotate(45deg)}
+.checks small{font-family:var(--mono);font-size:11px;color:var(--muted);margin-left:6px}
+
+/* 8 run */
+.dbrun{display:flex;align-items:center;gap:10px;font-size:13px}
+.db-dot{width:10px;height:10px;border-radius:50%;background:var(--data);box-shadow:0 0 0 0 var(--data-bg)}
+.scene.play .db-dot{animation:pulse 1.2s ease-out 3}
+@keyframes pulse{0%{box-shadow:0 0 0 0 var(--data)}100%{box-shadow:0 0 0 12px transparent}}
+.rows{margin:12px 0}
+.rows tr.a{animation-duration:.35s}
+.vote{display:grid;gap:6px;font-size:14px;padding:12px 14px;border:1px solid var(--line);border-radius:12px}
+.vote small{font-family:var(--mono);font-size:11px;color:var(--muted);margin-left:6px}
+
+/* 9 final */
+.final{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:14px;align-items:start}
+.final pre{margin:0}
+.tt{display:grid;grid-template-columns:24px repeat(5,minmax(0,1fr));gap:3px;padding:10px;border:1px solid var(--line);border-radius:12px;background:var(--bg)}
+.tt-h{font-size:12px;font-weight:600;color:var(--muted);text-align:center;padding-bottom:2px}
+.tt-t{font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums;padding-top:4px}
+.tt-c{height:48px;border-radius:6px;background:var(--surface);border:1px solid var(--line);padding:2px}
+.blk{display:flex;align-items:center;justify-content:center;height:100%;border-radius:5px;font-size:11.5px;font-weight:600;text-align:center;line-height:1.2}
+.blk.ba{background:var(--client-bg);color:var(--client);box-shadow:inset 0 0 0 1.5px var(--client)}
+.blk.bb{background:var(--t6-bg);color:var(--t6);box-shadow:inset 0 0 0 1.5px var(--t6)}
+.scene.play .blk.a{animation-name:pop;animation-duration:.45s;animation-timing-function:cubic-bezier(.3,1.5,.5,1)}
+@keyframes pop{from{opacity:0;transform:scale(.6)}to{opacity:1;transform:none}}
+
+@media (max-width: 980px){
+  .pl-body{grid-template-columns:1fr;min-height:0}
+  .pl-rail{flex-direction:row;overflow-x:auto;border-right:0;border-bottom:1px solid var(--line);padding:8px 10px;white-space:nowrap}
+  .pl-rail button{width:auto;font-size:13px}
+  .pl-stage{min-height:520px}
+}
+@media (max-width: 620px){
+  .pl-bar{flex-wrap:wrap}
+  .pl-title{width:100%}
+  .pl-sp{display:none}
+  .pl-stage{padding:16px 14px 18px}
+  .final{grid-template-columns:1fr}
+  .msg{grid-template-columns:1fr;gap:4px}
+  .ex{grid-template-columns:28px minmax(0,1fr)}
+  .ex .why{grid-column:2}
+  .src{grid-template-columns:56px 1fr}
+  .src b{grid-column:2}
+  .fix small{margin-left:0;width:100%}
+}
+@media (prefers-reduced-motion: reduce){
+  .scene.play .a,.scene.play .blk.a,.scene.play .db-dot{animation:none!important}
+}
+</style>
+
+<div class="shell">
+  <nav class="toc" aria-label="목차">
+    <div class="brand"><i>SQL</i><span>수강신청 Text-to-SQL</span></div>
+    <h4>전체 구조</h4>
+    <ol>
+      <li><a href="#overview">개요</a></li>
+      <li><a href="#system">시스템 구성</a></li>
+      <li><a href="#request">요청 흐름</a></li>
+    </ol>
+    <h4>질의 처리</h4>
+    <ol>
+      <li><a href="#trace">질문 하나 따라가기</a></li>
+      <li><a href="#v2">v2 파이프라인</a></li>
+      <li><a href="#guard">SQL 안전장치</a></li>
+      <li><a href="#v1">v1 레거시</a></li>
+    </ol>
+    <h4>주변 구성</h4>
+    <ol>
+      <li><a href="#frontend">프론트엔드</a></li>
+      <li><a href="#api">API</a></li>
+      <li><a href="#data">데이터 모델</a></li>
+      <li><a href="#eval">평가와 모델 선정</a></li>
+      <li><a href="#deploy">설정과 배포</a></li>
+      <li><a href="#next">남은 과제</a></li>
+    </ol>
+  </nav>
+
+  <main><div class="wrap">
+
+  <header class="hero" id="overview">
+    <span class="kicker">아키텍처 문서 · 2026-11 기준 master</span>
+    <h1>한국어 질문을 SQL로 바꿔 강의를 찾아주는 수강신청 도우미</h1>
+    <p class="lede">학생이 “월요일 오전에 듣는 3학점 전공필수 알려줘”처럼 물으면, 백엔드가 질문을 PostgreSQL <code>SELECT</code> 문으로 바꿔 실행하고 결과를 강의 목록과 시간표에 보여줍니다. 이 문서는 화면에서 DB까지 질문 하나가 지나가는 경로와 각 모듈의 역할을 정리합니다.</p>
+    <dl class="facts">
+      <div><dt>서비스 파이프라인</dt><dd>v2<small>backend/t2s/</small></dd></div>
+      <div><dt>SQL 생성 모델</dt><dd>Qwen2.5-Coder 14B<small>Ollama · Q4_K_M</small></dd></div>
+      <div><dt>실행 정확도 (243건)</dt><dd class="num">90.1%</dd></div>
+      <div><dt>응답 지연 p50 / p95</dt><dd class="num">3.9 / 5.4초</dd></div>
+    </dl>
+  </header>
+
+  <!-- 01 system -->
+  <section class="sec" id="system">
+    <div class="sec-head"><span class="no">01</span><h2>시스템 구성</h2></div>
+    <p class="intro">React 화면, FastAPI 백엔드, 원격 GPU의 Ollama, PostgreSQL, Redis Stack 다섯 덩어리로 나뉩니다. 개발 환경에서는 Docker Compose가 Ollama를 뺀 네 개를 띄웁니다.</p>
+    <div class="legend">
+      <span><i style="background:var(--client-bg);border-color:var(--client)"></i>클라이언트</span>
+      <span><i style="background:var(--server-bg);border-color:var(--server)"></i>애플리케이션 서버</span>
+      <span><i style="background:var(--model-bg);border-color:var(--model)"></i>모델</span>
+      <span><i style="background:var(--data-bg);border-color:var(--data)"></i>데이터 저장소</span>
+    </div>
+    <div class="figure">
+      <svg viewBox="0 0 900 470" role="img" aria-label="시스템 구성도: 브라우저가 Vite 프록시를 거쳐 FastAPI에 요청하고, FastAPI가 NER 모델, KURE 임베딩, Ollama, PostgreSQL, Redis를 사용한다">
+        <defs>
+          <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="s-arrow"/></marker>
+        </defs>
+        <!-- zones -->
+        <rect x="16" y="28" width="200" height="420" rx="14" class="s-zone"/>
+        <text x="30" y="20" class="s-z">브라우저</text>
+        <rect x="246" y="28" width="384" height="420" rx="14" class="s-zone"/>
+        <text x="260" y="20" class="s-z">backend 컨테이너 (FastAPI · :8000)</text>
+        <rect x="660" y="28" width="224" height="420" rx="14" class="s-zone"/>
+        <text x="674" y="20" class="s-z">외부 서비스</text>
+
+        <!-- client -->
+        <rect x="34" y="54" width="164" height="128" rx="12" class="s-box s-client"/>
+        <text x="48" y="80" class="s-t">React + Vite</text>
+        <text x="48" y="101" class="s-s">강의 표 · 시간표</text>
+        <text x="48" y="119" class="s-s">챗 팝업 (자연어 질의)</text>
+        <text x="48" y="137" class="s-s">로그인 (mock 토큰)</text>
+        <text x="48" y="166" class="s-m">:5173</text>
+        <rect x="34" y="232" width="164" height="70" rx="12" class="s-box s-client"/>
+        <text x="48" y="258" class="s-t">Vite dev proxy</text>
+        <text x="48" y="281" class="s-m">/api/v1 → backend</text>
+
+        <!-- server -->
+        <rect x="266" y="54" width="344" height="76" rx="12" class="s-box s-server"/>
+        <text x="282" y="80" class="s-t">main.py · API 라우터</text>
+        <text x="282" y="101" class="s-s">인증 · 강의 목록 · 질의 라우팅</text>
+        <text x="282" y="118" class="s-m">T2S_PIPELINE = v1 | v2</text>
+
+        <rect x="446" y="160" width="164" height="128" rx="12" class="s-box s-server"/>
+        <text x="462" y="186" class="s-t">t2s/ (v2)</text>
+        <text x="462" y="207" class="s-s">값 후보 · 예시 검색</text>
+        <text x="462" y="224" class="s-s">프롬프트 · 생성</text>
+        <text x="462" y="241" class="s-s">검증 · 실행 · 투표</text>
+        <text x="462" y="272" class="s-m">서비스 기본값</text>
+
+        <rect x="266" y="160" width="164" height="128" rx="12" class="s-box s-server" style="stroke-dasharray:5 4"/>
+        <text x="282" y="186" class="s-t">process.py (v1)</text>
+        <text x="282" y="207" class="s-s">마스킹 · 벡터 캐시</text>
+        <text x="282" y="224" class="s-s">LLM 생성 · 검증</text>
+        <text x="282" y="241" class="s-s">자기수정 재시도</text>
+        <text x="282" y="272" class="s-m">레거시 경로</text>
+
+        <rect x="266" y="318" width="164" height="110" rx="12" class="s-box s-model"/>
+        <text x="282" y="344" class="s-t">course-custom-ner</text>
+        <text x="282" y="365" class="s-s">강의 개체명 인식</text>
+        <text x="282" y="382" class="s-s">오타·약칭 교정</text>
+        <text x="282" y="412" class="s-m">keyword_extract.py</text>
+
+        <rect x="446" y="318" width="164" height="110" rx="12" class="s-box s-model"/>
+        <text x="462" y="344" class="s-t">KURE-v1 임베딩</text>
+        <text x="462" y="365" class="s-s">few-shot 예시 검색</text>
+        <text x="462" y="382" class="s-s">v1 벡터 캐시 키</text>
+        <text x="462" y="412" class="s-m">vector_cache.py</text>
+
+        <!-- external -->
+        <rect x="678" y="54" width="188" height="110" rx="12" class="s-box s-model"/>
+        <text x="694" y="80" class="s-t">Ollama (원격 GPU)</text>
+        <text x="694" y="101" class="s-s">qwen2.5-coder:14b</text>
+        <text x="694" y="118" class="s-s">-instruct</text>
+        <text x="694" y="148" class="s-m">OLLAMA_BASE_URL</text>
+
+        <rect x="678" y="194" width="188" height="110" rx="12" class="s-box s-data"/>
+        <text x="694" y="220" class="s-t">PostgreSQL</text>
+        <text x="694" y="241" class="s-s">v_course_info 뷰</text>
+        <text x="694" y="258" class="s-s">student · enrollment</text>
+        <text x="694" y="288" class="s-m">읽기 전용 트랜잭션</text>
+
+        <rect x="678" y="334" width="188" height="94" rx="12" class="s-box s-data"/>
+        <text x="694" y="360" class="s-t">Redis Stack</text>
+        <text x="694" y="381" class="s-s">벡터 인덱스 · 캐시</text>
+        <text x="694" y="412" class="s-m">REDIS_URL (선택)</text>
+
+        <!-- arrows -->
+        <path d="M116 182 V232" class="s-line" marker-end="url(#ah)"/>
+        <path d="M198 267 H232 V92 H266" class="s-line" marker-end="url(#ah)"/>
+        <rect x="200" y="160" width="62" height="18" rx="4" class="s-lblbg"/>
+        <text x="206" y="173" class="s-lbl">HTTP</text>
+        <path d="M528 130 V160" class="s-line" marker-end="url(#ah)"/>
+        <path d="M348 130 V160" class="s-dash" marker-end="url(#ah)"/>
+        <path d="M528 288 V318" class="s-line" marker-end="url(#ah)"/>
+        <path d="M470 288 L410 318" class="s-line" marker-end="url(#ah)"/>
+        <path d="M348 288 V318" class="s-dash" marker-end="url(#ah)"/>
+        <path d="M610 180 H640 V109 H678" class="s-line" marker-end="url(#ah)"/>
+        <rect x="612" y="124" width="60" height="18" rx="4" class="s-lblbg"/>
+        <text x="616" y="137" class="s-lbl">/api/chat</text>
+        <path d="M610 249 H678" class="s-line" marker-end="url(#ah)"/>
+        <rect x="614" y="230" width="50" height="16" rx="4" class="s-lblbg"/>
+        <text x="618" y="242" class="s-lbl">SELECT</text>
+        <path d="M610 381 H678" class="s-dash" marker-end="url(#ah)"/>
+      </svg>
+    </div>
+    <p class="cap">실선은 v2 경로, 점선은 v1에서만 쓰는 경로입니다. v1도 Ollama와 PostgreSQL을 쓰지만 그림에서는 생략했습니다. Redis는 v1 벡터 캐시에만 쓰이므로 없어도 v2는 동작합니다.</p>
+
+    <div class="tw min"><table>
+      <thead><tr><th>구성 요소</th><th>계층</th><th>위치</th><th>역할</th></tr></thead>
+      <tbody>
+        <tr><td class="k"><b>프론트엔드</b></td><td><span class="layer l-client">클라이언트</span></td><td><code>src/</code></td><td>React 18 + TypeScript + Tailwind. 강의 표, 시간표, 챗 팝업. DB가 없으면 <code>src/mock/courses.ts</code>로 대체</td></tr>
+        <tr><td class="k"><b>API 서버</b></td><td><span class="layer l-server">서버</span></td><td><code>backend/main.py</code></td><td>FastAPI. 인증, 강의 목록 페이지네이션, 질의를 v1/v2로 분기. 시작 시 NER과 모델 워밍업</td></tr>
+        <tr><td class="k"><b>v2 파이프라인</b></td><td><span class="layer l-server">서버</span></td><td><code>backend/t2s/</code></td><td>값 후보 → 예시 검색 → 프롬프트 → 생성 → 검증·실행 → 투표 → 재시도</td></tr>
+        <tr><td class="k"><b>NER 모델</b></td><td><span class="layer l-model">모델</span></td><td><code>backend/course_custom_ner_model/</code></td><td>학과·과목·교수 등 7종 개체 인식, DB 고유값과 대조해 교정</td></tr>
+        <tr><td class="k"><b>SQL 생성 LLM</b></td><td><span class="layer l-model">모델</span></td><td>원격 Ollama</td><td><code>T2S_MODEL=qwen2.5-coder:14b-instruct</code></td></tr>
+        <tr><td class="k"><b>PostgreSQL</b></td><td><span class="layer l-data">데이터</span></td><td><code>backend/db.py</code></td><td>강의·학생·수강 이력. 질의는 <code>v_course_info</code> 뷰 중심</td></tr>
+        <tr><td class="k"><b>Redis Stack</b></td><td><span class="layer l-data">데이터</span></td><td><code>backend/redis_cache.py</code></td><td>v1 벡터 캐시(유사도 0.9 이상, TTL 24시간)</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <!-- 02 request -->
+  <section class="sec" id="request">
+    <div class="sec-head"><span class="no">02</span><h2>질문 하나의 요청 흐름</h2></div>
+    <p class="intro">챗 팝업에서 보낸 질문은 <code>POST /api/v1/chat/query</code>로 들어와 <code>_run_query()</code>에서 파이프라인이 정해집니다.</p>
+    <div class="figure">
+      <svg viewBox="0 0 900 380" role="img" aria-label="요청 시퀀스: 챗 팝업, main.py, run_v2, Ollama, PostgreSQL 사이의 호출 순서">
+        <defs>
+          <marker id="ah2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="s-arrow"/></marker>
+        </defs>
+        <g>
+          <rect x="30" y="16" width="140" height="34" rx="9" class="s-box s-client"/><text x="100" y="38" text-anchor="middle" class="s-t" style="font-size:13px">ChatPopup</text>
+          <rect x="210" y="16" width="140" height="34" rx="9" class="s-box s-server"/><text x="280" y="38" text-anchor="middle" class="s-t" style="font-size:13px">main.py</text>
+          <rect x="390" y="16" width="140" height="34" rx="9" class="s-box s-server"/><text x="460" y="38" text-anchor="middle" class="s-t" style="font-size:13px">run_v2()</text>
+          <rect x="570" y="16" width="140" height="34" rx="9" class="s-box s-model"/><text x="640" y="38" text-anchor="middle" class="s-t" style="font-size:13px">Ollama</text>
+          <rect x="740" y="16" width="140" height="34" rx="9" class="s-box s-data"/><text x="810" y="38" text-anchor="middle" class="s-t" style="font-size:13px">PostgreSQL</text>
+        </g>
+        <path d="M100 50V370M280 50V370M460 50V370M640 50V370M810 50V370" class="s-dash" style="stroke:var(--line)"/>
+        <!-- msgs -->
+        <path d="M100 84H278" class="s-line" marker-end="url(#ah2)"/><text x="110" y="77" class="s-lbl">POST /chat/query {query}</text>
+        <rect x="286" y="96" width="168" height="40" rx="7" class="s-box s-server" style="stroke-width:1"/>
+        <text x="296" y="112" class="s-s">토큰 → studentNo</text>
+        <text x="296" y="128" class="s-s">T2S_PIPELINE 확인</text>
+        <path d="M280 154H458" class="s-line" marker-end="url(#ah2)"/><text x="290" y="147" class="s-lbl">run_v2(query, student_id)</text>
+        <rect x="466" y="166" width="168" height="40" rx="7" class="s-box s-server" style="stroke-width:1"/>
+        <text x="476" y="182" class="s-s">NER · 값 후보 · 예시</text>
+        <text x="476" y="198" class="s-s">프롬프트 조립</text>
+        <path d="M460 226H638" class="s-line" marker-end="url(#ah2)"/><text x="470" y="219" class="s-lbl">chat(messages)</text>
+        <path d="M640 252H462" class="s-dash" marker-end="url(#ah2)"/><text x="530" y="245" class="s-lbl">SQL 텍스트</text>
+        <path d="M460 284H808" class="s-line" marker-end="url(#ah2)"/><text x="470" y="277" class="s-lbl">검증·재작성한 SELECT (read-only, 3s)</text>
+        <path d="M810 310H462" class="s-dash" marker-end="url(#ah2)"/><text x="680" y="303" class="s-lbl">rows</text>
+        <path d="M460 338H282" class="s-dash" marker-end="url(#ah2)"/><text x="296" y="331" class="s-lbl">{sql, data, rejected, …}</text>
+        <path d="M280 362H102" class="s-dash" marker-end="url(#ah2)"/><text x="116" y="355" class="s-lbl">JSON 응답</text>
+      </svg>
+    </div>
+    <p class="cap">투표 결과가 비거나 실패하면 Ollama 호출과 실행이 한 번 더 반복됩니다(04장의 ⑧ 재시도).</p>
+    <h3>응답 형식</h3>
+<pre class="code">{
+  "sql": "SELECT * FROM v_course_info WHERE ... LIMIT 50",
+  "data": [ { "subject_name": "...", "professor": "...", ... } ],
+  "error": null,
+  "rejected": false,            <span class="c">// 모호하거나 답할 수 없는 질문이면 true</span>
+  "candidates": [ { "index": 0, "sql": "...", "rows": 12, "error": null, "rejected": false } ],
+  "timings_ms": { "preprocess_ms": …, "llm_ms": …, "execute_ms": …, "total_ms": … },
+  "value_candidates": [ { "column": "dept_name", "value": "컴퓨터융합학부", "source": "ner" } ]
+}</pre>
+  </section>
+
+  <!-- 03 trace -->
+  <section class="sec" id="trace">
+    <div class="sec-head"><span class="no">03</span><h2>질문 하나 따라가기</h2></div>
+    <p class="intro">로그인하지 않은 학생이 아래 질문을 보냈을 때, v2 파이프라인이 문장을 SQL과 결과로 바꿔 가는 과정을 단계별로 재생합니다. 단계를 누르면 그 장면에서 멈춥니다.</p>
+
+    <div class="player" id="player">
+      <div class="pl-bar">
+        <span class="pl-title" id="pl-title" aria-live="polite">1 / 9 · 질문 입력</span>
+        <span class="pl-sp"></span>
+        <button type="button" class="pl-btn" id="pl-prev" aria-label="이전 단계">◀</button>
+        <button type="button" class="pl-btn pl-play" id="pl-play">재생</button>
+        <button type="button" class="pl-btn" id="pl-next" aria-label="다음 단계">▶</button>
+      </div>
+      <div class="pl-segs" id="pl-segs" aria-hidden="true"></div>
+      <div class="pl-body">
+        <ol class="pl-rail" id="pl-rail"></ol>
+        <div class="pl-stage" id="pl-stage">
+
+          <!-- 1 -->
+          <div class="scene" data-k="질문 입력" data-dur="5200">
+            <p class="sc-lead">학생이 챗 팝업에 질문을 입력합니다. 학과는 약칭, 이수구분은 줄임말로 썼습니다.</p>
+            <div class="chat">
+              <div class="bub"><span class="type" data-speed="70">컴융 3학년 월요일 오전 전핵 중에 여석 있는 거 알려줘</span><i class="caret"></i></div>
+            </div>
+            <div class="req a" style="--d:3.2s">
+              <span class="m m-post">POST</span><code>/api/v1/chat/query</code>
+              <code class="req-body">{ "query": "컴융 3학년 …", "excludeCompletedCourses": false }</code>
+            </div>
+            <p class="sc-note a" style="--d:3.8s"><code>main._run_query()</code>가 <code>T2S_PIPELINE=v2</code>를 보고 <code>run_v2()</code>를 부릅니다. 토큰이 없으니 <code>student_id</code>는 <code>None</code>입니다.</p>
+          </div>
+
+          <!-- 2 -->
+          <div class="scene" data-k="NER 교정" data-dur="5600" hidden>
+            <p class="sc-lead"><code>course-custom-ner</code>가 질문에서 강의 관련 개체를 찾고, DB에 실제로 있는 값으로 교정합니다.</p>
+            <div class="qline">
+              <span class="tok hl t1 a" style="--d:.3s">컴융<em>DEPARTMENT</em></span>
+              <span class="tok">3학년</span><span class="tok">월요일</span><span class="tok">오전</span>
+              <span class="tok hl t2 a" style="--d:.8s">전핵<em>CATEGORY</em></span>
+              <span class="tok">중에</span><span class="tok">여석</span><span class="tok">있는</span><span class="tok">거</span><span class="tok">알려줘</span>
+            </div>
+            <div class="fixes">
+              <div class="fix a" style="--d:1.6s"><code class="t1c">컴융</code><span class="arr">→</span><b>공과대학 컴퓨터융합학부</b><small>약칭 사전 + DB 고유값 매칭</small></div>
+              <div class="fix a" style="--d:2.2s"><code class="t2c">전핵</code><span class="arr">→</span><b>전공(핵심)</b><small>category 컬럼의 실제 표기</small></div>
+            </div>
+            <p class="sc-note a" style="--d:3s">“3학년”, “월요일 오전”, “여석”은 특정 값이 아니라 컬럼 조건이라 NER 대상이 아닙니다. 이 표현들은 프롬프트 규칙을 보고 모델이 SQL로 옮깁니다.</p>
+          </div>
+
+          <!-- 3 -->
+          <div class="scene" data-k="값 후보" data-dur="5000" hidden>
+            <p class="sc-lead">교정된 값을 컬럼과 짝지어 프롬프트에 넣을 힌트로 만듭니다. <code>values.find_value_candidates()</code></p>
+            <div class="srcs">
+              <div class="src a" style="--d:.3s"><span class="layer l-model">ner</span><span>NER 교정 결과 중 DB 값 목록에 있는 것</span><b class="ok">2개</b></div>
+              <div class="src a" style="--d:.8s"><span class="layer l-mute">ngram</span><span>질문 글자열에 DB 값이 그대로 들어 있는지 검사. “전공(핵심)”은 정규화하면 “전공핵심”이라 질문에 없음</span><b>0개</b></div>
+            </div>
+<pre class="code hint a" style="--d:1.6s">[값 후보 — 참고용, 틀릴 수 있음]
+- <span class="t1c">dept_name = '공과대학 컴퓨터융합학부'</span>
+- <span class="t2c">category = '전공(핵심)'</span></pre>
+          </div>
+
+          <!-- 4 -->
+          <div class="scene" data-k="예시 검색" data-dur="5800" hidden>
+            <p class="sc-lead">질문을 KURE-v1로 임베딩해 검증된 예시 173개 가운데 가장 가까운 4개를 고릅니다.</p>
+            <div class="exs">
+              <div class="ex a" style="--d:.4s"><span class="rk">1</span><div><b>컴융 3학년 오전 9시 수업 알려줘</b><code>… dept_name LIKE '%컴퓨터융합학부%' AND target_year = 3 AND start_time = '09:00:00'</code></div><span class="why">학과·학년·시간</span></div>
+              <div class="ex a" style="--d:.8s"><span class="rk">2</span><div><b>토목공학과 목요일 오전 수업 뭐있어</b><code>… day_of_week = '목' AND start_time &lt; '12:00:00'</code></div><span class="why">요일·오전</span></div>
+              <div class="ex a" style="--d:1.2s"><span class="rk">3</span><div><b>미적분학 여석 있는 분반 알려줘</b><code>… enrolled &lt; capacity AND capacity &gt; 0</code></div><span class="why">여석</span></div>
+              <div class="ex a" style="--d:1.6s"><span class="rk">4</span><div><b>독문과 전공핵심 과목 알려줘</b><code>… category = '전공(핵심)'</code></div><span class="why">이수구분</span></div>
+            </div>
+            <p class="sc-note a" style="--d:2.4s">예시마다 질문의 다른 조각을 보여 줍니다. 예시를 빼면 평가 정확도가 52.7%까지 떨어질 만큼 이 단계의 기여가 큽니다.</p>
+          </div>
+
+          <!-- 5 -->
+          <div class="scene" data-k="프롬프트" data-dur="5600" hidden>
+            <p class="sc-lead"><code>build_messages()</code>가 메시지 10개짜리 대화를 조립합니다.</p>
+            <div class="msgs">
+              <div class="msg sys a" style="--d:.2s"><span class="role">system</span><div>SQL 생성기 지시 · <b>[스키마]</b> M-Schema · <b>[규칙]</b> 도메인 규칙 12개 + 비로그인 규칙</div></div>
+              <div class="msg pair a" style="--d:.7s"><span class="role">user · assistant ×4</span><div>질문: 컴융 3학년 오전 9시 수업 알려줘 → <code>SELECT …</code> <span class="muted">외 3쌍</span></div></div>
+              <div class="msg usr a" style="--d:1.3s"><span class="role">user</span>
+<pre>[값 후보 — 참고용, 틀릴 수 있음]
+- dept_name = '공과대학 컴퓨터융합학부'
+- category = '전공(핵심)'
+
+질문: 컴융 3학년 월요일 오전 전핵 중에 여석 있는 거 알려줘</pre></div>
+            </div>
+            <p class="sc-note a" style="--d:2.2s">규칙 예: “'N학년 대상'은 target_year = N”, “오전은 start_time &lt; '12:00:00'”, “'여석 있음'은 enrolled &lt; capacity AND capacity &gt; 0”.</p>
+          </div>
+
+          <!-- 6 -->
+          <div class="scene" data-k="SQL 생성" data-dur="7000" hidden>
+            <p class="sc-lead"><code>qwen2.5-coder:14b-instruct</code>가 SQL만 출력합니다. 질문의 각 표현이 어느 조건이 되었는지 같은 색으로 이었습니다.</p>
+            <div class="qline small">
+              <span class="tok hl t1 a" style="--d:.9s">컴융</span>
+              <span class="tok hl t3 a" style="--d:1.5s">3학년</span>
+              <span class="tok hl t5 a" style="--d:2.1s">월요일</span>
+              <span class="tok hl t6 a" style="--d:2.7s">오전</span>
+              <span class="tok hl t2 a" style="--d:3.3s">전핵</span>
+              <span class="tok">중에</span>
+              <span class="tok hl t4 a" style="--d:3.9s">여석 있는</span>
+              <span class="tok">거 알려줘</span>
+            </div>
+<pre class="code gen"><span class="ln a" style="--d:.3s">SELECT * FROM v_course_info</span>
+<span class="ln a" style="--d:.9s">WHERE <span class="t1c">dept_name LIKE '%컴퓨터융합학부%'</span></span>
+<span class="ln a" style="--d:1.5s">  AND <span class="t3c">target_year = 3</span></span>
+<span class="ln a" style="--d:2.1s">  AND <span class="t5c">day_of_week = '월'</span></span>
+<span class="ln a" style="--d:2.7s">  AND <span class="t6c">start_time &lt; '12:00:00'</span></span>
+<span class="ln a" style="--d:3.3s">  AND <span class="t2c">category = '전공(핵심)'</span></span>
+<span class="ln a" style="--d:3.9s">  AND <span class="t4c">enrolled &lt; capacity AND capacity &gt; 0</span></span></pre>
+            <p class="sc-note a" style="--d:4.6s">temperature 0.4, 최대 256토큰, stop 시퀀스로 설명문을 잘라냅니다. 답할 수 없는 질문이면 여기서 <code>UNKNOWN</code>이 나옵니다.</p>
+          </div>
+
+          <!-- 7 -->
+          <div class="scene" data-k="검증·재작성" data-dur="7400" hidden>
+            <p class="sc-lead">실행 전에 코드가 SQL을 검사하고 고칩니다. <code>execute.run_candidate()</code></p>
+            <ul class="checks">
+              <li class="a" style="--d:.3s"><i></i><span>SQL 추출, <code>UNKNOWN</code> 아님</span></li>
+              <li class="a" style="--d:.8s"><i></i><span>비로그인이지만 <code>student</code>·<code>enrollment</code>를 쓰지 않음</span></li>
+              <li class="a" style="--d:1.3s"><i></i><span><code>SELECT *</code> → 표준 컬럼 20개로 명시 <small>normalize_projection</small></span></li>
+              <li class="a" style="--d:1.8s"><i></i><span><code>LIMIT 50</code> 추가 <small>ensure_limit</small></span></li>
+              <li class="a" style="--d:2.3s"><i></i><span>SELECT 한 문장, 허용 함수만, 범위 검사 통과 <small>validate_generated_sql</small></span></li>
+              <li class="a" style="--d:2.8s"><i></i><span>요일·시간 조건이 있으니 맞는 분반의 <b>모든 수업 시간</b> 행을 가져오도록 감싸기 <small>expand_schedule_filtered_course_rows</small></span></li>
+            </ul>
+<pre class="code a" style="--d:3.6s">SELECT c.* FROM v_course_info AS c
+JOIN (SELECT DISTINCT v_course_info.subject_code, v_course_info.section
+      FROM v_course_info WHERE <span class="muted">…위 6개 조건…</span>) AS matched_courses
+  ON c.subject_code = matched_courses.subject_code
+ AND c.section IS NOT DISTINCT FROM matched_courses.section
+ORDER BY c.subject_code, c.section, <span class="muted">월→토 순서</span>, c.start_time
+LIMIT 200</pre>
+            <p class="sc-note a" style="--d:4.2s">월요일 오전 분반이 수요일에도 수업한다면 그 수요일 행까지 있어야 시간표를 온전히 그릴 수 있기 때문입니다.</p>
+          </div>
+
+          <!-- 8 -->
+          <div class="scene" data-k="실행·투표" data-dur="6200" hidden>
+            <p class="sc-lead">읽기 전용 트랜잭션, 3초 제한으로 PostgreSQL에서 실행하고 결과로 답을 고릅니다.</p>
+            <div class="dbrun a" style="--d:.2s"><span class="db-dot"></span><code>default_transaction_read_only=on · statement_timeout=3000</code></div>
+            <div class="tw rows a" style="--d:1s"><table>
+              <thead><tr><th>subject_name</th><th>section</th><th>day_of_week</th><th>start_time</th><th>capacity − enrolled</th></tr></thead>
+              <tbody>
+                <tr class="a" style="--d:1.3s"><td>과목 A</td><td class="num">01</td><td>월</td><td class="num">09:00</td><td class="num">8</td></tr>
+                <tr class="a" style="--d:1.5s"><td>과목 A</td><td class="num">01</td><td>수</td><td class="num">09:00</td><td class="num">8</td></tr>
+                <tr class="a" style="--d:1.7s"><td>과목 B</td><td class="num">02</td><td>월</td><td class="num">10:30</td><td class="num">3</td></tr>
+                <tr class="a" style="--d:1.9s"><td>과목 B</td><td class="num">02</td><td>목</td><td class="num">10:30</td><td class="num">3</td></tr>
+              </tbody>
+            </table></div>
+            <div class="vote a" style="--d:2.6s">
+              <div><span class="layer l-data">answer</span> 후보 1개, 결과 행 있음 → 후보 0번을 그대로 채택 <small>vote.decide()</small></div>
+              <div class="muted">결과가 0행이었다면 “위 SQL은 실행 결과가 0행이었다”는 피드백을 붙여 temperature 0으로 한 번 더 생성합니다.</div>
+            </div>
+          </div>
+
+          <!-- 9 -->
+          <div class="scene" data-k="응답·화면" data-dur="6500" hidden>
+            <p class="sc-lead">결과가 JSON으로 돌아가고, 화면은 강의 목록과 시간표로 보여 줍니다.</p>
+            <div class="final">
+<pre class="code a" style="--d:.2s">{
+  "rejected": false,
+  "error": null,
+  "sql": "SELECT c.* FROM v_course_info AS c JOIN …",
+  "data": [ <span class="muted">4행</span> ],
+  "value_candidates": [
+    { "column": "dept_name", "source": "ner", … },
+    { "column": "category",  "source": "ner", … }
+  ],
+  "timings_ms": { "preprocess_ms": …, "llm_ms": …, … }
+}</pre>
+              <div class="tt a" style="--d:.8s" aria-label="시간표 미리보기">
+                <div class="tt-h"></div><div class="tt-h">월</div><div class="tt-h">화</div><div class="tt-h">수</div><div class="tt-h">목</div><div class="tt-h">금</div>
+                <div class="tt-t">9</div><div class="tt-c"><span class="blk ba a" style="--d:1.4s">과목 A</span></div><div class="tt-c"></div><div class="tt-c"><span class="blk ba a" style="--d:1.6s">과목 A</span></div><div class="tt-c"></div><div class="tt-c"></div>
+                <div class="tt-t">10</div><div class="tt-c"><span class="blk bb a" style="--d:1.9s">과목 B</span></div><div class="tt-c"></div><div class="tt-c"></div><div class="tt-c"><span class="blk bb a" style="--d:2.1s">과목 B</span></div><div class="tt-c"></div>
+                <div class="tt-t">11</div><div class="tt-c"></div><div class="tt-c"></div><div class="tt-c"></div><div class="tt-c"></div><div class="tt-c"></div>
+              </div>
+            </div>
+            <p class="sc-note a" style="--d:2.6s">줄임말 두 개와 조건 네 개가 담긴 한 문장이, 교정 → 힌트 → 예시 → 생성 → 검증 → 실행을 거쳐 시간표 블록이 됩니다.</p>
+          </div>
+
+        </div>
+      </div>
+    </div>
+    <p class="cap">SQL, 프롬프트 형식, 재작성 규칙은 실제 코드를 따릅니다. 예시 검색 순위와 결과 행(과목 A·B)은 흐름을 보여 주기 위한 예시입니다.</p>
+  </section>
+
+  <!-- 03 v2 -->
+  <section class="sec" id="v2">
+    <div class="sec-head"><span class="no">04</span><h2>v2 파이프라인</h2></div>
+    <p class="intro"><code>backend/t2s/pipeline.py</code>의 <code>run_v2()</code>가 여덟 단계를 순서대로 돌립니다. 단계를 눌러 세부 내용을 보세요.</p>
+
+    <div class="pipe" role="tablist" aria-label="v2 파이프라인 단계" id="pipe"></div>
+    <div class="panel" role="tabpanel" id="panel" aria-live="polite"></div>
+
+    <h3>설계 원칙</h3>
+    <ul class="notes">
+      <li><b>모델은 SQL만 쓴다.</b> 로그인 학생 조건, 이수 과목 제외, 행 수 제한, 시간표 행 확장은 모두 실행 직전 코드가 결정적으로 붙입니다.</li>
+      <li><b>거부도 정답이다.</b> 스키마로 답할 수 없거나 다른 학생 정보를 묻으면 모델이 <code>UNKNOWN</code>을 내고, 응답은 <code>rejected: true</code>가 됩니다.</li>
+      <li><b>설정은 호출 시점에 읽는다.</b> <code>load_settings()</code>가 매 요청 환경변수를 읽어 평가 스크립트가 후보 수·예시 사용 등을 바꿔가며 비교할 수 있습니다.</li>
+      <li><b>의존성 주입.</b> <code>Deps</code>로 전처리·chat·run·validate를 갈아끼울 수 있어 DB·Ollama 없이 단위 테스트가 돕니다(<code>t2s/tests/</code> 11개 파일).</li>
+    </ul>
+  </section>
+
+  <!-- 04 guard -->
+  <section class="sec" id="guard">
+    <div class="sec-head"><span class="no">05</span><h2>SQL 안전장치</h2></div>
+    <p class="intro">생성된 SQL은 <code>backend/validate.py</code>의 <code>validate_generated_sql()</code>이 sqlglot AST로 검사한 뒤에만 실행됩니다. 실행 자체도 읽기 전용입니다.</p>
+    <ul class="guard">
+      <li><span class="n">1</span><div><b>SELECT 한 문장만</b> 허용. <code>WITH</code>(CTE)는 생성 형식 오류로 따로 표시합니다.</div></li>
+      <li><span class="n">2</span><div><b>함수 허용 목록.</b> <code>pg_read_file</code>, <code>set_config</code>, <code>pg_sleep</code> 같은 시스템 함수는 목록에 없어 거부됩니다. <code>U&amp;</code> 문자열, <code>$</code> 인용, 단독 <code>TABLE</code>, 행 잠금도 거부합니다.</div></li>
+      <li><span class="n">3</span><div><b>학생 데이터 범위 검사.</b> <code>student</code>·<code>enrollment</code>를 쓰는 모든 인스턴스는 <code>student_id = %(student_id)s</code>로 묶여 있어야 합니다. 비로그인 사용자가 개인 테이블을 건드리면 실행 전에 거부됩니다.</div></li>
+      <li><span class="n">4</span><div><b>값 바인딩.</b> 학번은 SQL 문자열에 넣지 않고 psycopg2 파라미터 <code>%(student_id)s</code>로만 전달합니다.</div></li>
+      <li><span class="n">5</span><div><b>실행 제한.</b> <code>default_transaction_read_only=on</code>, <code>statement_timeout=3000ms</code>, 결과 <code>LIMIT 50</code>(<code>T2S_ROW_CAP</code>).</div></li>
+    </ul>
+    <div class="callout"><b>주의</b><span>v1 경로의 <code>db.run_query</code>는 아직 읽기 전용 연결이 아닙니다. 서비스는 v2로 돌고 있지만 v1을 켤 때는 이 차이를 기억해야 합니다.</span></div>
+  </section>
+
+  <!-- 05 v1 -->
+  <section class="sec" id="v1">
+    <div class="sec-head"><span class="no">06</span><h2>v1 레거시 파이프라인</h2></div>
+    <p class="intro"><code>T2S_PIPELINE=v1</code>(코드상 기본값)일 때 쓰는 <code>backend/process.py</code>의 <code>process()</code>입니다. 미세조정 모델 <code>text2sql-local</code>과 Redis 벡터 캐시를 중심으로 만들어졌습니다.</p>
+    <div class="grid3">
+      <div class="box"><h5>1. 전처리·마스킹</h5><span class="path">keyword_extract.preprocess_query</span><p>NER로 개체를 찾아 교정하고, 값을 <code>&lt;DEPARTMENT&gt;</code> 같은 자리표시자로 바꾼 마스킹 질의를 만듭니다.</p></div>
+      <div class="box"><h5>2. 벡터 캐시 조회</h5><span class="path">vector_cache.find_vector_cache</span><p>마스킹 질의를 KURE-v1로 임베딩해 Redis에서 유사도 0.9 이상 항목을 찾고, 있으면 자리표시자에 값을 채워 SQL을 재사용합니다.</p></div>
+      <div class="box"><h5>3. 생성·검증·실행</h5><span class="path">llm.py · validate.py · db.py</span><p>캐시가 없으면 LLM으로 생성하고 검증 후 실행, 오류 시 자기수정 재시도. 성공한 SQL은 마스킹해 캐시에 저장합니다.</p></div>
+    </div>
+    <p>평가셋 243건 기준 정확도는 <b>16.5%</b>였습니다. v2는 같은 평가셋에서 이를 <b>90.1%</b>까지 끌어올렸고, 지금 서비스 설정(<code>backend/.env.example</code>, <code>docker-compose.yml</code>)은 v2입니다.</p>
+  </section>
+
+  <!-- 06 frontend -->
+  <section class="sec" id="frontend">
+    <div class="sec-head"><span class="no">07</span><h2>프론트엔드</h2></div>
+    <p class="intro">Vite + React 18 + TypeScript + Tailwind. 로그인 화면과 메인 화면 두 페이지로 되어 있고, API 호출은 <code>apiClient</code> 하나를 거칩니다.</p>
+    <div class="grid2">
+      <div class="box"><h5>pages <span class="layer l-client">화면</span></h5><span class="path">src/pages/</span><p><code>AuthPage</code> 로그인·회원가입, <code>MainPage</code> 강의 검색·선택·시간표·챗 팝업 상태를 모두 관리.</p></div>
+      <div class="box"><h5>components <span class="layer l-client">UI</span></h5><span class="path">src/components/</span><p><code>CourseTable</code> 강의 목록, <code>Timetable</code>·<code>ExpandedTimetableModal</code> 주간 시간표, <code>ChatPopup</code> 자연어 질의와 결과.</p></div>
+      <div class="box"><h5>services <span class="layer l-client">통신</span></h5><span class="path">src/services/</span><p><code>apiClient</code>(fetch, 기본 <code>/api/v1</code>) 위에 <code>authApi</code>·<code>coursesApi</code>·<code>studentsApi</code>. 인증은 <code>localAuthService</code>/<code>remoteAuthService</code> 두 구현.</p></div>
+      <div class="box"><h5>utils <span class="layer l-client">도메인 로직</span></h5><span class="path">src/utils/</span><p><code>courseMapper</code> API 응답 → <code>Course</code>, <code>schedule</code>·<code>courseSchedule</code> 시간 충돌, <code>prerequisites</code> 선수과목, <code>courseColors</code> 시간표 색.</p></div>
+    </div>
+  </section>
+
+  <!-- 07 api -->
+  <section class="sec" id="api">
+    <div class="sec-head"><span class="no">08</span><h2>API 엔드포인트</h2></div>
+    <p class="intro">모두 <code>backend/main.py</code>에 있습니다. 인증은 <code>mock_auth.py</code>의 서명 토큰과 <code>backend/data/mock_students.json</code>을 씁니다.</p>
+    <div class="endpoints">
+      <div class="ep"><span class="m m-get">GET</span><code>/api/v1/health</code><span class="d">헬스체크 (Compose healthcheck가 사용)</span></div>
+      <div class="ep"><span class="m m-get">GET</span><code>/api/v1/warmup</code><span class="d">NER·모델 워밍업 상태</span></div>
+      <div class="ep"><span class="m m-post">POST</span><code>/api/v1/auth/login</code><span class="d">학번 로그인, 액세스 토큰 발급</span></div>
+      <div class="ep"><span class="m m-post">POST</span><code>/api/v1/auth/signup</code><span class="d">회원가입 (mock)</span></div>
+      <div class="ep"><span class="m m-post">POST</span><code>/api/v1/auth/logout</code><span class="d">로그아웃</span></div>
+      <div class="ep"><span class="m m-get">GET</span><code>/api/v1/students/me</code><span class="d">토큰의 학생 정보</span></div>
+      <div class="ep"><span class="m m-get">GET</span><code>/api/v1/students/me/profile</code><span class="d">프로필과 이수 과목</span></div>
+      <div class="ep"><span class="m m-get">GET</span><code>/api/v1/courses</code><span class="d">강의 목록 (page, pageSize ≤ 200, keyword)</span></div>
+      <div class="ep"><span class="m m-post">POST</span><code>/api/v1/chat/query</code><span class="d">자연어 질의 → SQL → 결과</span></div>
+      <div class="ep"><span class="m m-post">POST</span><code>/api/v1/query</code><span class="d">위와 같은 처리 (별칭)</span></div>
+    </div>
+    <p>질의 요청 본문은 <code>{ query, excludeCompletedCourses }</code>입니다. <code>excludeCompletedCourses</code>가 참이면 로그인이 필수이고, 이미 들은 과목을 빼는 조건은 모델이 아니라 코드가 붙입니다.</p>
+  </section>
+
+  <!-- 08 data -->
+  <section class="sec" id="data">
+    <div class="sec-head"><span class="no">09</span><h2>데이터 모델</h2></div>
+    <p class="intro">강의 질문 대부분은 조인을 미리 풀어둔 뷰 <code>v_course_info</code> 하나로 답합니다. 개인 질문만 <code>student</code>·<code>enrollment</code>를 씁니다.</p>
+    <div class="tw min"><table>
+      <thead><tr><th>객체</th><th>종류</th><th>주요 컬럼</th></tr></thead>
+      <tbody>
+        <tr><td class="k"><code>v_course_info</code></td><td><span class="layer l-data">뷰</span></td><td>subject_code, section, subject_name, category, credit_hours(“학점/이론/실습”), target_year, professor, capacity, enrolled, class_mode, dept_name, day_of_week, start_time, end_time, classroom, prereq_subject_names</td></tr>
+        <tr><td class="k"><code>cnu_courses</code></td><td><span class="layer l-mute">테이블</span></td><td>개설 분반: 교수, 정원, 수강인원, 평가·수업 방식</td></tr>
+        <tr><td class="k"><code>subject</code></td><td><span class="layer l-mute">테이블</span></td><td>과목명, 이수구분, 학점, 대상 학년</td></tr>
+        <tr><td class="k"><code>department</code></td><td><span class="layer l-mute">테이블</span></td><td>학과 코드와 이름</td></tr>
+        <tr><td class="k"><code>course_schedule</code></td><td><span class="layer l-mute">테이블</span></td><td>요일, 시작·종료 시각, 강의실</td></tr>
+        <tr><td class="k"><code>student</code></td><td><span class="layer l-bad">개인</span></td><td>학번, 학년, 학과 코드 — 본인 행만 조회 가능</td></tr>
+        <tr><td class="k"><code>enrollment</code></td><td><span class="layer l-bad">개인</span></td><td>수강 연도·학기, 과목, 성적 — 본인 행만 조회 가능</td></tr>
+      </tbody>
+    </table></div>
+    <p>프롬프트에는 이 스키마가 <b>M-Schema</b> 형식으로 들어갑니다. <code>t2s/schema_docs.yaml</code>의 한국어 컬럼 설명에 DB에서 읽은 값(고유값 20개 이하면 전부, 많으면 빈도 상위 3개)을 붙입니다.</p>
+  </section>
+
+  <!-- 09 eval -->
+  <section class="sec" id="eval">
+    <div class="sec-head"><span class="no">10</span><h2>평가와 모델 선정</h2></div>
+    <p class="intro"><code>backend/eval/</code>의 골든 평가셋 243건을 실제 DB와 Ollama에 돌려 실행 결과로 채점합니다. 정답 SQL 문자열이 아니라 결과 행이 같으면 정답입니다.</p>
+
+    <h3>모델 비교 (v2, 후보 1개)</h3>
+    <div class="bars" role="img" aria-label="모델별 실행 정확도 막대 그래프">
+      <div class="bar sel"><div class="nm">qwen2.5-coder 14B<small>선정 · 거부 100% · p95 5.4초</small></div><div class="tr"><i style="width:90.1%"></i></div><div class="v">90.1%</div></div>
+      <div class="bar"><div class="nm">XiYanSQL-QwenCoder 7B<small>거부 96.7% · p95 3.6초</small></div><div class="tr"><i style="width:86.8%"></i></div><div class="v">86.8%</div></div>
+      <div class="bar"><div class="nm">OmniSQL 7B<small>거부 93.3% · p95 3.4초</small></div><div class="tr"><i style="width:85.2%"></i></div><div class="v">85.2%</div></div>
+      <div class="bar out"><div class="nm">XiYanSQL-QwenCoder 14B<small>거부 80% · 탈락</small></div><div class="tr"><i style="width:82.3%"></i></div><div class="v">82.3%</div></div>
+      <div class="bar"><div class="nm">qwen2.5-coder 7B<small>기존 기준 · p95 3.4초</small></div><div class="tr"><i style="width:81.5%"></i></div><div class="v">81.5%</div></div>
+      <div class="bar out"><div class="nm">text2sql-local<small>거부 56.7% · 탈락</small></div><div class="tr"><i style="width:70.8%"></i></div><div class="v">70.8%</div></div>
+      <div class="axis"><div></div><div><span style="left:0%">0</span><span style="left:25%">25</span><span style="left:50%">50</span><span style="left:75%">75</span><span style="left:100%">100%</span></div><div></div></div>
+    </div>
+    <p class="cap">선정 기준: 실행 정확도 우선, ±1%p 동률이면 p95 지연, 거부 정확도 90% 미만은 탈락. 출처 <code>docs/superpowers/plans/2026-10-21-t2s-model-selection.md</code>.</p>
+
+    <h3>정확도가 오른 과정</h3>
+    <ol class="timeline">
+      <li><span class="pct">16.5%</span>v1 <code>process()</code> 기준선</li>
+      <li><span class="pct">73.3%</span>v2 파이프라인 + qwen2.5-coder 7B, 후보 5개 (p95 11.4초)</li>
+      <li><span class="pct">76.5%</span>과잉 거부 수정: 첫 후보도 <code>UNKNOWN</code>일 때만 거부, temperature 0.4</li>
+      <li><span class="pct">77.8%</span>후보 1개로 전환, 학생 질문용 프롬프트 규칙 추가 (p95 3.4초)</li>
+      <li><span class="pct">81.5%</span>힌트·규칙 정리, 평가셋과 겹치던 예시 9개 제거 후의 깨끗한 기준선</li>
+      <li class="big"><span class="pct">90.1%</span>모델을 qwen2.5-coder 14B로 교체</li>
+    </ol>
+
+    <h3>유형별 정확도 (선정 모델)</h3>
+    <div class="tw"><table>
+      <thead><tr><th>강의 검색</th><th>선수과목</th><th>집계</th><th>이수 제외</th><th>본인 조회</th><th>거부</th><th>졸업요건</th></tr></thead>
+      <tbody><tr><td class="num">97.5%</td><td class="num">93.3%</td><td class="num">85.4%</td><td class="num">93.1%</td><td class="num">70.0%</td><td class="num">100%</td><td class="num">0% (미연결)</td></tr></tbody>
+    </table></div>
+  </section>
+
+  <!-- 10 deploy -->
+  <section class="sec" id="deploy">
+    <div class="sec-head"><span class="no">11</span><h2>설정과 배포</h2></div>
+    <p class="intro"><code>docker compose up --build</code>로 frontend·backend·postgres·redis를 띄웁니다. Ollama는 컨테이너 밖(원격 GPU 서버)에 있고, 스키마와 데이터는 직접 넣어야 합니다.</p>
+    <div class="tw min"><table>
+      <thead><tr><th>환경변수</th><th>현재 값</th><th>의미</th></tr></thead>
+      <tbody>
+        <tr><td class="k"><code>T2S_PIPELINE</code></td><td><code>v2</code></td><td>질의 파이프라인 선택 (코드 기본값은 v1)</td></tr>
+        <tr><td class="k"><code>T2S_MODEL</code></td><td><code>qwen2.5-coder:14b-instruct</code></td><td>v2 생성 모델. 없으면 <code>OLLAMA_MODEL</code></td></tr>
+        <tr><td class="k"><code>T2S_CANDIDATES</code></td><td class="num">1</td><td>후보 SQL 수. 5개는 +1.6%p에 지연 약 3배</td></tr>
+        <tr><td class="k"><code>T2S_TEMPERATURE</code></td><td class="num">0.4</td><td>후보 생성 온도 (재시도는 0)</td></tr>
+        <tr><td class="k"><code>T2S_EXAMPLES_K</code></td><td class="num">4</td><td>few-shot 예시 수. 끄면 정확도 52.7%로 하락</td></tr>
+        <tr><td class="k"><code>T2S_VALUE_SOURCES</code></td><td><code>ner,ngram</code></td><td>값 후보 출처</td></tr>
+        <tr><td class="k"><code>T2S_ROW_CAP</code></td><td class="num">50</td><td>결과 행 상한</td></tr>
+        <tr><td class="k"><code>T2S_STATEMENT_TIMEOUT_MS</code></td><td class="num">3000</td><td>쿼리 실행 제한 시간</td></tr>
+        <tr><td class="k"><code>T2S_MAX_TOKENS</code></td><td class="num">256</td><td>생성 토큰 상한</td></tr>
+        <tr><td class="k"><code>T2S_REVIEW_LOG</code></td><td class="num">1</td><td>질의·SQL을 <code>t2s/logs/review_queue.jsonl</code>에 기록</td></tr>
+        <tr><td class="k"><code>OLLAMA_BASE_URL</code></td><td>원격 서버</td><td>Ollama 주소 (Compose에선 <code>host.docker.internal</code>도 가능)</td></tr>
+        <tr><td class="k"><code>DATABASE_URL</code></td><td>환경별</td><td>없으면 강의 목록은 mock, 질의는 오류</td></tr>
+        <tr><td class="k"><code>REDIS_URL</code> · <code>VECTOR_CACHE_*</code></td><td>선택</td><td>v1 벡터 캐시 (임계 0.9, TTL 86400초)</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <!-- 11 next -->
+  <section class="sec" id="next">
+    <div class="sec-head"><span class="no">12</span><h2>남은 과제</h2></div>
+    <ul class="notes">
+      <li><b>별도 검증셋.</b> 프롬프트 규칙과 예시를 같은 평가셋으로 다듬었기 때문에, 새 질문 묶음으로 과적합 여부를 확인해야 합니다.</li>
+      <li><b>졸업요건 기능.</b> 보관된 졸업요건 기능이 연결되지 않아 해당 유형은 0%입니다.</li>
+      <li><b>본인 조회 정확도.</b> 70.0%로 유형 중 가장 낮습니다.</li>
+      <li><b>v1 DB 연결.</b> <code>db.run_query</code>를 읽기 전용으로 바꾸거나 v1을 정리해야 합니다.</li>
+    </ul>
+    <footer>저장소 master(7c8b293) 코드와 <code>docs/superpowers/</code>의 계획·평가 기록을 바탕으로 작성. 수치는 평가셋 243건, 원격 Ollama(P100 16GB, Q4_K_M) 기준입니다.</footer>
+  </section>
+
+  </div></main>
+</div>
+
+<script>
+(function(){
+  var steps = [
+    {k:"전처리", s:"NER", where:"keyword_extract.preprocess_query(fail_open=True)",
+     t:"자체 학습한 NER 모델로 질문에서 개체를 찾고 DB 고유값과 대조해 교정합니다.",
+     li:["레이블 7종: CATEGORY, COURSE_NAME, DEPARTMENT, CLASS_MODE, EVAL_TYPE, GRADE_METHOD, PROFESSOR","오타·약칭을 실제 값으로 바꾼 corrected_entities를 다음 단계로 넘김","fail_open이라 NER이 실패해도 파이프라인은 계속 진행"]},
+    {k:"값 후보", s:"values.py", where:"t2s/values.find_value_candidates()",
+     t:"WHERE 절에 들어갈 정확한 값을 미리 찾아 프롬프트에 힌트로 줍니다.",
+     li:["NER 교정 결과 + NER과 무관한 n-gram 검색 두 출처 (T2S_VALUE_SOURCES)","대상 컬럼: dept_name, category, subject_name, professor, class_mode, eval_type, grading_method","과목명·교수명 NER 힌트는 질문에 그 이름이 실제로 나올 때만 사용"]},
+    {k:"예시 검색", s:"examples.py", where:"t2s/examples.default_store().search(query, k=4)",
+     t:"검증된 질문→SQL 쌍에서 지금 질문과 비슷한 것을 골라 few-shot 예시로 씁니다.",
+     li:["예시 원본: t2s/data/examples.json (평가셋과 분리)","KURE-v1 임베딩 코사인 유사도로 상위 4개","오염 검사: 평가 질문과 유사도 0.9 이상이거나 SQL 골격이 같고 0.8 이상이면 제외","예시를 끄면 정확도가 52.7%로 떨어질 만큼 기여가 큼"]},
+    {k:"프롬프트", s:"prompt.py", where:"t2s/prompt.build_messages()",
+     t:"시스템 지시, M-Schema, 도메인 규칙, 값 힌트, 예시를 채팅 메시지로 조립합니다.",
+     li:["“SQL만 출력, 답할 수 없으면 UNKNOWN 한 단어”","도메인 규칙 12개: 이수구분 괄호 표기, 학점은 credit_hours LIKE 'N/%', ‘1시~7시’는 13~19시, 여석 = capacity − enrolled 등","로그인 상태면 학생 규칙(별칭, student_id 바인딩, ‘내 학과’ 서브쿼리), 아니면 개인 질문 거부 규칙","이수 과목 제외는 시스템이 처리하니 SQL에 넣지 말라는 규칙"]},
+    {k:"생성", s:"generate.py", where:"t2s/generate.generate_with_errors() → ollama_chat",
+     t:"Ollama 채팅 API로 후보 SQL을 생성합니다.",
+     li:["모델 qwen2.5-coder:14b-instruct, temperature 0.4, max_tokens 256","stop 시퀀스(###, \\n\\n\\n 등)로 잡설 차단","후보가 여러 개면 두 번째부터 예시 순서를 섞어 다양성 확보 (기본 1개)","호출 실패는 후보별 오류로 기록하고 계속 진행"]},
+    {k:"검증·실행", s:"execute.py", where:"t2s/execute.run_candidate()",
+     t:"후보마다 SQL을 꺼내 정리하고 검증한 뒤 읽기 전용으로 실행합니다.",
+     li:["UNKNOWN이면 거부, 비로그인인데 student·enrollment를 쓰면 거부","postprocess: 표준 컬럼 투영 정리, LIMIT 50 보장 (sqlglot)","validate_generated_sql 통과 후 top-N 확장, 시간표 행 확장, 이수 과목 제외를 코드로 덧붙임","%(student_id)s 파라미터 바인딩, read-only 트랜잭션, 3초 제한"]},
+    {k:"투표", s:"vote.py", where:"t2s/vote.decide()",
+     t:"실행 결과 행 집합이 같은 후보끼리 묶어 다수결로 답을 고릅니다.",
+     li:["첫(greedy) 후보가 거부했고 과반이 거부하면 → rejected","실행에 성공한 후보가 없으면 → none, 모두 0행이면 → empty","그 외에는 가장 큰 결과 그룹의 후보를 선택"]},
+    {k:"재시도", s:"pipeline.py", where:"t2s/pipeline.run_v2() 후반부",
+     t:"none 또는 empty면 첫 후보 대화에 실패 이유를 붙여 한 번 더 생성합니다.",
+     li:["“실행할 SQL이 아니었다” / “오류: …였다” / “0행이었다” 중 하나를 피드백","temperature 0으로 재생성 후 같은 검증·실행 단계를 통과","행이 나오면 그 결과를 답으로 채택","거부가 아닌 응답은 review_queue.jsonl에 남겨 예시 후보로 검토"]}
+  ];
+  var pipe = document.getElementById('pipe'), panel = document.getElementById('panel'), cur = 0;
+  function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;')}
+  steps.forEach(function(st,i){
+    var b = document.createElement('button');
+    b.type='button'; b.id='step-'+i; b.setAttribute('role','tab'); b.setAttribute('aria-controls','panel');
+    b.innerHTML='<span class="nd">'+(i+1)+'</span><b>'+st.k+'</b><small>'+st.s+'</small>';
+    b.addEventListener('click',function(){show(i)});
+    b.addEventListener('keydown',function(e){
+      if(e.key==='ArrowRight'){e.preventDefault();show(Math.min(i+1,steps.length-1),true)}
+      if(e.key==='ArrowLeft'){e.preventDefault();show(Math.max(i-1,0),true)}
+    });
+    pipe.appendChild(b);
+  });
+  function show(i,focus){
+    cur=i; var st=steps[i];
+    pipe.querySelectorAll('button').forEach(function(b,j){b.setAttribute('aria-selected',j===i?'true':'false');b.tabIndex=j===i?0:-1});
+    panel.setAttribute('aria-labelledby','step-'+i);
+    panel.innerHTML='<h4>'+(i+1)+'. '+st.k+'</h4><code class="where" style="background:none;padding:0">'+esc(st.where)+'</code><p>'+esc(st.t)+'</p><ul>'+st.li.map(function(x){return '<li>'+esc(x)+'</li>'}).join('')+'</ul>'+
+      '<div class="ctl"><button type="button" data-d="-1"'+(i===0?' disabled':'')+'>← 이전 단계</button><button type="button" data-d="1"'+(i===steps.length-1?' disabled':'')+'>다음 단계 →</button></div>';
+    panel.querySelectorAll('.ctl button').forEach(function(b){b.addEventListener('click',function(){show(cur+Number(b.dataset.d))})});
+    if(focus) document.getElementById('step-'+i).focus();
+  }
+  show(0);
+
+  // scroll spy (highlight only; content is always visible)
+  var links = Array.prototype.slice.call(document.querySelectorAll('.toc a'));
+  var map = {}; links.forEach(function(a){map[a.getAttribute('href').slice(1)]=a});
+  if('IntersectionObserver' in window){
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(en){
+        if(en.isIntersecting){
+          links.forEach(function(a){a.classList.remove('on')});
+          var a = map[en.target.id]; if(a){a.classList.add('on'); if(a.scrollIntoView && window.innerWidth<=980){a.scrollIntoView({block:'nearest',inline:'center'})}}
+        }
+      });
+    },{rootMargin:'-20% 0px -70% 0px'});
+    Object.keys(map).forEach(function(id){var el=document.getElementById(id); if(el) io.observe(el)});
+  }
+})();
+</script>
+
+<script>
+(function(){
+  var player=document.getElementById('player'); if(!player) return;
+  var scenes=Array.prototype.slice.call(player.querySelectorAll('.scene'));
+  var rail=document.getElementById('pl-rail'), segs=document.getElementById('pl-segs');
+  var title=document.getElementById('pl-title'), playBtn=document.getElementById('pl-play');
+  var reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var idx=0, playing=false, elapsed=0, last=0, raf=0, typeTimer=0, started=false;
+  var bars=[];
+  scenes.forEach(function(sc,i){
+    var li=document.createElement('li'), b=document.createElement('button');
+    b.type='button'; b.innerHTML='<span>'+(i+1)+'</span>'+sc.dataset.k;
+    b.addEventListener('click',function(){go(i);setPlaying(false)});
+    li.appendChild(b); rail.appendChild(li);
+    var s=document.createElement('i'), f=document.createElement('b'); s.appendChild(f); segs.appendChild(s); bars.push(f);
+    var t=sc.querySelector('.type'); if(t) t.dataset.full=t.textContent;
+  });
+  var railBtns=rail.querySelectorAll('button');
+  function dur(i){return Number(scenes[i].dataset.dur)||5000}
+  function paintBars(){
+    bars.forEach(function(f,j){f.style.width=j<idx?'100%':j>idx?'0':Math.min(100,elapsed/dur(idx)*100)+'%'});
+  }
+  function typeIn(sc){
+    clearInterval(typeTimer); sc.classList.remove('typing');
+    var t=sc.querySelector('.type'); if(!t) return;
+    var full=t.dataset.full;
+    if(reduce){t.textContent=full;return}
+    var n=0, speed=Number(t.dataset.speed)||60; t.textContent=''; sc.classList.add('typing');
+    typeTimer=setInterval(function(){
+      if(player.classList.contains('paused')) return;
+      n++; t.textContent=full.slice(0,n);
+      if(n>=full.length){clearInterval(typeTimer); setTimeout(function(){sc.classList.remove('typing')},600)}
+    },speed);
+  }
+  function go(i,animate){
+    idx=Math.max(0,Math.min(scenes.length-1,i)); elapsed=0;
+    scenes.forEach(function(sc,j){sc.hidden=j!==idx; sc.classList.remove('play','typing')});
+    var sc=scenes[idx];
+    if(animate!==false && !reduce){void sc.offsetWidth; sc.classList.add('play'); typeIn(sc)}
+    else{clearInterval(typeTimer); var t=sc.querySelector('.type'); if(t) t.textContent=t.dataset.full}
+    railBtns.forEach(function(b,j){
+      if(j===idx) b.setAttribute('aria-current','step'); else b.removeAttribute('aria-current');
+      b.classList.toggle('done',j<idx);
+    });
+    if(window.innerWidth<=980 && railBtns[idx].scrollIntoView){
+      var r=rail.getBoundingClientRect(), br=railBtns[idx].getBoundingClientRect();
+      rail.scrollLeft+=br.left-r.left-(r.width-br.width)/2;
+    }
+    title.textContent=(idx+1)+' / '+scenes.length+' · '+sc.dataset.k;
+    paintBars();
+  }
+  function tick(now){
+    if(!playing) return;
+    elapsed+=now-last; last=now;
+    if(elapsed>=dur(idx)){
+      if(idx<scenes.length-1){go(idx+1)} else {elapsed=dur(idx); paintBars(); setPlaying(false); playBtn.textContent='다시 재생'; return}
+    }
+    paintBars(); raf=requestAnimationFrame(tick);
+  }
+  function setPlaying(p){
+    playing=p; cancelAnimationFrame(raf);
+    player.classList.toggle('paused',!p);
+    playBtn.textContent=p?'일시정지':'재생';
+    if(p){last=performance.now(); raf=requestAnimationFrame(tick)}
+  }
+  playBtn.addEventListener('click',function(){
+    started=true;
+    if(playing){setPlaying(false);return}
+    if(idx===scenes.length-1 && elapsed>=dur(idx)) go(0);
+    else if(!scenes[idx].classList.contains('play') && !reduce){go(idx)}
+    setPlaying(true);
+  });
+  document.getElementById('pl-prev').addEventListener('click',function(){started=true;go(idx-1);setPlaying(false)});
+  document.getElementById('pl-next').addEventListener('click',function(){started=true;go(idx+1);setPlaying(false)});
+  player.addEventListener('keydown',function(e){
+    if(e.target.closest('.pl-rail')||e.target.closest('.pl-bar')){
+      if(e.key==='ArrowRight'){e.preventDefault();started=true;go(idx+1);setPlaying(false)}
+      if(e.key==='ArrowLeft'){e.preventDefault();started=true;go(idx-1);setPlaying(false)}
+    }
+  });
+  go(0,false); setPlaying(false);
+  if(!reduce && 'IntersectionObserver' in window){
+    var io=new IntersectionObserver(function(es){
+      es.forEach(function(en){
+        if(en.isIntersecting && !started){started=true; go(0); setPlaying(true); io.disconnect()}
+      });
+    },{threshold:.45});
+    io.observe(player);
+  }
+})();
+</script>
